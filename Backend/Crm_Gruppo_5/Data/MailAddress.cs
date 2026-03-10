@@ -4,7 +4,7 @@
     {
         public int MailAddressId { get; set; }
         public required string Mail { get; set; }
-        public int? ContactId { get; set; }
-        public int? TypeId { get; set; }
+        public Contact? Contact { get; set; }
+        public MailAddressType? MailAddressType { get; set; }
     }
 }
