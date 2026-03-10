@@ -1,45 +1,43 @@
 <!DOCTYPE html>
 <html lang="it">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style/shared.css">
-    <link rel="stylesheet" href="style/azienda.css">
-    <title>Aziende</title>
-</head>
-<body>
-    <div class="Title">
-        <div class="TitleText">
-            <h1>Aziende</h1>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="style/shared.css">
+        <link rel="stylesheet" href="style/azienda.css">
+        <title>Aziende</title>
+    </head>
+    <body>
+        <div class="header">
+            <div class="header-title">
+                <h1>Aziende</h1>
+            </div>
+            <button class="menu-toggle" aria-label="Toggle menu">☰</button>
+            <div class="menu">
+                <a class="menu-link" href="contatti.html">Contatti</a>
+                <a class="menu-link" href="email.html">Email</a>
+                <a class="menu-link" href="numeri.html">Numeri</a>
+            </div>
         </div>
-        <button class="menu-toggle" aria-label="Toggle menu">☰</button>
-        <div class="menu">
-            <a class="menu-link" href="contatti.html">Contatti</a>
-            <a class="menu-link" href="email.html">Email</a>
-            <a class="menu-link" href="numeri.html">Numeri</a>
+        <div class="menu-overlay"></div>
+        <div class="page-container">
+            <div class="content-section">
+                <table class="table-company">
+                        <thead>
+                            <tr>
+                                <th>Nome Azienda</th>
+                                <th>Indirizzo</th>
+                                <th>Sito Web</th>
+                                <th>Partita IVA</th>
+                                <th>Dimensione</th>
+                                <th>Note</th>
+                                <th>Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-company-body"></tbody>
+                </table>
+            </div>
         </div>
-    </div>
-
-    <div class="menu-overlay"></div>
-
-    <div class="page-container">
-        <div class="content-section">
-            <table class="table-aziende">
-                    <thead>
-                        <tr>
-                            <th>Nome Azienda</th>
-                            <th>Indirizzo</th>
-                            <th>Sito Web</th>
-                            <th>Partita IVA</th>
-                            <th>Dimensione</th>
-                            <th>Note</th>
-                            <th>Azioni</th>
-                        </tr>
-                    </thead>
-            </table>
-        </div>
-    </div>
-
-    <div class="menu-overlay"></div>
-</body>
+    </body>
+    <script type="module" src="src/azienda.js"></script>
 </html>

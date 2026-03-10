@@ -14,7 +14,7 @@
 /* Content section - limita la larghezza della tabella */
 .content-section {
     width: 100%;
-    max-width: 1000px;
+    max-width: 1200px;
     background-color: var(--surface);
     border-radius: 8px;
     box-shadow: var(--shadow);
@@ -22,38 +22,87 @@
 }
 
 /* Stili della tabella */
-.table-aziende {
+.table-company {
     width: 100%;
     border-collapse: collapse;
     font-size: 0.95rem;
+    table-layout: fixed;
 }
 
 /* Header della tabella */
-.table-aziende thead {
+.table-company thead {
     background-color: var(--primary-dark);
     color: white;
 }
 
-.table-aziende thead th {
-    padding: 1rem;
+.table-company thead th {
+    padding: 1.25rem 1.5rem;
     text-align: left;
     font-weight: 600;
     border-bottom: 2px solid var(--primary-medium);
+    word-break: break-word;
+    overflow-wrap: break-word;
+    min-height: 4.5rem;
+    height: 4.5rem;
+    display: table-cell;
+    vertical-align: middle;
 }
 
 /* Righe della tabella */
-.table-aziende tbody tr {
+.table-company tbody tr {
     border-bottom: 1px solid var(--border);
     transition: background-color 0.2s ease;
+    height: 4.5rem;
 }
 
-.table-aziende tbody tr:hover {
+.table-company tbody tr:hover {
     background-color: #f5f7fa;
 }
 
-.table-aziende tbody td {
-    padding: 1rem;
+.table-company tbody td {
+    padding: 1.25rem 1.5rem;
     color: var(--text-dark);
+    word-break: break-word;
+    overflow-wrap: break-word;
+    vertical-align: middle;
+    min-height: 4.5rem;
+    display: table-cell;
+}
+
+/* Larghezze proporzionate delle colonne */
+.table-company th:nth-child(1),
+.table-company td:nth-child(1) {
+    width: 15%;
+}
+
+.table-company th:nth-child(2),
+.table-company td:nth-child(2) {
+    width: 20%;
+}
+
+.table-company th:nth-child(3),
+.table-company td:nth-child(3) {
+    width: 15%;
+}
+
+.table-company th:nth-child(4),
+.table-company td:nth-child(4) {
+    width: 12%;
+}
+
+.table-company th:nth-child(5),
+.table-company td:nth-child(5) {
+    width: 10%;
+}
+
+.table-company th:nth-child(6),
+.table-company td:nth-child(6) {
+    width: 18%;
+}
+
+.table-company th:nth-child(7),
+.table-company td:nth-child(7) {
+    width: 10%;
 }
 
 /* Responsive - per schermi piccoli */
@@ -63,12 +112,12 @@
         margin: 0 auto;
     }
 
-    .table-aziende thead th {
+    .table-company thead th {
         padding: 0.75rem 0.5rem;
         font-size: 0.85rem;
     }
 
-    .table-aziende tbody td {
+    .table-company tbody td {
         padding: 0.75rem 0.5rem;
         font-size: 0.85rem;
     }
