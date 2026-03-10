@@ -1,0 +1,75 @@
+/* ========================================
+   PAGINA AZIENDE - STILI SPECIFICI
+   ======================================== */
+
+.page-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: calc(100vh - 60px);
+    padding: 2rem 1rem;
+}
+
+/* Content section - limita la larghezza della tabella */
+.content-section {
+    width: 100%;
+    max-width: 1000px;
+    background-color: var(--surface);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    overflow-x: auto;
+}
+
+/* Stili della tabella */
+.table-aziende {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+
+/* Header della tabella */
+.table-aziende thead {
+    background-color: var(--primary-dark);
+    color: white;
+}
+
+.table-aziende thead th {
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid var(--primary-medium);
+}
+
+/* Righe della tabella */
+.table-aziende tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background-color 0.2s ease;
+}
+
+.table-aziende tbody tr:hover {
+    background-color: #f5f7fa;
+}
+
+.table-aziende tbody td {
+    padding: 1rem;
+    color: var(--text-dark);
+}
+
+/* Responsive - per schermi piccoli */
+@media (max-width: 768px) {
+    .content-section {
+        max-width: 95%;
+        margin: 0 auto;
+    }
+
+    .table-aziende thead th {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.85rem;
+    }
+
+    .table-aziende tbody td {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.85rem;
+    }
+}

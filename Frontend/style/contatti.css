@@ -1,0 +1,14 @@
+/* ========================================
+   PAGINA CONTATTI - STILI SPECIFICI
+   ======================================== */
+
+.page-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: calc(100vh - 60px);
+    padding: 2rem 1rem;
+}
+
+/* Aggiungere here gli stili specifici per la pagina contatti */
