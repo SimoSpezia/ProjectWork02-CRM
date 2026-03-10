@@ -1,0 +1,13 @@
+﻿namespace CrmGruppo5.Data
+{
+    public class PhoneNumber
+    {
+        public int PhoneNumberId { get; set; }
+        public required string Number { get; set; }
+        public string? Prefix { get; set; }
+        public required string Nationality { get; set; }
+        public int? ContactId { get; set; }
+        public int? TypeId { get; set; }
+        public required int Priority { get; set; }
+    }
+}

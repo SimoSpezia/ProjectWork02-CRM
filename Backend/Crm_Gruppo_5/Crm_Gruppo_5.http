@@ -1,0 +1,6 @@
+@Crm_Gruppo_5_HostAddress = http://localhost:5259
+
+GET {{Crm_Gruppo_5_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
