@@ -1,7 +1,8 @@
 ﻿using Crm_Gruppo_5.Dto;
 using CrmGruppo5.Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
-using static Azure.Core.HttpHeader;
+using Microsoft.AspNetCore.Http;
 
 namespace Crm_Gruppo_5.Controllers
 {
@@ -10,81 +11,85 @@ namespace Crm_Gruppo_5.Controllers
     public class CompanyController(Data.ContactDbContext ctx, ILogger<CompanyController> logger, Mapper mapper) : ControllerBase
     {
         private readonly Data.ContactDbContext _ctx = ctx;
-        private readonly ILogger<CompanyController> logger = logger;
+        private readonly ILogger<CompanyController> _logger = logger;
         private readonly Mapper _mapper = mapper;
 
 
         [HttpGet]
         public IActionResult GetAll()
         {
-            var result = _ctx.Companies.ToList().ConvertAll(_mapper.MapBaseEntitytoDto);
-            return Ok(result);
+            try
+            {
+                var result = _ctx.Companies.ToList().ConvertAll(_mapper.MapBaseEntitytoDto);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                return StatusCode(500, ex.Message);
+            }
+
         }
 
         [HttpGet]
         [Route("{id}")]
-        [HttpGet("{id}")]
         public IActionResult GetSingle(int id)
         {
             var company =  _ctx.Companies.SingleOrDefault(c=>c.CompanyId == id);
 
             if (company == null)
             {
-                logger.LogWarning("Company with id {Id} not found", id);
-                return NotFound();
+                return BadRequest($"Company with id {id} not found");
+               
             }
-
-            var companyDto = _mapper.Map<CompanyDto>(company);
-
-            return Ok(companyDto);
+            return Ok(_mapper.MapBaseEntitytoDto(company));
         }
+
         [HttpPost]
-        public IActionResult Create([FromBody] CompanyDto companyDto)
+        public IActionResult Create(CompanyDto company)
         {
-            var company = _mapper.Map<Company>(companyDto);
-
+            company.CompanyId = 0;
             _ctx.Companies.Add(company);
-             _ctx.SaveChangesAsync();
-
-            var result = _mapper.Map<CompanyDto>(company);
-
-            return CreatedAtAction(nameof(GetSingle), new { id = company.CompanyId }, result);
+            if (_ctx.SaveChanges() > 0)
+            {
+                return Ok();
+            }
+            return BadRequest();
         }
-        [HttpPut("{id}")]
-        public IActionResult Update(int id, [FromBody] CompanyDto companyDto)
+        [HttpPut]
+        [Route("{id}")]
+        public IActionResult Update([FromRoute]int id, [FromBody] CompanySimpleDto Dto)
         {
             var company = _ctx.Companies.SingleOrDefault(c => c.CompanyId == id);
 
             if (company == null)
             {
-                logger.LogWarning("Company with id {Id} not found", id);
-                return NotFound();
+                return BadRequest();
             }
 
-            _mapper.Map(companyDto, company);
-
+            company.Denomination= Dto.Denomination;
+            company.AddressId=Dto.AddressId;
+            company.Address = _mapper.MapDtoToEntity(Dto.Address);
              _ctx.SaveChangesAsync();
 
-            var result = _mapper.Map<CompanyDto>(company);
+            var result = _mapper.MapBaseEntitytoDto(company);
 
             return Ok(result);
         }
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-            var company =  _ctx.Companies.SingleOrDefault(c => c.CompanyId == id);
+            var company = _ctx.Companies.SingleOrDefault(c => c.CompanyId == id);
 
             if (company == null)
             {
-                logger.LogWarning("Company with id {Id} not found", id);
-                return NotFound();
+                return BadRequest();
             }
-
             _ctx.Companies.Remove(company);
-             _ctx.SaveChangesAsync();
-
-            logger.LogInformation("Company with id {Id} deleted", id);
-            return NoContent();
+            if (_ctx.SaveChanges() == 1)
+                return NoContent();
+            else
+                return UnprocessableEntity();
         }
     }
 }
