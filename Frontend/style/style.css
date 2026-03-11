@@ -1,0 +1,12 @@
+
+/* ========================================
+   STILE PRINCIPALE - IMPORTA SHARED
+   ======================================== 
+   
+   NOTA: Questo file mantiene la retrocompatibilità.
+   Per nuove pagine, importare:
+   - style/shared.css (elementi comuni)
+   - style/nomepagina.css (stili specifici)
+*/
+
+@import url('shared.css');

@@ -1,0 +1,124 @@
+/* ========================================
+   PAGINA AZIENDE - STILI SPECIFICI
+   ======================================== */
+
+.page-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: calc(100vh - 60px);
+    padding: 2rem 1rem;
+}
+
+/* Content section - limita la larghezza della tabella */
+.content-section {
+    width: 100%;
+    max-width: 1200px;
+    background-color: var(--surface);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    overflow-x: auto;
+}
+
+/* Stili della tabella */
+.table-company {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+    table-layout: fixed;
+}
+
+/* Header della tabella */
+.table-company thead {
+    background-color: var(--primary-dark);
+    color: white;
+}
+
+.table-company thead th {
+    padding: 1.25rem 1.5rem;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid var(--primary-medium);
+    word-break: break-word;
+    overflow-wrap: break-word;
+    min-height: 4.5rem;
+    height: 4.5rem;
+    display: table-cell;
+    vertical-align: middle;
+}
+
+/* Righe della tabella */
+.table-company tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background-color 0.2s ease;
+    height: 4.5rem;
+}
+
+.table-company tbody tr:hover {
+    background-color: #f5f7fa;
+}
+
+.table-company tbody td {
+    padding: 1.25rem 1.5rem;
+    color: var(--text-dark);
+    word-break: break-word;
+    overflow-wrap: break-word;
+    vertical-align: middle;
+    min-height: 4.5rem;
+    display: table-cell;
+}
+
+/* Larghezze proporzionate delle colonne */
+.table-company th:nth-child(1),
+.table-company td:nth-child(1) {
+    width: 15%;
+}
+
+.table-company th:nth-child(2),
+.table-company td:nth-child(2) {
+    width: 20%;
+}
+
+.table-company th:nth-child(3),
+.table-company td:nth-child(3) {
+    width: 15%;
+}
+
+.table-company th:nth-child(4),
+.table-company td:nth-child(4) {
+    width: 12%;
+}
+
+.table-company th:nth-child(5),
+.table-company td:nth-child(5) {
+    width: 10%;
+}
+
+.table-company th:nth-child(6),
+.table-company td:nth-child(6) {
+    width: 18%;
+}
+
+.table-company th:nth-child(7),
+.table-company td:nth-child(7) {
+    width: 10%;
+}
+
+/* Responsive - per schermi piccoli */
+@media (max-width: 768px) {
+    .content-section {
+        max-width: 95%;
+        margin: 0 auto;
+    }
+
+    .table-company thead th {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.85rem;
+    }
+
+    .table-company tbody td {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.85rem;
+    }
+}
