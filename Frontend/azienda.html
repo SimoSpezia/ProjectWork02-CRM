@@ -22,6 +22,61 @@
         <div class="menu-overlay"></div>
         <div class="page-container">
             <div class="content-section">
+                <button id="add-company-btn" class="add-company-btn">Aggiungi Azienda</button>
+                <div id="add-company-panel" class="add-company-panel">
+                    <h2>Aggiungi Nuova Azienda</h2>
+                    <form id="add-company-form">
+                        <label for="company-name">Nome Azienda:</label>
+                        <input type="text" id="company-name" required>
+
+                        <label for="company-address">Indirizzo:</label>
+                        <input type="text" id="company-address" required>
+
+                        <label for="company-website">Sito Web:</label>
+                        <input type="url" id="company-website">
+
+                        <label for="company-partitaIVA">Partita IVA:</label>
+                        <input type="text" id="company-partitaIVA" required>
+
+                        <label for="company-size">Dimensione:</label>
+                        <input type="text" id="company-size">
+
+                        <label for="company-notes">Note:</label>
+                        <textarea id="company-notes"></textarea>
+
+                        <div class="form-buttons">
+                            <button type="submit">Salva</button>
+                            <button type="button" id="cancel-add-company">Annulla</button>
+                        </div>
+                    </form>
+                </div>
+                <div id="edit-company-panel" class="add-company-panel">
+                    <h2>Modifica Azienda</h2>
+                    <form id="edit-company-form">
+                        <label for="edit-company-name">Nome Azienda:</label>
+                        <input type="text" id="edit-company-name" required>
+
+                        <label for="edit-company-address">Indirizzo:</label>
+                        <input type="text" id="edit-company-address" required>
+
+                        <label for="edit-company-website">Sito Web:</label>
+                        <input type="url" id="edit-company-website">
+
+                        <label for="edit-company-partitaIVA">Partita IVA:</label>
+                        <input type="text" id="edit-company-partitaIVA" required>
+
+                        <label for="edit-company-size">Dimensione:</label>
+                        <input type="text" id="edit-company-size">
+
+                        <label for="edit-company-notes">Note:</label>
+                        <textarea id="edit-company-notes"></textarea>
+
+                        <div class="form-buttons">
+                            <button type="submit">Salva Modifiche</button>
+                            <button type="button" id="cancel-edit-company">Annulla</button>
+                        </div>
+                    </form>
+                </div>
                 <table class="table-company">
                         <thead>
                             <tr>

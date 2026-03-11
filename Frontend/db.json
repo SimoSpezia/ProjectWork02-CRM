@@ -1,0 +1,35 @@
+{
+  "companies": [
+    {
+      "id": "1",
+      "name": "Acme",
+      "address": "Via Roma 1",
+      "website": "acme.com",
+      "partitaIVA": "123",
+      "size": "50",
+      "notes": ""
+    },
+    {
+      "id": "2",
+      "name": "TechCorp",
+      "address": "Via Milano 5",
+      "website": "tech.com",
+      "partitaIVA": "456",
+      "size": "200",
+      "notes": ""
+    },
+    {
+      "id": "1d6b",
+      "name": "prova",
+      "address": "prova",
+      "website": "http://127.0.0.1:5500/Frontend/azienda.html",
+      "partitaIVA": "prova",
+      "size": "prova",
+      "notes": "prova"
+    }
+  ],
+  "contacts": [],
+  "phoneNumbers": [],
+  "mailAddresses": [],
+  "$schema": "./node_modules/json-server/schema.json"
+}
