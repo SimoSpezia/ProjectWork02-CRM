@@ -1,4 +1,6 @@
 using Crm_Gruppo_5.Data;
+using Crm_Gruppo_5.Dto;
+using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,7 +14,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddSqlServer<ContactDbContext>(
     builder.Configuration.GetConnectionString("Default")
 );
-
+builder.Services.AddSingleton<Mapper>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
