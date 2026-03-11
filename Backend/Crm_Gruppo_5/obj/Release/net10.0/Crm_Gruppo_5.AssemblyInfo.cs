@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Crm_Gruppo_5")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+37d356387c3344f434d36a4fe375b114e101d621")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ae2938449de8c5e6cb569aea3e316eace36caa71")]
 [assembly: System.Reflection.AssemblyProductAttribute("Crm_Gruppo_5")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Crm_Gruppo_5")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
