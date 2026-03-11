@@ -1,94 +1,97 @@
-import { applyTableStyles, createStyledCell, createStyledRow, TABLE_STYLES, DELETEBUTTON_STYLES,EDITBUTTON_STYLES } from './tableUtils.js';
+import { applyTableStyles, createStyledCell, createStyledRow, TABLE_STYLES, DELETEBUTTON_STYLES, EDITBUTTON_STYLES } from './tableUtils.js';
+import { Company, getCompanies, addCompany, setupAddEntityForm } from './common.js';
 
-// Interfaccia per i dati azienda
-interface Company {
-    name: string;
-    address: string;
-    website: string;
-    partitaIVA: string;
-    size: string;
-    notes: string;
-}
-
+// consolidated type for a list of companies
 type CompanyData = Company[];
 
 let companyData: CompanyData = [];
 
-// Initialize event listeners
-initializeEventListeners();
+// bootstrap the page behaviour       
+initialize();
 
-getCompanyData().catch(err => console.error('Errore nel recupero dati azienda:', err));
+async function initialize(): Promise<void> {
+    setupAddEntityForm<Company>(
+        'add-company-btn',
+        'add-company-panel',
+        'cancel-add-company',
+        'add-company-form',
+        () => ({
+            name: (document.getElementById('company-name') as HTMLInputElement).value,
+            address: (document.getElementById('company-address') as HTMLInputElement).value,
+            website: (document.getElementById('company-website') as HTMLInputElement).value,
+            partitaIVA: (document.getElementById('company-partitaIVA') as HTMLInputElement).value,
+            size: (document.getElementById('company-size') as HTMLInputElement).value,
+            notes: (document.getElementById('company-notes') as HTMLTextAreaElement).value,
+        }),
+        async (c) => {
+            await addCompany(c);
+            await loadCompanyData();
+        }
+    );
 
-function initializeEventListeners(): void {
-    // Open form
-    const addCompanyBtn = document.getElementById('add-company-btn') as HTMLButtonElement;
-    const addCompanyPanel = document.getElementById('add-company-panel') as HTMLDivElement;
-    const cancelBtn = document.getElementById('cancel-add-company') as HTMLButtonElement;
-    const addCompanyForm = document.getElementById('add-company-form') as HTMLFormElement;
-
-    addCompanyBtn.addEventListener('click', () => {
-        addCompanyPanel.style.display = 'block';
-        addCompanyBtn.style.display = 'none';
-    });
-
-    // Close form
-    cancelBtn.addEventListener('click', () => {
-        addCompanyPanel.style.display = 'none';
-        addCompanyBtn.style.display = 'block';
-        addCompanyForm.reset();
-    });
-
-    // Handle form submission
-    addCompanyForm.addEventListener('submit', (e: Event) => {
-        e.preventDefault();
-        handleAddCompany();
-    });
+    await loadCompanyData();
 }
 
-function handleAddCompany(): void {
-    const form = document.getElementById('add-company-form') as HTMLFormElement;
-    const newCompany: Company = {
-        name: (document.getElementById('company-name') as HTMLInputElement).value,
-        address: (document.getElementById('company-address') as HTMLInputElement).value,
-        website: (document.getElementById('company-website') as HTMLInputElement).value,
-        partitaIVA: (document.getElementById('company-partitaIVA') as HTMLInputElement).value,
-        size: (document.getElementById('company-size') as HTMLInputElement).value,
-        notes: (document.getElementById('company-notes') as HTMLTextAreaElement).value,
+async function loadCompanyData(): Promise<void> {
+    try {
+        const data = await getCompanies();
+        companyData = data;
+        showCompany(companyData);
+    } catch (err) {
+        console.error('Errore nel recupero dati azienda:', err);
+    }
+}
+
+function openEditForm(company: Company): void {
+    // Popola il form di modifica con i dati attuali
+    (document.getElementById('edit-company-name') as HTMLInputElement).value = company.name;
+    (document.getElementById('edit-company-address') as HTMLInputElement).value = company.address;
+    (document.getElementById('edit-company-website') as HTMLInputElement).value = company.website;
+    (document.getElementById('edit-company-partitaIVA') as HTMLInputElement).value = company.partitaIVA;
+    (document.getElementById('edit-company-size') as HTMLInputElement).value = company.size;
+    (document.getElementById('edit-company-notes') as HTMLTextAreaElement).value = company.notes;
+
+    // Mostra il pannello di modifica
+    const panel = document.getElementById('edit-company-panel') as HTMLElement;
+    panel.style.display = 'block';
+    document.body.classList.add('modal-open');
+
+    // Gestisci la chiusura
+    const cancelBtn = document.getElementById('cancel-edit-company') as HTMLButtonElement;
+    const form = document.getElementById('edit-company-form') as HTMLFormElement;
+
+    const closeHandler = () => {
+        panel.style.display = 'none';
+        document.body.classList.remove('modal-open');
+        form.reset();
+        cancelBtn.removeEventListener('click', closeHandler);
+        form.removeEventListener('submit', submitHandler);
     };
 
-    // POST the new company to the backend
-    fetch('/api/companies', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newCompany),
-    })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            // Close panel and reset form
-            const addCompanyPanel = document.getElementById('add-company-panel') as HTMLDivElement;
-            const addCompanyBtn = document.getElementById('add-company-btn') as HTMLButtonElement;
-            addCompanyPanel.style.display = 'none';
-            addCompanyBtn.style.display = 'block';
-            form.reset();
-            // Refresh data
-            return getCompanyData();
-        })
-        .catch(err => console.error('Errore nell\'aggiunta azienda:', err));
-}
+    const submitHandler = async (e: Event) => {
+        e.preventDefault();
+        const updatedCompany: Company = {
+            name: (document.getElementById('edit-company-name') as HTMLInputElement).value,
+            address: (document.getElementById('edit-company-address') as HTMLInputElement).value,
+            website: (document.getElementById('edit-company-website') as HTMLInputElement).value,
+            partitaIVA: (document.getElementById('edit-company-partitaIVA') as HTMLInputElement).value,
+            size: (document.getElementById('edit-company-size') as HTMLInputElement).value,
+            notes: (document.getElementById('edit-company-notes') as HTMLTextAreaElement).value,
+        };
 
-async function getCompanyData(): Promise<void> {
-    const response = await fetch('/api/companies');
-    if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-    }
+        try {
+            // Qui dovresti chiamare l'API per aggiornare l'azienda
+            // Per ora, simula un aggiornamento locale
+            console.log('Aggiornamento azienda:', updatedCompany);
+            await loadCompanyData(); // Ricarica i dati
+            closeHandler();
+        } catch (err) {
+            console.error('Errore nell\'aggiornamento azienda:', err);
+        }
+    };
 
-    const data: CompanyData = await response.json();
-    companyData = data;
-    showCompany(companyData);
+    cancelBtn.addEventListener('click', closeHandler);
+    form.addEventListener('submit', submitHandler);
 }
 
 function showCompany(data: CompanyData) {
@@ -103,15 +106,10 @@ function showCompany(data: CompanyData) {
         const row = createStyledRow();
 
         row.appendChild(createStyledCell(company.name));
-
         row.appendChild(createStyledCell(company.address));
-
         row.appendChild(createStyledCell(company.website));
-
         row.appendChild(createStyledCell(company.partitaIVA));
-
         row.appendChild(createStyledCell(company.size));
-
         row.appendChild(createStyledCell(company.notes));
 
         const deleteButton = document.createElement('button');
@@ -124,7 +122,7 @@ function showCompany(data: CompanyData) {
 
         const editButton = document.createElement('button');
         editButton.addEventListener('click', () => {
-        // apri il popup di modifica con i dati correnti dell'azienda
+            openEditForm(company);
         });
         Object.assign(editButton.style, EDITBUTTON_STYLES);
         editButton.textContent = 'Modifica';
@@ -133,4 +131,5 @@ function showCompany(data: CompanyData) {
         tableBody.appendChild(row);
     });
 }
+
 
