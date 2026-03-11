@@ -1,0 +1,21 @@
+﻿using CrmGruppo5.Data;
+using System.ComponentModel.DataAnnotations;
+
+namespace Crm_Gruppo_5.Dto
+{
+    public class ContactDto
+    {
+        public int ContactId { get; set; }
+        [MinLength(2)]
+        public required string Name { get; set; }
+        [MinLength(2)]
+        public required string Surname { get; set; }
+        public string? Title { get; set; }
+        public string? WorkRole { get; set; }
+        public string? Gender { get; set; }
+        public required DateTime Birthday { get; set; }
+        public required int AddressId { get; set; }
+        public string? Note { get; set; }
+        public required DateTime DateAdded { get; set; }
+    }
+}
