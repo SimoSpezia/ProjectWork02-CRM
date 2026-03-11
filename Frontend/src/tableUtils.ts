@@ -45,6 +45,16 @@ export const DELETEBUTTON_STYLES = {
 
 };
 
+export const EDITBUTTON_STYLES = {
+    backgroundColor: '#3498db',
+    color: '#fff',
+    border: 'none',
+    padding: '0.5rem 1rem',
+    cursor: 'pointer',
+    borderRadius: '4px',
+    transition: 'background-color 0.2s ease'
+};
+
 
 export function applyTableStyles(table: HTMLTableElement): void {
     Object.assign(table.style, TABLE_STYLES.table);

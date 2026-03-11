@@ -1,54 +1,85 @@
-import { applyTableStyles, createStyledCell, createStyledRow, DELETEBUTTON_STYLES } from './tableUtils.js';
-// Inizializza con dati di esempio
-const companyData = [
-    {
-        name: "Acme Corp",
-        address: "Via Roma 123, Milano",
-        website: "www.acmecorp.it",
-        partitaIVA: "12345678901",
-        size: "Grande",
-        notes: "Cliente premium con molti contatti"
-    },
-    {
-        name: "TechSolutions srl",
-        address: "Corso Vittorio 456, Torino",
-        website: "www.techsolutions.it",
-        partitaIVA: "98765432109",
-        size: "Media",
-        notes: "Specializzata in software development"
-    },
-    {
-        name: "GreenEnergy Ltd",
-        address: "Via Garibaldi 789, Bologna",
-        website: "www.greenenergy.eu",
-        partitaIVA: "11223344556",
-        size: "Piccola",
-        notes: "Certificazioni ambientali internazionali"
+import { applyTableStyles, createStyledCell, createStyledRow, DELETEBUTTON_STYLES, EDITBUTTON_STYLES } from './tableUtils.js';
+let companyData = [];
+// Initialize event listeners
+initializeEventListeners();
+getCompanyData().catch(err => console.error('Errore nel recupero dati azienda:', err));
+function initializeEventListeners() {
+    // Open form
+    const addCompanyBtn = document.getElementById('add-company-btn');
+    const addCompanyPanel = document.getElementById('add-company-panel');
+    const cancelBtn = document.getElementById('cancel-add-company');
+    const addCompanyForm = document.getElementById('add-company-form');
+    addCompanyBtn.addEventListener('click', () => {
+        addCompanyPanel.style.display = 'block';
+        addCompanyBtn.style.display = 'none';
+    });
+    // Close form
+    cancelBtn.addEventListener('click', () => {
+        addCompanyPanel.style.display = 'none';
+        addCompanyBtn.style.display = 'block';
+        addCompanyForm.reset();
+    });
+    // Handle form submission
+    addCompanyForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        handleAddCompany();
+    });
+}
+function handleAddCompany() {
+    const form = document.getElementById('add-company-form');
+    const newCompany = {
+        name: document.getElementById('company-name').value,
+        address: document.getElementById('company-address').value,
+        website: document.getElementById('company-website').value,
+        partitaIVA: document.getElementById('company-partitaIVA').value,
+        size: document.getElementById('company-size').value,
+        notes: document.getElementById('company-notes').value,
+    };
+    // POST the new company to the backend
+    fetch('/api/companies', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newCompany),
+    })
+        .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        // Close panel and reset form
+        const addCompanyPanel = document.getElementById('add-company-panel');
+        const addCompanyBtn = document.getElementById('add-company-btn');
+        addCompanyPanel.style.display = 'none';
+        addCompanyBtn.style.display = 'block';
+        form.reset();
+        // Refresh data
+        return getCompanyData();
+    })
+        .catch(err => console.error('Errore nell\'aggiunta azienda:', err));
+}
+async function getCompanyData() {
+    const response = await fetch('/api/companies');
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
     }
-];
-// Chiama la funzione con i dati
-showCompany(companyData);
+    const data = await response.json();
+    companyData = data;
+    showCompany(companyData);
+}
 function showCompany(data) {
     const tableBody = document.getElementById('table-company-body');
     const table = tableBody.closest('table');
     tableBody.innerHTML = '';
     applyTableStyles(table);
-    // Itera sui dati e crea le righe
     data.forEach(company => {
         const row = createStyledRow();
-        // Nome Azienda
         row.appendChild(createStyledCell(company.name));
-        // Indirizzo
         row.appendChild(createStyledCell(company.address));
-        // Sito Web
         row.appendChild(createStyledCell(company.website));
-        // Partita IVA
         row.appendChild(createStyledCell(company.partitaIVA));
-        // Dimensione
         row.appendChild(createStyledCell(company.size));
-        // Note
         row.appendChild(createStyledCell(company.notes));
-        // pulsante per eliminare l'azienda
         const deleteButton = document.createElement('button');
         deleteButton.addEventListener('click', () => {
             tableBody.removeChild(row);
@@ -56,6 +87,13 @@ function showCompany(data) {
         Object.assign(deleteButton.style, DELETEBUTTON_STYLES);
         deleteButton.textContent = 'Elimina';
         row.appendChild(deleteButton);
+        const editButton = document.createElement('button');
+        editButton.addEventListener('click', () => {
+            // apri il popup di modifica con i dati correnti dell'azienda
+        });
+        Object.assign(editButton.style, EDITBUTTON_STYLES);
+        editButton.textContent = 'Modifica';
+        row.appendChild(editButton);
         tableBody.appendChild(row);
     });
 }
