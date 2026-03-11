@@ -9,6 +9,7 @@
         public required string City { get; set; }
         public required string Street { get; set; }
         public required string StreetNumber { get; set; }
+        public required string zip { get; set; }
         public Contact? Contact { get; set; }
         public Company? Company { get; set; }
     }
