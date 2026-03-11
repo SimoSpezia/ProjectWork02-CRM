@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Crm_Gruppo_5")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+108e48c9d5eced196da33a2347caf5d934ea8158")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ec9239a4df82a9e09954fc6e1884cf5ee50525d3")]
 [assembly: System.Reflection.AssemblyProductAttribute("Crm_Gruppo_5")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Crm_Gruppo_5")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
