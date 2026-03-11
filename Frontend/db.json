@@ -3,7 +3,15 @@
     {
       "id": "1",
       "name": "Acme",
-      "address": "Via Roma 1",
+      "address": {
+        "street": "Via Roma",
+        "streetNumber": "10",
+        "city": "Roma",
+        "province": "RM",
+        "region": "Lazio",
+        "zip": "00100",
+        "country": "Italy"
+      },
       "website": "acme.com",
       "partitaIVA": "123",
       "size": "50",
@@ -12,7 +20,15 @@
     {
       "id": "2",
       "name": "TechCorp",
-      "address": "Via Milano 5",
+      "address": {
+        "street": "Corso Milano",
+        "streetNumber": "20",
+        "city": "Milano",
+        "province": "MI",
+        "region": "Lombardia",
+        "zip": "20100",
+        "country": "Italy"
+      },
       "website": "tech.com",
       "partitaIVA": "456",
       "size": "200",
@@ -21,7 +37,15 @@
     {
       "id": "1d6b",
       "name": "prova",
-      "address": "prova",
+      "address": {
+        "street": "prova",
+        "streetNumber": "prova",
+        "city": "prova",
+        "province": "prova",
+        "region": "prova",
+        "zip": "prova",
+        "country": "prova"
+      },
       "website": "http://127.0.0.1:5500/Frontend/azienda.html",
       "partitaIVA": "prova",
       "size": "prova",

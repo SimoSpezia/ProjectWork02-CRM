@@ -17,7 +17,15 @@ async function initialize(): Promise<void> {
         'add-company-form',
         () => ({
             name: (document.getElementById('company-name') as HTMLInputElement).value,
-            address: (document.getElementById('company-address') as HTMLInputElement).value,
+            address:{
+                street: (document.getElementById('company-address-street') as HTMLInputElement).value,
+                streetNumber: (document.getElementById('company-address-streetNumber') as HTMLInputElement).value,
+                city: (document.getElementById('company-address-city') as HTMLInputElement).value,
+                province: (document.getElementById('company-address-province') as HTMLInputElement).value,
+                region: (document.getElementById('company-address-region') as HTMLInputElement).value,
+                zip: (document.getElementById('company-address-zip') as HTMLInputElement).value,
+                country: (document.getElementById('company-address-country') as HTMLInputElement).value,
+            },
             website: (document.getElementById('company-website') as HTMLInputElement).value,
             partitaIVA: (document.getElementById('company-partitaIVA') as HTMLInputElement).value,
             size: (document.getElementById('company-size') as HTMLInputElement).value,
@@ -45,7 +53,15 @@ async function loadCompanyData(): Promise<void> {
 function openEditForm(company: Company): void {
     // Popola il form di modifica con i dati attuali
     (document.getElementById('edit-company-name') as HTMLInputElement).value = company.name;
-    (document.getElementById('edit-company-address') as HTMLInputElement).value = company.address;
+
+    (document.getElementById('edit-company-address-street') as HTMLInputElement).value = company.address.street;
+    (document.getElementById('edit-company-address-streetNumber') as HTMLInputElement).value = company.address.streetNumber;
+    (document.getElementById('edit-company-address-city') as HTMLInputElement).value = company.address.city;
+    (document.getElementById('edit-company-address-province') as HTMLInputElement).value = company.address.province;
+    (document.getElementById('edit-company-address-region') as HTMLInputElement).value = company.address.region;
+    (document.getElementById('edit-company-address-zip') as HTMLInputElement).value = company.address.zip;
+    (document.getElementById('edit-company-address-country') as HTMLInputElement).value = company.address.country;
+
     (document.getElementById('edit-company-website') as HTMLInputElement).value = company.website;
     (document.getElementById('edit-company-partitaIVA') as HTMLInputElement).value = company.partitaIVA;
     (document.getElementById('edit-company-size') as HTMLInputElement).value = company.size;
@@ -72,7 +88,15 @@ function openEditForm(company: Company): void {
         e.preventDefault();
         const updatedCompany: Company = {
             name: (document.getElementById('edit-company-name') as HTMLInputElement).value,
-            address: (document.getElementById('edit-company-address') as HTMLInputElement).value,
+            address: {
+                street: (document.getElementById('edit-company-address-street') as HTMLInputElement).value,
+                streetNumber: (document.getElementById('edit-company-address-streetNumber') as HTMLInputElement).value,
+                city: (document.getElementById('edit-company-address-city') as HTMLInputElement).value,
+                province: (document.getElementById('edit-company-address-province') as HTMLInputElement).value,
+                region: (document.getElementById('edit-company-address-region') as HTMLInputElement).value,
+                zip: (document.getElementById('edit-company-address-zip') as HTMLInputElement).value,
+                country: (document.getElementById('edit-company-address-country') as HTMLInputElement).value,
+            },
             website: (document.getElementById('edit-company-website') as HTMLInputElement).value,
             partitaIVA: (document.getElementById('edit-company-partitaIVA') as HTMLInputElement).value,
             size: (document.getElementById('edit-company-size') as HTMLInputElement).value,
@@ -106,7 +130,14 @@ function showCompany(data: CompanyData) {
         const row = createStyledRow();
 
         row.appendChild(createStyledCell(company.name));
-        row.appendChild(createStyledCell(company.address));
+        row.appendChild(createStyledCell(company.address.street + ' ' 
+            + company.address.streetNumber 
+            + ', ' 
+            + company.address.city 
+            + ' (' + company.address.province + '), ' 
+            + company.address.region 
+            + ' - ' + company.address.zip 
+            + ', ' + company.address.country));
         row.appendChild(createStyledCell(company.website));
         row.appendChild(createStyledCell(company.partitaIVA));
         row.appendChild(createStyledCell(company.size));

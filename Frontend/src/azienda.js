@@ -6,7 +6,15 @@ initialize();
 async function initialize() {
     setupAddEntityForm('add-company-btn', 'add-company-panel', 'cancel-add-company', 'add-company-form', () => ({
         name: document.getElementById('company-name').value,
-        address: document.getElementById('company-address').value,
+        address: {
+            street: document.getElementById('company-address-street').value,
+            streetNumber: document.getElementById('company-address-streetNumber').value,
+            city: document.getElementById('company-address-city').value,
+            province: document.getElementById('company-address-province').value,
+            region: document.getElementById('company-address-region').value,
+            zip: document.getElementById('company-address-zip').value,
+            country: document.getElementById('company-address-country').value,
+        },
         website: document.getElementById('company-website').value,
         partitaIVA: document.getElementById('company-partitaIVA').value,
         size: document.getElementById('company-size').value,
@@ -30,7 +38,13 @@ async function loadCompanyData() {
 function openEditForm(company) {
     // Popola il form di modifica con i dati attuali
     document.getElementById('edit-company-name').value = company.name;
-    document.getElementById('edit-company-address').value = company.address;
+    document.getElementById('edit-company-address-street').value = company.address.street;
+    document.getElementById('edit-company-address-streetNumber').value = company.address.streetNumber;
+    document.getElementById('edit-company-address-city').value = company.address.city;
+    document.getElementById('edit-company-address-province').value = company.address.province;
+    document.getElementById('edit-company-address-region').value = company.address.region;
+    document.getElementById('edit-company-address-zip').value = company.address.zip;
+    document.getElementById('edit-company-address-country').value = company.address.country;
     document.getElementById('edit-company-website').value = company.website;
     document.getElementById('edit-company-partitaIVA').value = company.partitaIVA;
     document.getElementById('edit-company-size').value = company.size;
@@ -53,7 +67,15 @@ function openEditForm(company) {
         e.preventDefault();
         const updatedCompany = {
             name: document.getElementById('edit-company-name').value,
-            address: document.getElementById('edit-company-address').value,
+            address: {
+                street: document.getElementById('edit-company-address-street').value,
+                streetNumber: document.getElementById('edit-company-address-streetNumber').value,
+                city: document.getElementById('edit-company-address-city').value,
+                province: document.getElementById('edit-company-address-province').value,
+                region: document.getElementById('edit-company-address-region').value,
+                zip: document.getElementById('edit-company-address-zip').value,
+                country: document.getElementById('edit-company-address-country').value,
+            },
             website: document.getElementById('edit-company-website').value,
             partitaIVA: document.getElementById('edit-company-partitaIVA').value,
             size: document.getElementById('edit-company-size').value,
@@ -81,7 +103,14 @@ function showCompany(data) {
     data.forEach(company => {
         const row = createStyledRow();
         row.appendChild(createStyledCell(company.name));
-        row.appendChild(createStyledCell(company.address));
+        row.appendChild(createStyledCell(company.address.street + ' '
+            + company.address.streetNumber
+            + ', '
+            + company.address.city
+            + ' (' + company.address.province + '), '
+            + company.address.region
+            + ' - ' + company.address.zip
+            + ', ' + company.address.country));
         row.appendChild(createStyledCell(company.website));
         row.appendChild(createStyledCell(company.partitaIVA));
         row.appendChild(createStyledCell(company.size));

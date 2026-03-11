@@ -1,7 +1,16 @@
-// --- Types ---
+export interface Address {
+    street: string;
+    streetNumber: string;
+    city: string;
+    province: string;
+    region: string;
+    zip: string;
+    country: string;
+}
+
 export interface Company {
     name: string;
-    address: string;
+    address: Address;
     website: string;
     partitaIVA: string;
     size: string;
