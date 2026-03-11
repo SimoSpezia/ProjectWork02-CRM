@@ -16,5 +16,6 @@ namespace Crm_Gruppo_5.Dto
         public required string Street { get; set; }
         [MinLength(1)]
         public required string StreetNumber { get; set; }
+
     }
 }
