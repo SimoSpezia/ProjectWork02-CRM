@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\SpezialeSimone\\source\\repos\\CRM5\\Backend\\Crm_Gruppo_5\\Crm_Gruppo_5.csproj": {}
+    "C:\\Users\\LeonardoCaldarola\\source\\repos\\CRM5\\Backend\\Crm_Gruppo_5\\Crm_Gruppo_5.csproj": {}
   },
   "projects": {
-    "C:\\Users\\SpezialeSimone\\source\\repos\\CRM5\\Backend\\Crm_Gruppo_5\\Crm_Gruppo_5.csproj": {
+    "C:\\Users\\LeonardoCaldarola\\source\\repos\\CRM5\\Backend\\Crm_Gruppo_5\\Crm_Gruppo_5.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\SpezialeSimone\\source\\repos\\CRM5\\Backend\\Crm_Gruppo_5\\Crm_Gruppo_5.csproj",
+        "projectUniqueName": "C:\\Users\\LeonardoCaldarola\\source\\repos\\CRM5\\Backend\\Crm_Gruppo_5\\Crm_Gruppo_5.csproj",
         "projectName": "Crm_Gruppo_5",
-        "projectPath": "C:\\Users\\SpezialeSimone\\source\\repos\\CRM5\\Backend\\Crm_Gruppo_5\\Crm_Gruppo_5.csproj",
-        "packagesPath": "C:\\Users\\SpezialeSimone\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\SpezialeSimone\\source\\repos\\CRM5\\Backend\\Crm_Gruppo_5\\obj\\",
+        "projectPath": "C:\\Users\\LeonardoCaldarola\\source\\repos\\CRM5\\Backend\\Crm_Gruppo_5\\Crm_Gruppo_5.csproj",
+        "packagesPath": "C:\\Users\\LeonardoCaldarola\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\LeonardoCaldarola\\source\\repos\\CRM5\\Backend\\Crm_Gruppo_5\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\SpezialeSimone\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\LeonardoCaldarola\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -44,7 +44,7 @@
           "auditLevel": "low",
           "auditMode": "all"
         },
-        "SdkAnalysisLevel": "10.0.200"
+        "SdkAnalysisLevel": "10.0.100"
       },
       "frameworks": {
         "net10.0": {
@@ -88,7 +88,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.200-preview.0.26103.119/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.102/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.AspNetCore": "(,10.0.32767]",
             "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",
