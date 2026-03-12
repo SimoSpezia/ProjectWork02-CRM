@@ -2,250 +2,474 @@
    PAGINA AZIENDE - STILI SPECIFICI
    ======================================== */
 
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+/* ========================================
+   LAYOUT PAGINA
+   ======================================== */
+
 .page-container {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    min-height: calc(100vh - 60px);
-    padding: 2rem 1rem;
+    min-height: calc(100vh - 64px);
+    padding: 2.5rem 1.5rem;
+    font-family: 'DM Sans', sans-serif;
 }
 
-/* Content section - limita la larghezza della tabella */
 .content-section {
     width: 100%;
-    max-width: 1200px;
+    max-width: 1300px;
     background-color: var(--surface);
-    border-radius: 8px;
-    box-shadow: var(--shadow);
-    overflow-x: auto;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(30,58,95,0.08);
+    overflow: hidden;
 }
 
-/* Stili della tabella */
-.table-company {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.95rem;
-    table-layout: fixed;
+/* ========================================
+   TOOLBAR CON PULSANTE
+   ======================================== */
+
+.toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.75rem;
+    border-bottom: 1px solid var(--border);
+    background-color: #fafbfc;
 }
 
-/* Header della tabella */
-.table-company thead {
+/* ========================================
+   BOTTONE AGGIUNGI AZIENDA
+   ======================================== */
+
+.add-company-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 1.25rem 1.75rem;
+    padding: 0.65rem 1.4rem;
     background-color: var(--primary-dark);
     color: white;
-}
-
-.table-company thead th {
-    padding: 1.25rem 1.5rem;
-    text-align: left;
-    font-weight: 600;
-    border-bottom: 2px solid var(--primary-medium);
-    word-break: break-word;
-    overflow-wrap: break-word;
-    min-height: 4.5rem;
-    height: 4.5rem;
-    display: table-cell;
-    vertical-align: middle;
-}
-
-/* Righe della tabella */
-.table-company tbody tr {
-    border-bottom: 1px solid var(--border);
-    transition: background-color 0.2s ease;
-    height: 4.5rem;
-}
-
-.table-company tbody tr:hover {
-    background-color: #f5f7fa;
-}
-
-.table-company tbody td {
-    padding: 1.25rem 1.5rem;
-    color: var(--text-dark);
-    word-break: break-word;
-    overflow-wrap: break-word;
-    vertical-align: middle;
-    min-height: 4.5rem;
-    display: table-cell;
-}
-
-/* Larghezze proporzionate delle colonne */
-.table-company th:nth-child(1),
-.table-company td:nth-child(1) {
-    width: 15%;
-}
-
-.table-company th:nth-child(2),
-.table-company td:nth-child(2) {
-    width: 20%;
-}
-
-.table-company th:nth-child(3),
-.table-company td:nth-child(3) {
-    width: 15%;
-}
-
-.table-company th:nth-child(4),
-.table-company td:nth-child(4) {
-    width: 12%;
-}
-
-.table-company th:nth-child(5),
-.table-company td:nth-child(5) {
-    width: 10%;
-}
-
-.table-company th:nth-child(6),
-.table-company td:nth-child(6) {
-    width: 18%;
-}
-
-.table-company th:nth-child(7),
-.table-company td:nth-child(7) {
-    width: 10%;
-}
-
-/* Add Company Button */
-.add-company-btn {
-    margin: 1rem;
-    padding: 0.75rem 1.5rem;
-    background-color: var(--primary-medium);
-    color: white;
     border: none;
-    border-radius: 4px;
-    font-size: 1rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
     font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    letter-spacing: 0.01em;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.18s ease, transform 0.1s ease, box-shadow 0.18s ease;
+    box-shadow: 0 2px 6px rgba(30,58,95,0.18);
+}
+
+.add-company-btn::before {
+    content: '+';
+    font-size: 1.2rem;
+    line-height: 1;
+    font-weight: 400;
 }
 
 .add-company-btn:hover {
-    background-color: var(--primary-dark);
+    background-color: var(--primary-medium);
+    box-shadow: 0 4px 12px rgba(30,58,95,0.25);
+    transform: translateY(-1px);
 }
 
-/* Add Company Panel (Modal) */
+.add-company-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 4px rgba(30,58,95,0.15);
+}
+
+/* ========================================
+   TABELLA
+   ======================================== */
+
+.table-company {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    font-family: 'DM Sans', sans-serif;
+    table-layout: fixed;
+}
+
+/* Header */
+.table-company thead {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-medium) 100%);
+}
+
+.table-company thead th {
+    padding: 0.65rem 1rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.8rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.9);
+    border-bottom: none;
+    vertical-align: middle;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Corpo tabella */
+.table-company tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background-color 0.15s ease;
+    height: 3.5rem;
+}
+
+.table-company tbody tr:last-child {
+    border-bottom: none;
+}
+
+.table-company tbody tr:hover {
+    background-color: #f0f5fb;
+}
+
+.table-company tbody td {
+    padding: 0.5rem 1rem;
+    color: var(--text-dark);
+    vertical-align: middle;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 0;
+}
+
+/* Colonna Note: cella normale, scroll gestito dal div interno */
+.table-company td:nth-child(6) {
+    padding: 0.4rem 0.75rem;
+    vertical-align: middle;
+    overflow: visible;
+    white-space: normal;
+}
+
+.note-cell {
+    height: 2.6rem;
+    overflow-y: auto;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    line-height: 1.5;
+    font-size: 0.76rem;
+    color: var(--text-light);
+}
+
+/* Scrollbar note */
+.note-cell::-webkit-scrollbar {
+    width: 4px;
+}
+.note-cell::-webkit-scrollbar-track {
+    background: transparent;
+}
+.note-cell::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+}
+
+/* Colonna Partita IVA: monospace */
+.table-company td:nth-child(4) {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--text-light);
+}
+
+/* Larghezze colonne */
+.table-company th:nth-child(1),
+.table-company td:nth-child(1) { width: 13%; }
+.table-company th:nth-child(2),
+.table-company td:nth-child(2) { width: 18%; }
+.table-company th:nth-child(3),
+.table-company td:nth-child(3) { width: 13%; }
+.table-company th:nth-child(4),
+.table-company td:nth-child(4) { width: 10%; }
+.table-company th:nth-child(5),
+.table-company td:nth-child(5) { width: 9%; }
+.table-company th:nth-child(6),
+.table-company td:nth-child(6) { width: 22%; }
+.table-company th:nth-child(7),
+.table-company td:nth-child(7) { width: 15%; }
+
+/* Colonna azioni */
+.table-company th:nth-child(7) {
+    text-align: left;
+    padding-left: 0.75rem;
+}
+.table-company td:nth-child(7) {
+    display: table-cell;
+    text-align: left;
+    padding-left: 0.75rem;
+    vertical-align: middle;
+}
+
+/* Zebra stripes sottili */
+.table-company tbody tr:nth-child(even) {
+    background-color: #f8fafc;
+}
+
+.table-company tbody tr:nth-child(even):hover {
+    background-color: #f0f5fb;
+}
+
+/* ========================================
+   PANNELLI (ADD / EDIT) - MODAL
+   ======================================== */
+
 .add-company-panel {
     display: none;
     position: fixed;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%) scale(0.97);
     background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-    padding: 2rem;
+    border-radius: 14px;
+    box-shadow:
+        0 4px 6px rgba(0,0,0,0.04),
+        0 12px 40px rgba(30,58,95,0.18),
+        0 0 0 1px rgba(30,58,95,0.06);
+    padding: 2.5rem;
     z-index: 1000;
-    max-width: 500px;
     width: 90%;
-    max-height: 90vh;
+    max-width: 640px;
+    max-height: 88vh;
     overflow-y: auto;
+    font-family: 'DM Sans', sans-serif;
+    opacity: 0;
+    transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.18s ease;
 }
 
+.add-company-panel.visible {
+    display: block;
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+/* Scrollbar pannello */
+.add-company-panel::-webkit-scrollbar {
+    width: 5px;
+}
+.add-company-panel::-webkit-scrollbar-track {
+    background: transparent;
+}
+.add-company-panel::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 10px;
+}
+
+/* Titolo pannello */
 .add-company-panel h2 {
-    margin-top: 0;
+    margin: 0 0 1.75rem 0;
     color: var(--primary-dark);
-    margin-bottom: 1.5rem;
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--border);
 }
 
+/* Form layout */
 .add-company-panel form {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem 1.25rem;
 }
 
+/* Campi che occupano tutta la larghezza */
+.add-company-panel form > label:first-of-type,
+.add-company-panel form > input:first-of-type,
+#edit-company-address-form,
+.add-company-panel label[for="company-notes"],
+.add-company-panel label[for="edit-company-notes"],
+.add-company-panel textarea,
+.add-company-panel .form-buttons {
+    grid-column: 1 / -1;
+}
+
+/* Sezione indirizzo */
+#edit-company-address-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem 1.25rem;
+    padding: 1.25rem;
+    background-color: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    margin-top: 0.25rem;
+}
+
+#edit-company-address-form label {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 0;
+}
+
+/* Label generiche */
 .add-company-panel label {
     font-weight: 600;
-    color: var(--text-dark);
-    margin-bottom: 0.25rem;
+    font-size: 0.82rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-light);
+    margin-bottom: -0.25rem;
+    align-self: end;
 }
 
+/* Input e textarea */
 .add-company-panel input,
 .add-company-panel textarea {
-    padding: 0.75rem;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    font-size: 1rem;
-    font-family: inherit;
+    padding: 0.65rem 0.9rem;
+    border: 1.5px solid var(--border);
+    border-radius: 7px;
+    font-size: 0.92rem;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text-dark);
+    background-color: #fafbfc;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.add-company-panel input:hover,
+.add-company-panel textarea:hover {
+    border-color: var(--primary-light);
+    background-color: #fff;
 }
 
 .add-company-panel input:focus,
 .add-company-panel textarea:focus {
     outline: none;
-    border-color: var(--primary-medium);
-    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    border-color: var(--accent);
+    background-color: #fff;
+    box-shadow: 0 0 0 3px rgba(13,160,252,0.12);
+}
+
+.add-company-panel input::placeholder,
+.add-company-panel textarea::placeholder {
+    color: #bcc5ce;
 }
 
 .add-company-panel textarea {
     resize: vertical;
-    min-height: 100px;
+    min-height: 90px;
+    grid-column: 1 / -1;
 }
 
+/* Bottoni form */
 .form-buttons {
     display: flex;
-    gap: 1rem;
-    margin-top: 1rem;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
 }
 
 .form-buttons button {
     flex: 1;
-    padding: 0.75rem 1.5rem;
+    padding: 0.7rem 1.25rem;
     border: none;
-    border-radius: 4px;
-    font-size: 1rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
     font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
 }
 
 .form-buttons button[type="submit"] {
-    background-color: var(--primary-medium);
+    background-color: var(--primary-dark);
     color: white;
+    box-shadow: 0 2px 6px rgba(30,58,95,0.2);
 }
 
 .form-buttons button[type="submit"]:hover {
-    background-color: var(--primary-dark);
+    background-color: var(--primary-medium);
+    box-shadow: 0 4px 12px rgba(30,58,95,0.28);
+    transform: translateY(-1px);
+}
+
+.form-buttons button[type="submit"]:active {
+    transform: translateY(0);
 }
 
 .form-buttons button[type="button"] {
-    background-color: var(--border);
-    color: var(--text-dark);
+    background-color: transparent;
+    color: var(--text-light);
+    border: 1.5px solid var(--border);
 }
 
 .form-buttons button[type="button"]:hover {
-    background-color: #d0d0d0;
+    background-color: #f0f2f5;
+    color: var(--text-dark);
+    border-color: #c8d0da;
 }
 
-/* Overlay backdrop */
+/* ========================================
+   OVERLAY BACKDROP
+   ======================================== */
+
 body.modal-open::before {
     content: '';
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
+    inset: 0;
+    background-color: rgba(15, 25, 40, 0.45);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
     z-index: 999;
+    animation: fadeInOverlay 0.2s ease;
 }
 
-/* Responsive - per schermi piccoli */
+@keyframes fadeInOverlay {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* ========================================
+   RESPONSIVE MOBILE
+   ======================================== */
+
 @media (max-width: 768px) {
+    .page-container {
+        padding: 1rem 0.75rem;
+    }
+
     .content-section {
-        max-width: 95%;
-        margin: 0 auto;
+        border-radius: 8px;
+        overflow-x: auto;
     }
 
-    .table-company thead th {
-        padding: 0.75rem 0.5rem;
+    .add-company-btn {
+        margin: 1rem;
         font-size: 0.85rem;
     }
 
+    .table-company thead th,
     .table-company tbody td {
-        padding: 0.75rem 0.5rem;
-        font-size: 0.85rem;
+        padding: 0.75rem 0.75rem;
+        font-size: 0.82rem;
     }
 
     .add-company-panel {
         width: 95%;
-        padding: 1.5rem;
+        max-width: none;
+        padding: 1.75rem 1.25rem;
+        max-height: 92vh;
+        border-radius: 12px;
+    }
+
+    .add-company-panel form,
+    #edit-company-address-form {
+        grid-template-columns: 1fr;
+    }
+
+    .add-company-panel form > * {
+        grid-column: 1 / -1;
+    }
+
+    .form-buttons {
+        flex-direction: column;
     }
 }
