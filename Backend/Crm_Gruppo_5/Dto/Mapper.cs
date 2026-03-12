@@ -24,7 +24,7 @@ namespace Crm_Gruppo_5.Dto
         }
 
         // CORRETTO: Il tipo di ritorno ora è CompanySimpleDto (prima era CompanyDto e dava errore)
-        public CompanySimpleDto MapEntitytoSingleDto(Company entity)
+        public CompanySimpleDto MapEntitytoSimpleDto(Company entity)
         {
             CompanySimpleDto simpledto = new CompanySimpleDto
             {
