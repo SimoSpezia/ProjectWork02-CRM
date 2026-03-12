@@ -9,8 +9,6 @@ namespace Crm_Gruppo_5.Dto
 
         public CompanyDto MapBaseEntitytoDto(Company entity)
         {
-            if (entity == null) return null;
-
             CompanyDto dto = new CompanyDto
             {
                 CompanyId = entity.CompanyId,
@@ -37,6 +35,22 @@ namespace Crm_Gruppo_5.Dto
                 Address = entity.Address != null ? MapBaseEntityToDto(entity.Address) : null
             };
             return simpledto;
+        }
+
+        public Contact MapDtoToEntity(ContactDto dto)
+        {
+            Contact entity = new Contact
+            {
+                Name = dto.Name,
+                Surname = dto.Surname,
+                Title = dto.Title,
+                WorkRole = dto.WorkRole,
+                Gender = dto.Gender,
+                Birthday = dto.Birthday,
+                Note = dto.Note,
+                DateAdded = dto.DateAdded
+            };
+            return entity;
         }
 
         public Address MapDtoToEntity(AddressDto dto)
@@ -91,7 +105,6 @@ namespace Crm_Gruppo_5.Dto
 
         public ContactDto MapBaseEntitytoDto(Contact entity)
         {
-            if (entity == null) return null;
             ContactDto dto = new ContactDto
             {
                 ContactId = entity.ContactId,
