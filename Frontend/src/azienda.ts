@@ -1,12 +1,10 @@
-import { applyTableStyles, createStyledCell, createStyledRow, TABLE_STYLES, DELETEBUTTON_STYLES, EDITBUTTON_STYLES } from './tableUtils.js';
-import { Company, getCompanies, addCompany, setupAddEntityForm } from './common.js';
+import { applyTableStyles, createStyledCell, createStyledRow, DELETEBUTTON_STYLES, EDITBUTTON_STYLES, createStyledWebsiteCell } from './tableUtils.js';
+import { Company, getCompanies, addCompany, deleteCompany, setupAddEntityForm, } from './common.js';
 
-// consolidated type for a list of companies
 type CompanyData = Company[];
 
 let companyData: CompanyData = [];
 
-// bootstrap the page behaviour       
 initialize();
 
 async function initialize(): Promise<void> {
@@ -17,7 +15,15 @@ async function initialize(): Promise<void> {
         'add-company-form',
         () => ({
             name: (document.getElementById('company-name') as HTMLInputElement).value,
-            address: (document.getElementById('company-address') as HTMLInputElement).value,
+            address: {
+                street: (document.getElementById('company-address-street') as HTMLInputElement).value,
+                streetNumber: (document.getElementById('company-address-streetNumber') as HTMLInputElement).value,
+                city: (document.getElementById('company-address-city') as HTMLInputElement).value,
+                province: (document.getElementById('company-address-province') as HTMLInputElement).value,
+                region: (document.getElementById('company-address-region') as HTMLInputElement).value,
+                zip: (document.getElementById('company-address-zip') as HTMLInputElement).value,
+                country: (document.getElementById('company-address-country') as HTMLInputElement).value,
+            },
             website: (document.getElementById('company-website') as HTMLInputElement).value,
             partitaIVA: (document.getElementById('company-partitaIVA') as HTMLInputElement).value,
             size: (document.getElementById('company-size') as HTMLInputElement).value,
@@ -42,94 +48,144 @@ async function loadCompanyData(): Promise<void> {
     }
 }
 
-function openEditForm(company: Company): void {
-    // Popola il form di modifica con i dati attuali
-    (document.getElementById('edit-company-name') as HTMLInputElement).value = company.name;
-    (document.getElementById('edit-company-address') as HTMLInputElement).value = company.address;
-    (document.getElementById('edit-company-website') as HTMLInputElement).value = company.website;
-    (document.getElementById('edit-company-partitaIVA') as HTMLInputElement).value = company.partitaIVA;
-    (document.getElementById('edit-company-size') as HTMLInputElement).value = company.size;
-    (document.getElementById('edit-company-notes') as HTMLTextAreaElement).value = company.notes;
+function getField<T extends HTMLElement>(id: string): T {
+    return document.getElementById(id) as T;
+}
 
-    // Mostra il pannello di modifica
-    const panel = document.getElementById('edit-company-panel') as HTMLElement;
+function readAddress(prefix: string): Company['address'] {
+    return {
+        street: getField<HTMLInputElement>(`${prefix}-street`).value,
+        streetNumber: getField<HTMLInputElement>(`${prefix}-streetNumber`).value,
+        city: getField<HTMLInputElement>(`${prefix}-city`).value,
+        province: getField<HTMLInputElement>(`${prefix}-province`).value,
+        region: getField<HTMLInputElement>(`${prefix}-region`).value,
+        zip: getField<HTMLInputElement>(`${prefix}-zip`).value,
+        country: getField<HTMLInputElement>(`${prefix}-country`).value,
+    };
+}
+
+function openEditForm(company: Company): void {
+    const panel = getField<HTMLElement>('edit-company-panel');
+    const form = getField<HTMLFormElement>('edit-company-form');
+    const cancelBtn = getField<HTMLButtonElement>('cancel-edit-company');
+    const addBtn = getField<HTMLElement>('add-company-btn');
+
+    // Popola il form con i dati dell'azienda selezionata
+    getField<HTMLInputElement>('edit-company-name').value = company.name;
+    getField<HTMLInputElement>('edit-company-address-street').value = company.address.street;
+    getField<HTMLInputElement>('edit-company-address-streetNumber').value = company.address.streetNumber;
+    getField<HTMLInputElement>('edit-company-address-city').value = company.address.city;
+    getField<HTMLInputElement>('edit-company-address-province').value = company.address.province;
+    getField<HTMLInputElement>('edit-company-address-region').value = company.address.region;
+    getField<HTMLInputElement>('edit-company-address-zip').value = company.address.zip;
+    getField<HTMLInputElement>('edit-company-address-country').value = company.address.country;
+    getField<HTMLInputElement>('edit-company-website').value = company.website;
+    getField<HTMLInputElement>('edit-company-partitaIVA').value = company.partitaIVA;
+    getField<HTMLInputElement>('edit-company-size').value = company.size;
+    getField<HTMLTextAreaElement>('edit-company-notes').value = company.notes;
+
+    // Mostra il pannello con animazione CSS
     panel.style.display = 'block';
+    void panel.offsetHeight;
+    panel.classList.add('visible');
     document.body.classList.add('modal-open');
 
-    // Gestisci la chiusura
-    const cancelBtn = document.getElementById('cancel-edit-company') as HTMLButtonElement;
-    const form = document.getElementById('edit-company-form') as HTMLFormElement;
-
-    const closeHandler = () => {
-        panel.style.display = 'none';
+    const closePanel = () => {
+        panel.classList.remove('visible');
+        panel.addEventListener('transitionend', () => {
+            panel.style.display = 'none';
+        }, { once: true });
         document.body.classList.remove('modal-open');
         form.reset();
-        cancelBtn.removeEventListener('click', closeHandler);
+        cancelBtn.removeEventListener('click', closePanel);
         form.removeEventListener('submit', submitHandler);
     };
 
     const submitHandler = async (e: Event) => {
         e.preventDefault();
+
         const updatedCompany: Company = {
-            name: (document.getElementById('edit-company-name') as HTMLInputElement).value,
-            address: (document.getElementById('edit-company-address') as HTMLInputElement).value,
-            website: (document.getElementById('edit-company-website') as HTMLInputElement).value,
-            partitaIVA: (document.getElementById('edit-company-partitaIVA') as HTMLInputElement).value,
-            size: (document.getElementById('edit-company-size') as HTMLInputElement).value,
-            notes: (document.getElementById('edit-company-notes') as HTMLTextAreaElement).value,
+            id: company.id,
+            name: getField<HTMLInputElement>('edit-company-name').value,
+            address: readAddress('edit-company-address'),
+            website: getField<HTMLInputElement>('edit-company-website').value,
+            partitaIVA: getField<HTMLInputElement>('edit-company-partitaIVA').value,
+            size: getField<HTMLInputElement>('edit-company-size').value,
+            notes: getField<HTMLTextAreaElement>('edit-company-notes').value,
         };
 
         try {
-            // Qui dovresti chiamare l'API per aggiornare l'azienda
-            // Per ora, simula un aggiornamento locale
+            // TODO: chiamare API PUT/PATCH quando disponibile
             console.log('Aggiornamento azienda:', updatedCompany);
-            await loadCompanyData(); // Ricarica i dati
-            closeHandler();
+            await loadCompanyData();
+            closePanel();
         } catch (err) {
-            console.error('Errore nell\'aggiornamento azienda:', err);
+            console.error('Errore aggiornamento azienda:', err);
         }
     };
 
-    cancelBtn.addEventListener('click', closeHandler);
+    cancelBtn.addEventListener('click', closePanel);
     form.addEventListener('submit', submitHandler);
 }
 
-function showCompany(data: CompanyData) {
+function showCompany(data: CompanyData): void {
     const tableBody = document.getElementById('table-company-body') as HTMLTableSectionElement;
     const table = tableBody.closest('table') as HTMLTableElement;
 
     tableBody.innerHTML = '';
-
     applyTableStyles(table);
 
     data.forEach(company => {
         const row = createStyledRow();
 
+        const fullAddress = [
+            company.address.street,
+            company.address.streetNumber,
+            company.address.city ? `– ${company.address.city} (${company.address.province})` : '',
+            company.address.zip,
+            company.address.country,
+        ].filter(Boolean).join(' ');
+
         row.appendChild(createStyledCell(company.name));
-        row.appendChild(createStyledCell(company.address));
-        row.appendChild(createStyledCell(company.website));
+        row.appendChild(createStyledCell(fullAddress));
+        row.appendChild(createStyledWebsiteCell(company.website));
         row.appendChild(createStyledCell(company.partitaIVA));
         row.appendChild(createStyledCell(company.size));
-        row.appendChild(createStyledCell(company.notes));
 
-        const deleteButton = document.createElement('button');
-        deleteButton.addEventListener('click', () => {
-            tableBody.removeChild(row);
-        });
-        Object.assign(deleteButton.style, DELETEBUTTON_STYLES);
-        deleteButton.textContent = 'Elimina';
-        row.appendChild(deleteButton);
+        const notesCell = document.createElement('td');
+        const notesDiv = document.createElement('div');
+        notesDiv.className = 'note-cell';
+        notesDiv.textContent = company.notes;
+        notesCell.appendChild(notesDiv);
+        row.appendChild(notesCell);
+
+        const actionsCell = document.createElement('td');
+        actionsCell.style.verticalAlign = 'middle';
+        actionsCell.style.whiteSpace = 'nowrap';
+        actionsCell.style.padding = '0.5rem 0.75rem';
 
         const editButton = document.createElement('button');
-        editButton.addEventListener('click', () => {
-            openEditForm(company);
-        });
-        Object.assign(editButton.style, EDITBUTTON_STYLES);
         editButton.textContent = 'Modifica';
-        row.appendChild(editButton);
+        Object.assign(editButton.style, EDITBUTTON_STYLES);
+        editButton.style.marginRight = '0.4rem';
+        editButton.addEventListener('click', () => openEditForm(company));
+
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Elimina';
+        Object.assign(deleteButton.style, DELETEBUTTON_STYLES);
+        deleteButton.addEventListener('click', async () => {
+            try {
+                await deleteCompany(company.id);
+                await loadCompanyData();
+            } catch (err) {
+                console.error('Errore eliminazione azienda:', err);
+            }
+        });
+
+        actionsCell.appendChild(editButton);
+        actionsCell.appendChild(deleteButton);
+        row.appendChild(actionsCell);
 
         tableBody.appendChild(row);
     });
 }
-
-

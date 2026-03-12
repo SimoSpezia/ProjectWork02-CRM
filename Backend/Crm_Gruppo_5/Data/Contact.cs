@@ -9,7 +9,6 @@
         public string? WorkRole { get; set; }
         public string? Gender { get; set; }
         public required DateTime Birthday { get; set; }
-        public required int AddressId { get; set; }
         public required Address Address { get; set; }
         public Company? Company { get; set; } = null;
         public string? Note { get; set; }

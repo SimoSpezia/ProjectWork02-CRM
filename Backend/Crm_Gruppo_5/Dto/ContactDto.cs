@@ -14,7 +14,6 @@ namespace Crm_Gruppo_5.Dto
         public string? WorkRole { get; set; }
         public string? Gender { get; set; }
         public required DateTime Birthday { get; set; }
-        public required int AddressId { get; set; }
         public string? Note { get; set; }
         public required DateTime DateAdded { get; set; }
     }

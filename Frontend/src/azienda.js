@@ -1,12 +1,19 @@
-import { applyTableStyles, createStyledCell, createStyledRow, DELETEBUTTON_STYLES, EDITBUTTON_STYLES } from './tableUtils.js';
-import { getCompanies, addCompany, setupAddEntityForm } from './common.js';
+import { applyTableStyles, createStyledCell, createStyledRow, DELETEBUTTON_STYLES, EDITBUTTON_STYLES, createStyledWebsiteCell } from './tableUtils.js';
+import { getCompanies, addCompany, deleteCompany, setupAddEntityForm, } from './common.js';
 let companyData = [];
-// bootstrap the page behaviour       
 initialize();
 async function initialize() {
     setupAddEntityForm('add-company-btn', 'add-company-panel', 'cancel-add-company', 'add-company-form', () => ({
         name: document.getElementById('company-name').value,
-        address: document.getElementById('company-address').value,
+        address: {
+            street: document.getElementById('company-address-street').value,
+            streetNumber: document.getElementById('company-address-streetNumber').value,
+            city: document.getElementById('company-address-city').value,
+            province: document.getElementById('company-address-province').value,
+            region: document.getElementById('company-address-region').value,
+            zip: document.getElementById('company-address-zip').value,
+            country: document.getElementById('company-address-country').value,
+        },
         website: document.getElementById('company-website').value,
         partitaIVA: document.getElementById('company-partitaIVA').value,
         size: document.getElementById('company-size').value,
@@ -27,50 +34,75 @@ async function loadCompanyData() {
         console.error('Errore nel recupero dati azienda:', err);
     }
 }
+function getField(id) {
+    return document.getElementById(id);
+}
+function readAddress(prefix) {
+    return {
+        street: getField(`${prefix}-street`).value,
+        streetNumber: getField(`${prefix}-streetNumber`).value,
+        city: getField(`${prefix}-city`).value,
+        province: getField(`${prefix}-province`).value,
+        region: getField(`${prefix}-region`).value,
+        zip: getField(`${prefix}-zip`).value,
+        country: getField(`${prefix}-country`).value,
+    };
+}
 function openEditForm(company) {
-    // Popola il form di modifica con i dati attuali
-    document.getElementById('edit-company-name').value = company.name;
-    document.getElementById('edit-company-address').value = company.address;
-    document.getElementById('edit-company-website').value = company.website;
-    document.getElementById('edit-company-partitaIVA').value = company.partitaIVA;
-    document.getElementById('edit-company-size').value = company.size;
-    document.getElementById('edit-company-notes').value = company.notes;
-    // Mostra il pannello di modifica
-    const panel = document.getElementById('edit-company-panel');
+    const panel = getField('edit-company-panel');
+    const form = getField('edit-company-form');
+    const cancelBtn = getField('cancel-edit-company');
+    const addBtn = getField('add-company-btn');
+    // Popola il form con i dati dell'azienda selezionata
+    getField('edit-company-name').value = company.name;
+    getField('edit-company-address-street').value = company.address.street;
+    getField('edit-company-address-streetNumber').value = company.address.streetNumber;
+    getField('edit-company-address-city').value = company.address.city;
+    getField('edit-company-address-province').value = company.address.province;
+    getField('edit-company-address-region').value = company.address.region;
+    getField('edit-company-address-zip').value = company.address.zip;
+    getField('edit-company-address-country').value = company.address.country;
+    getField('edit-company-website').value = company.website;
+    getField('edit-company-partitaIVA').value = company.partitaIVA;
+    getField('edit-company-size').value = company.size;
+    getField('edit-company-notes').value = company.notes;
+    // Mostra il pannello con animazione CSS
     panel.style.display = 'block';
+    void panel.offsetHeight;
+    panel.classList.add('visible');
     document.body.classList.add('modal-open');
-    // Gestisci la chiusura
-    const cancelBtn = document.getElementById('cancel-edit-company');
-    const form = document.getElementById('edit-company-form');
-    const closeHandler = () => {
-        panel.style.display = 'none';
+    const closePanel = () => {
+        panel.classList.remove('visible');
+        panel.addEventListener('transitionend', () => {
+            panel.style.display = 'none';
+        }, { once: true });
         document.body.classList.remove('modal-open');
         form.reset();
-        cancelBtn.removeEventListener('click', closeHandler);
+        cancelBtn.removeEventListener('click', closePanel);
         form.removeEventListener('submit', submitHandler);
     };
     const submitHandler = async (e) => {
         e.preventDefault();
         const updatedCompany = {
-            name: document.getElementById('edit-company-name').value,
-            address: document.getElementById('edit-company-address').value,
-            website: document.getElementById('edit-company-website').value,
-            partitaIVA: document.getElementById('edit-company-partitaIVA').value,
-            size: document.getElementById('edit-company-size').value,
-            notes: document.getElementById('edit-company-notes').value,
+            id: company.id,
+            name: getField('edit-company-name').value,
+            address: readAddress('edit-company-address'),
+            website: getField('edit-company-website').value,
+            partitaIVA: getField('edit-company-partitaIVA').value,
+            size: getField('edit-company-size').value,
+            notes: getField('edit-company-notes').value,
         };
         try {
-            // Qui dovresti chiamare l'API per aggiornare l'azienda
-            // Per ora, simula un aggiornamento locale
+            // TODO: chiamare API PUT/PATCH quando disponibile
             console.log('Aggiornamento azienda:', updatedCompany);
-            await loadCompanyData(); // Ricarica i dati
-            closeHandler();
+            await loadCompanyData();
+            closePanel();
         }
         catch (err) {
-            console.error('Errore nell\'aggiornamento azienda:', err);
+            console.error('Errore aggiornamento azienda:', err);
         }
     };
-    cancelBtn.addEventListener('click', closeHandler);
+    cancelBtn.addEventListener('click', closePanel);
     form.addEventListener('submit', submitHandler);
 }
 function showCompany(data) {
@@ -80,26 +112,48 @@ function showCompany(data) {
     applyTableStyles(table);
     data.forEach(company => {
         const row = createStyledRow();
+        const fullAddress = [
+            company.address.street,
+            company.address.streetNumber,
+            company.address.city ? `– ${company.address.city} (${company.address.province})` : '',
+            company.address.zip,
+            company.address.country,
+        ].filter(Boolean).join(' ');
         row.appendChild(createStyledCell(company.name));
-        row.appendChild(createStyledCell(company.address));
-        row.appendChild(createStyledCell(company.website));
+        row.appendChild(createStyledCell(fullAddress));
+        row.appendChild(createStyledWebsiteCell(company.website));
         row.appendChild(createStyledCell(company.partitaIVA));
         row.appendChild(createStyledCell(company.size));
-        row.appendChild(createStyledCell(company.notes));
-        const deleteButton = document.createElement('button');
-        deleteButton.addEventListener('click', () => {
-            tableBody.removeChild(row);
-        });
-        Object.assign(deleteButton.style, DELETEBUTTON_STYLES);
-        deleteButton.textContent = 'Elimina';
-        row.appendChild(deleteButton);
+        const notesCell = document.createElement('td');
+        const notesDiv = document.createElement('div');
+        notesDiv.className = 'note-cell';
+        notesDiv.textContent = company.notes;
+        notesCell.appendChild(notesDiv);
+        row.appendChild(notesCell);
+        const actionsCell = document.createElement('td');
+        actionsCell.style.verticalAlign = 'middle';
+        actionsCell.style.whiteSpace = 'nowrap';
+        actionsCell.style.padding = '0.5rem 0.75rem';
         const editButton = document.createElement('button');
-        editButton.addEventListener('click', () => {
-            openEditForm(company);
-        });
-        Object.assign(editButton.style, EDITBUTTON_STYLES);
         editButton.textContent = 'Modifica';
-        row.appendChild(editButton);
+        Object.assign(editButton.style, EDITBUTTON_STYLES);
+        editButton.style.marginRight = '0.4rem';
+        editButton.addEventListener('click', () => openEditForm(company));
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Elimina';
+        Object.assign(deleteButton.style, DELETEBUTTON_STYLES);
+        deleteButton.addEventListener('click', async () => {
+            try {
+                await deleteCompany(company.id);
+                await loadCompanyData();
+            }
+            catch (err) {
+                console.error('Errore eliminazione azienda:', err);
+            }
+        });
+        actionsCell.appendChild(editButton);
+        actionsCell.appendChild(deleteButton);
+        row.appendChild(actionsCell);
         tableBody.appendChild(row);
     });
 }
