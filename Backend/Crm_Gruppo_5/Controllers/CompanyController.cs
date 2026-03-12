@@ -47,6 +47,25 @@ namespace Crm_Gruppo_5.Controllers
             return Ok(_mapper.MapEntitytoSingleDto(company));
         }
 
+        [HttpGet]
+        [Route("{id}/contact")]
+        public IActionResult GetContacts(int id)
+        {
+            var company = _ctx.Companies.Include(c => c.Contacts)
+                               .SingleOrDefault(c => c.CompanyId == id);
+            if (company == null)
+            {
+                return BadRequest($"Company with id {id} not found");
+            }
+            if (company.Contacts == null || !company.Contacts.Any())
+            {
+                return NoContent();
+            }
+            var contactsDto = company.Contacts.Select(c => _mapper.MapBaseEntitytoDto(c)).ToList();
+            return Ok(contactsDto);
+        }
+
+           
         [HttpPost]
         public IActionResult Create(CompanySimpleDto company)
         {

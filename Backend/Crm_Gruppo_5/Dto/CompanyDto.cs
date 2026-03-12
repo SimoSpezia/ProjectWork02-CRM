@@ -13,5 +13,6 @@ namespace Crm_Gruppo_5.Dto
         public required string VatNumber { get; set; }
         public string? Size { get; set; }
         public string? Note { get; set; }
+        public int? CountContacts { get; set; }
     }
 }

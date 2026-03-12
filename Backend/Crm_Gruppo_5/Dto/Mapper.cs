@@ -88,5 +88,23 @@ namespace Crm_Gruppo_5.Dto
             };
             return entity;
         }
+
+        public ContactDto MapBaseEntitytoDto(Contact entity)
+        {
+            if (entity == null) return null;
+            ContactDto dto = new ContactDto
+            {
+                ContactId = entity.ContactId,
+                Name = entity.Name,
+                Surname = entity.Surname,
+                Title = entity.Title,
+                WorkRole = entity.WorkRole,
+                Gender = entity.Gender,
+                Birthday = entity.Birthday,
+                Note = entity.Note,
+                DateAdded = entity.DateAdded
+            };
+            return dto;
+        }
     }
 }
