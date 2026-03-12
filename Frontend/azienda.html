@@ -54,7 +54,7 @@
                            required>
 
                     <!-- Indirizzo strutturato — ID allineati con azienda.ts -->
-                    <div id="add-company-address-form">
+                    <div id="edit-company-address-form">
                         <label for="company-address-street">Via / Piazza</label>
                         <input type="text"
                                id="company-address-street"
@@ -220,6 +220,30 @@
 
                 </form>
             </div>
+
+            <!--  PANNELLO: DETTAGLIO AZIENDA  -->
+               <div id="company-detail-panel"
+                     class="info-company-panel"
+                     role="dialog"
+                     aria-modal="true"
+                     aria-labelledby="detail-panel-title"
+                     style="display:none;">
+       
+                  <h2 id="detail-panel-title">Dettagli Azienda</h2>
+       
+                  <div id="company-detail-content">
+                     <div id="company-detail-name"></div>
+                     <div id="company-detail-address"></div>
+                     <div id="company-detail-partitaIVA"></div>
+                     <div id="company-detail-size"></div>
+                     <div id="company-detail-website"></div>
+                     <div id="company-detail-contacts"></div>
+                     <div id="company-detail-notes"></div>
+
+                  </div>
+       
+                  <button type="button" id="close-detail-panel">Chiudi</button>
+              </div>
 
             <!-- ===== TABELLA AZIENDE ===== -->
             <div class="table-wrapper">
