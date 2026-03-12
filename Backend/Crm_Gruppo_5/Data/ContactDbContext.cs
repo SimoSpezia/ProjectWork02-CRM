@@ -10,7 +10,8 @@ namespace Crm_Gruppo_5.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Contact - Address (1-a-1)
+
+            //Contact - Company(N - a - 1)
             modelBuilder.Entity<Contact>()
                 .HasOne(c => c.Address)
                 .WithOne(a => a.Contact)
@@ -64,7 +65,7 @@ namespace Crm_Gruppo_5.Data
                 .HasOne(c => c.Address)
                 .WithOne(a => a.Company)
                 .HasForeignKey<Company>(c => c.AddressId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
         }
 
         public DbSet<Address> Addresses { get; set; }

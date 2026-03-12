@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Crm_Gruppo_5.Migrations
 {
     [DbContext(typeof(ContactDbContext))]
-    [Migration("20260311175907_RimossoVincoloRequired")]
-    partial class RimossoVincoloRequired
+    [Migration("20260312095023_nuovaMigration")]
+    partial class nuovaMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -326,7 +326,7 @@ namespace Crm_Gruppo_5.Migrations
                     b.HasOne("CrmGruppo5.Data.Address", "Address")
                         .WithOne("Company")
                         .HasForeignKey("CrmGruppo5.Data.Company", "AddressId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Address");
                 });

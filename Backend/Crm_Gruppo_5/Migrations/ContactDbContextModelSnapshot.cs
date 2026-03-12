@@ -323,7 +323,7 @@ namespace Crm_Gruppo_5.Migrations
                     b.HasOne("CrmGruppo5.Data.Address", "Address")
                         .WithOne("Company")
                         .HasForeignKey("CrmGruppo5.Data.Company", "AddressId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Address");
                 });
