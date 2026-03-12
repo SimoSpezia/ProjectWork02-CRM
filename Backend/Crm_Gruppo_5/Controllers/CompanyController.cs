@@ -65,7 +65,30 @@ namespace Crm_Gruppo_5.Controllers
             return Ok(contactsDto);
         }
 
-           
+        [HttpGet]
+        [Route("/NumberContacts")]
+        public IActionResult GetNumberContacts()
+        {
+            var companiesDto = _ctx.Companies
+                    .Where(c => c.Contacts != null && c.Contacts.Any())
+                    .Select(c => new CompanyDto
+                    {
+                        CompanyId = c.CompanyId,
+                        Denomination = c.Denomination,
+                        Website = c.Website,
+                        VatNumber = c.VatNumber,
+                        Size = c.Size,
+                        Note = c.Note,
+                        CountContacts = c.Contacts.Count()
+                    });
+            if (companiesDto.Any())
+            {
+                return Ok(companiesDto);
+
+            }
+            else return NoContent();
+        }
+
         [HttpPost]
         public IActionResult Create(CompanySimpleDto company)
         {
