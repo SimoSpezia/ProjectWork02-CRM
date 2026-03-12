@@ -65,6 +65,24 @@ export function applyTableStyles(table) {
         }
     }
 }
+export function createStyledWebsiteCell(content) {
+    const cell = document.createElement('td');
+    const link = document.createElement('a');
+    link.href = content;
+    link.target = '_blank';
+    link.textContent = content;
+    link.style.color = '#3498db';
+    link.style.textDecoration = 'none';
+    link.addEventListener('mouseover', () => {
+        link.style.textDecoration = 'underline';
+    });
+    link.addEventListener('mouseout', () => {
+        link.style.textDecoration = 'none';
+    });
+    link.style.fontSize = '0.9em';
+    cell.appendChild(link);
+    return cell;
+}
 export function createStyledCell(content, options) {
     const cell = document.createElement('td');
     cell.textContent = content;
