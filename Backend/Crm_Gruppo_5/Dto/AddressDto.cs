@@ -18,6 +18,8 @@ namespace Crm_Gruppo_5.Dto
         public required string StreetNumber { get; set; }
         [StringLength(5)]
         public  required string zip { get; set; }
+        public int? CompanyId { get; set; }
+        public int? ContactId { get; set; }
 
     }
 }

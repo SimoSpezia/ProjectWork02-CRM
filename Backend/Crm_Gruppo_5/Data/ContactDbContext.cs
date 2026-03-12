@@ -10,63 +10,64 @@ namespace Crm_Gruppo_5.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-
-            //Contact - Company(N - a - 1)
-            modelBuilder.Entity<Contact>()
-                .HasOne(c => c.Address)
-                .WithOne(a => a.Contact)
-                .HasForeignKey<Contact>(c => c.AddressId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // Contact - Company (N-a-1)
+            // Contact - Company (N-a-1) [RESTRICT]
             modelBuilder.Entity<Contact>()
                 .HasOne(c => c.Company)
                 .WithMany(c => c.Contacts)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Contact - ContactType (N-a-1)
-            modelBuilder.Entity<Contact>()
-                .HasOne(c => c.ContactType)
-                .WithMany(ct => ct.Contacts)
-                .OnDelete(DeleteBehavior.Restrict);
+            // Company - Address (1-a-1) [CASCADE]
+            modelBuilder.Entity<Company>()
+                .HasOne(c => c.Address)
+                .WithOne(a => a.Company)
+                .HasForeignKey<Address>(a => a.CompanyId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-            // Contact - MailAddress (1-a-N)
+            // Contact - Address (1-a-1) [CASCADE]
+            modelBuilder.Entity<Contact>()
+                .HasOne(c => c.Address)
+                .WithOne(a => a.Contact)
+                .HasForeignKey<Address>(a => a.ContactId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Contact - MailAddress (1-a-N) [CASCADE]
             modelBuilder.Entity<Contact>()
                 .HasMany(c => c.MailAddresses)
                 .WithOne(m => m.Contact)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
-            // Contact - PhoneNumber (1-a-N)
+            // Contact - PhoneNumber (1-a-N) [CASCADE]
             modelBuilder.Entity<Contact>()
                 .HasMany(c => c.PhoneNumbers)
                 .WithOne(p => p.Contact)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
-            // Contact - Category (N-a-N)
+            // Contact - Category (N-a-N) 
             modelBuilder.Entity<Contact>()
                 .HasMany(c => c.Categories)
                 .WithMany(ca => ca.Contacts)
                 .UsingEntity(e => e.ToTable("Groups"));
 
-            // MailAddress - MailAddressType (N-a-1)
+            // Contact - ContactType (N-a-1) [RESTRICT]
+            modelBuilder.Entity<Contact>()
+                .HasOne(c => c.ContactType)
+                .WithMany(ct => ct.Contacts)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // MailAddress - MailAddressType (N-a-1) [RESTRICT]
             modelBuilder.Entity<MailAddress>()
                 .HasOne(m => m.MailAddressType)
                 .WithMany(mat => mat.Mails)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // PhoneNumber - PhoneNumberType (N-a-1)
+            // PhoneNumber - PhoneNumberType (N-a-1) [RESTRICT]
             modelBuilder.Entity<PhoneNumber>()
                 .HasOne(p => p.PhoneNumberType)
                 .WithMany(pnt => pnt.Numbers)
                 .OnDelete(DeleteBehavior.Restrict);
-
-            // Company - Address (1-a-1)
-            modelBuilder.Entity<Company>()
-                .HasOne(c => c.Address)
-                .WithOne(a => a.Company)
-                .HasForeignKey<Company>(c => c.AddressId)
-                .OnDelete(DeleteBehavior.Cascade);
         }
+
+
 
         public DbSet<Address> Addresses { get; set; }
         public DbSet<Category> Categories { get; set; }
@@ -77,5 +78,7 @@ namespace Crm_Gruppo_5.Data
         public DbSet<MailAddressType> MailAddressTypes { get; set; }
         public DbSet<PhoneNumber> PhoneNumbers { get; set; }
         public DbSet<PhoneNumberType> PhoneNumberTypes { get; set; }
+
+
     }
 }
