@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Crm_Gruppo_5.Migrations
 {
     [DbContext(typeof(ContactDbContext))]
-    [Migration("20260312095023_nuovaMigration")]
-    partial class nuovaMigration
+    [Migration("20260312103318_nuovoDb")]
+    partial class nuovoDb
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -52,6 +52,12 @@ namespace Crm_Gruppo_5.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("CompanyId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ContactId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Country")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -75,6 +81,14 @@ namespace Crm_Gruppo_5.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("AddressId");
+
+                    b.HasIndex("CompanyId")
+                        .IsUnique()
+                        .HasFilter("[CompanyId] IS NOT NULL");
+
+                    b.HasIndex("ContactId")
+                        .IsUnique()
+                        .HasFilter("[ContactId] IS NOT NULL");
 
                     b.ToTable("Addresses");
                 });
@@ -104,9 +118,6 @@ namespace Crm_Gruppo_5.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CompanyId"));
 
-                    b.Property<int?>("AddressId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Denomination")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -126,10 +137,6 @@ namespace Crm_Gruppo_5.Migrations
 
                     b.HasKey("CompanyId");
 
-                    b.HasIndex("AddressId")
-                        .IsUnique()
-                        .HasFilter("[AddressId] IS NOT NULL");
-
                     b.ToTable("Companies");
                 });
 
@@ -140,9 +147,6 @@ namespace Crm_Gruppo_5.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ContactId"));
-
-                    b.Property<int>("AddressId")
-                        .HasColumnType("int");
 
                     b.Property<DateTime>("Birthday")
                         .HasColumnType("datetime2");
@@ -177,9 +181,6 @@ namespace Crm_Gruppo_5.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("ContactId");
-
-                    b.HasIndex("AddressId")
-                        .IsUnique();
 
                     b.HasIndex("CompanyId");
 
@@ -321,24 +322,25 @@ namespace Crm_Gruppo_5.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("CrmGruppo5.Data.Company", b =>
+            modelBuilder.Entity("CrmGruppo5.Data.Address", b =>
                 {
-                    b.HasOne("CrmGruppo5.Data.Address", "Address")
-                        .WithOne("Company")
-                        .HasForeignKey("CrmGruppo5.Data.Company", "AddressId")
+                    b.HasOne("CrmGruppo5.Data.Company", "Company")
+                        .WithOne("Address")
+                        .HasForeignKey("CrmGruppo5.Data.Address", "CompanyId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.Navigation("Address");
+                    b.HasOne("CrmGruppo5.Data.Contact", "Contact")
+                        .WithOne("Address")
+                        .HasForeignKey("CrmGruppo5.Data.Address", "ContactId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Company");
+
+                    b.Navigation("Contact");
                 });
 
             modelBuilder.Entity("CrmGruppo5.Data.Contact", b =>
                 {
-                    b.HasOne("CrmGruppo5.Data.Address", "Address")
-                        .WithOne("Contact")
-                        .HasForeignKey("CrmGruppo5.Data.Contact", "AddressId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("CrmGruppo5.Data.Company", "Company")
                         .WithMany("Contacts")
                         .HasForeignKey("CompanyId")
@@ -350,8 +352,6 @@ namespace Crm_Gruppo_5.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Address");
-
                     b.Navigation("Company");
 
                     b.Navigation("ContactType");
@@ -362,7 +362,7 @@ namespace Crm_Gruppo_5.Migrations
                     b.HasOne("CrmGruppo5.Data.Contact", "Contact")
                         .WithMany("MailAddresses")
                         .HasForeignKey("ContactId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("CrmGruppo5.Data.MailAddressType", "MailAddressType")
                         .WithMany("Mails")
@@ -379,7 +379,7 @@ namespace Crm_Gruppo_5.Migrations
                     b.HasOne("CrmGruppo5.Data.Contact", "Contact")
                         .WithMany("PhoneNumbers")
                         .HasForeignKey("ContactId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("CrmGruppo5.Data.PhoneNumberType", "PhoneNumberType")
                         .WithMany("Numbers")
@@ -391,20 +391,18 @@ namespace Crm_Gruppo_5.Migrations
                     b.Navigation("PhoneNumberType");
                 });
 
-            modelBuilder.Entity("CrmGruppo5.Data.Address", b =>
-                {
-                    b.Navigation("Company");
-
-                    b.Navigation("Contact");
-                });
-
             modelBuilder.Entity("CrmGruppo5.Data.Company", b =>
                 {
+                    b.Navigation("Address");
+
                     b.Navigation("Contacts");
                 });
 
             modelBuilder.Entity("CrmGruppo5.Data.Contact", b =>
                 {
+                    b.Navigation("Address")
+                        .IsRequired();
+
                     b.Navigation("MailAddresses");
 
                     b.Navigation("PhoneNumbers");

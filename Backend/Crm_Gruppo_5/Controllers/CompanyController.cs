@@ -21,7 +21,7 @@ namespace Crm_Gruppo_5.Controllers
         {
             try
             {
-                var result = _ctx.Companies.ToList().ConvertAll(_mapper.MapBaseEntitytoDto);
+                var result = _ctx.Companies.Include(c => c.Address).ToList().ConvertAll(_mapper.MapEntitytoSimpleDto);
                 return Ok(result);
             }
             catch (Exception ex)
@@ -44,7 +44,49 @@ namespace Crm_Gruppo_5.Controllers
                 return BadRequest($"Company with id {id} not found");
                
             }
-            return Ok(_mapper.MapEntitytoSingleDto(company));
+            return Ok(_mapper.MapEntitytoSimpleDto(company));
+        }
+
+        [HttpGet]
+        [Route("{id}/contact")]
+        public IActionResult GetContacts(int id)
+        {
+            var company = _ctx.Companies.Include(c => c.Contacts)
+                               .SingleOrDefault(c => c.CompanyId == id);
+            if (company == null)
+            {
+                return BadRequest($"Company with id {id} not found");
+            }
+            if (company.Contacts == null || !company.Contacts.Any())
+            {
+                return NoContent();
+            }
+            var contactsDto = company.Contacts.Select(c => _mapper.MapBaseEntitytoDto(c)).ToList();
+            return Ok(contactsDto);
+        }
+
+        [HttpGet]
+        [Route("/NumberContacts")]
+        public IActionResult GetNumberContacts()
+        {
+            var companiesDto = _ctx.Companies
+                    .Where(c => c.Contacts != null && c.Contacts.Any())
+                    .Select(c => new CompanyDto
+                    {
+                        CompanyId = c.CompanyId,
+                        Denomination = c.Denomination,
+                        Website = c.Website,
+                        VatNumber = c.VatNumber,
+                        Size = c.Size,
+                        Note = c.Note,
+                        CountContacts = c.Contacts.Count()
+                    });
+            if (companiesDto.Any())
+            {
+                return Ok(companiesDto);
+
+            }
+            else return NoContent();
         }
 
         [HttpPost]
