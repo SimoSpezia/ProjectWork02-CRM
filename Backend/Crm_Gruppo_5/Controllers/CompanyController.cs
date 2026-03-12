@@ -15,6 +15,7 @@ namespace Crm_Gruppo_5.Controllers
         private readonly Mapper _mapper = mapper;
 
 
+
         [HttpGet]
         public IActionResult GetAll()
         {
