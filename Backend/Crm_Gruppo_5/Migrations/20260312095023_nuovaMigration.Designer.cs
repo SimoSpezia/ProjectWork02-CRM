@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Crm_Gruppo_5.Migrations
 {
     [DbContext(typeof(ContactDbContext))]
-    [Migration("20260310170725_Contact")]
-    partial class Contact
+    [Migration("20260312095023_nuovaMigration")]
+    partial class nuovaMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -70,6 +70,10 @@ namespace Crm_Gruppo_5.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("zip")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("AddressId");
 
                     b.ToTable("Addresses");
@@ -100,7 +104,7 @@ namespace Crm_Gruppo_5.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CompanyId"));
 
-                    b.Property<int>("AddressId")
+                    b.Property<int?>("AddressId")
                         .HasColumnType("int");
 
                     b.Property<string>("Denomination")
@@ -123,7 +127,8 @@ namespace Crm_Gruppo_5.Migrations
                     b.HasKey("CompanyId");
 
                     b.HasIndex("AddressId")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[AddressId] IS NOT NULL");
 
                     b.ToTable("Companies");
                 });
@@ -321,8 +326,7 @@ namespace Crm_Gruppo_5.Migrations
                     b.HasOne("CrmGruppo5.Data.Address", "Address")
                         .WithOne("Company")
                         .HasForeignKey("CrmGruppo5.Data.Company", "AddressId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Address");
                 });
