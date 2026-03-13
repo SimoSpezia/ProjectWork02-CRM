@@ -1,3 +1,4 @@
+import { Address } from "./apiAzienda";
 
 
 export const TABLE_STYLES = {
@@ -90,6 +91,30 @@ export function createStyledWebsiteCell(content: string): HTMLTableCellElement {
     });
     link.style.fontSize = '0.9em';
     cell.appendChild(link);
+    return cell;
+}
+
+// Utility per fare una cella apposita per l'address per fare un dropdown e vedere tutte le info 
+export function createStyledAddressCell(address : Address): HTMLTableCellElement {
+    const cell = document.createElement('td');
+    const addressDiv = document.createElement('div');
+    addressDiv.textContent = `${address.street} ${address.streetNumber}`;
+    addressDiv.style.cursor = 'pointer';
+    addressDiv.style.color = '#3498db';
+    addressDiv.addEventListener('click', () => {
+        // Toggle display of full address info verso il basso allungando verticalmente la cella
+        if (addressDiv.nextSibling) {
+            addressDiv.parentElement?.removeChild(addressDiv.nextSibling);
+        } else {
+            const fullAddressDiv = document.createElement('div');
+            fullAddressDiv.style.marginTop = '5px';
+            fullAddressDiv.style.fontSize = '0.9em';
+            fullAddressDiv.style.color = '#555';
+            fullAddressDiv.textContent = `${address.city ? `– ${address.city} (${address.province})` : ''} ${address.zip} ${address.country}`;
+            addressDiv.parentElement?.appendChild(fullAddressDiv);
+        }
+    });
+    cell.appendChild(addressDiv);
     return cell;
 }
 

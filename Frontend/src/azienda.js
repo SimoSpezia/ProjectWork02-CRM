@@ -1,5 +1,6 @@
-import { applyTableStyles, createStyledCell, createStyledRow, DELETEBUTTON_STYLES, EDITBUTTON_STYLES, createStyledWebsiteCell } from './tableUtils.js';
-import { getCompanies, addCompany, deleteCompany, setupAddEntityForm, } from './common.js';
+import { applyTableStyles, createStyledCell, createStyledRow, DELETEBUTTON_STYLES, EDITBUTTON_STYLES, createStyledWebsiteCell, createStyledAddressCell } from './tableUtils.js';
+import { setupAddEntityForm } from './common.js';
+import { getCompanies, addCompany, deleteCompany, updateCompany, getCompanyWithDetails } from './apiAzienda.js';
 let companyData = [];
 initialize();
 async function initialize() {
@@ -93,8 +94,7 @@ function openEditForm(company) {
             notes: getField('edit-company-notes').value,
         };
         try {
-            // TODO: chiamare API PUT/PATCH quando disponibile
-            console.log('Aggiornamento azienda:', updatedCompany);
+            await updateCompany(company.id, updatedCompany);
             await loadCompanyData();
             closePanel();
         }
@@ -105,6 +105,51 @@ function openEditForm(company) {
     cancelBtn.addEventListener('click', closePanel);
     form.addEventListener('submit', submitHandler);
 }
+function populateInfoPanel(company) {
+    const panel = getField('company-detail-panel');
+    const div = getField('company-detail-content');
+    const nameDiv = getField('company-detail-name');
+    const addressDiv = getField('company-detail-address');
+    const partitaIVADiv = getField('company-detail-partitaIVA');
+    const sizeDiv = getField('company-detail-size');
+    const websiteDiv = getField('company-detail-website');
+    const contactsDiv = getField('company-detail-contacts');
+    const notesDiv = getField('company-detail-notes');
+    const cancelBtn = getField('cancel-edit-company');
+    nameDiv.textContent = `Nome: ${company.name}`;
+    addressDiv.textContent = `Indirizzo: ${company.address.street} ${company.address.streetNumber}, ${company.address.city}, ${company.address.province}, ${company.address.region}, ${company.address.zip}, ${company.address.country}`;
+    partitaIVADiv.textContent = `Partita IVA: ${company.partitaIVA}`;
+    sizeDiv.textContent = `Dimensione: ${company.size}`;
+    websiteDiv.textContent = `Sito Web: ${company.website}`;
+    contactsDiv.textContent = `Contatti: ${company.contacts ? company.contacts.map(c => `${c.name} (${c.role})`).join(', ') : 'N/A'}`;
+    notesDiv.textContent = `Note: ${company.notes}`;
+    // Mostra il pannello con animazione CSS
+    panel.style.display = 'block';
+    void panel.offsetHeight;
+    panel.classList.add('visible');
+    document.body.classList.add('modal-open');
+    const closePanel = () => {
+        panel.classList.remove('visible');
+        panel.addEventListener('transitionend', () => {
+            panel.style.display = 'none';
+        }, { once: true });
+        document.body.classList.remove('modal-open');
+        cancelBtn.removeEventListener('click', closePanel);
+    };
+    cancelBtn.addEventListener('click', closePanel);
+}
+function openInfoPanel(company) {
+    // need to fetch full details in case the company list endpoint returns only partial data
+    getCompanyWithDetails(company.id)
+        .then(fullCompany => {
+        populateInfoPanel(fullCompany);
+    })
+        .catch(err => {
+        console.error('Errore nel recupero dettagli azienda:', err);
+        // In caso di errore, mostra comunque il pannello con i dati parziali
+        populateInfoPanel(company);
+    });
+}
 function showCompany(data) {
     const tableBody = document.getElementById('table-company-body');
     const table = tableBody.closest('table');
@@ -112,15 +157,13 @@ function showCompany(data) {
     applyTableStyles(table);
     data.forEach(company => {
         const row = createStyledRow();
-        const fullAddress = [
-            company.address.street,
-            company.address.streetNumber,
-            company.address.city ? `– ${company.address.city} (${company.address.province})` : '',
-            company.address.zip,
-            company.address.country,
-        ].filter(Boolean).join(' ');
-        row.appendChild(createStyledCell(company.name));
-        row.appendChild(createStyledCell(fullAddress));
+        const nameCell = createStyledCell(company.name);
+        nameCell.style.cursor = 'pointer';
+        nameCell.addEventListener('click', () => {
+            openInfoPanel(company);
+        });
+        row.appendChild(nameCell);
+        row.appendChild(createStyledAddressCell(company.address));
         row.appendChild(createStyledWebsiteCell(company.website));
         row.appendChild(createStyledCell(company.partitaIVA));
         row.appendChild(createStyledCell(company.size));

@@ -21,7 +21,7 @@ namespace Crm_Gruppo_5.Controllers
         {
             try
             {
-                var result = _ctx.Companies.ToList().ConvertAll(_mapper.MapBaseEntitytoDto);
+                var result = _ctx.Companies.Include(c => c.Address).ToList().ConvertAll(_mapper.MapEntitytoSimpleDto);
                 return Ok(result);
             }
             catch (Exception ex)
@@ -44,7 +44,7 @@ namespace Crm_Gruppo_5.Controllers
                 return BadRequest($"Company with id {id} not found");
                
             }
-            return Ok(_mapper.MapEntitytoSingleDto(company));
+            return Ok(_mapper.MapEntitytoSimpleDto(company));
         }
 
         [HttpGet]
