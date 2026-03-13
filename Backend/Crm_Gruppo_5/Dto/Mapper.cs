@@ -1,6 +1,4 @@
 ﻿using CrmGruppo5.Data;
-using Microsoft.AspNetCore.Http.HttpResults;
-using System.ComponentModel.Design;
 
 namespace Crm_Gruppo_5.Dto
 {
@@ -119,5 +117,84 @@ namespace Crm_Gruppo_5.Dto
             };
             return dto;
         }
+
+        public ContactDetailsDto MapEntityToContactDetailsDto(Contact entity)
+        {
+            ContactDetailsDto detailsDto = new ContactDetailsDto
+            {
+                ContactId = entity.ContactId,
+                Name = entity.Name,
+                Surname = entity.Surname,
+                Title = entity.Title,
+                WorkRole = entity.WorkRole,
+                Gender = entity.Gender,
+                Birthday = entity.Birthday,
+                Note = entity.Note,
+                DateAdded = entity.DateAdded,
+                ContactType = entity.ContactType != null ? MapBaseEntitytoDto(entity.ContactType) : null,
+                Address = entity.Address != null ? MapBaseEntityToDto(entity.Address) : null,
+                Company = entity.Company != null ? MapBaseEntitytoDto(entity.Company) : null,
+                MailAddresses = entity.MailAddresses != null ? entity.MailAddresses.Select(m => MapBaseEntitytoDto(m)).ToList() : null,
+                PhoneNumbers = entity.PhoneNumbers != null ? entity.PhoneNumbers.Select(p => MapBaseEntitytoDto(p)).ToList() : null,
+                Categories = entity.Categories != null ? entity.Categories.Select(c => MapBaseEntitytoDto(c)).ToList() : null
+            };
+            return detailsDto;
+        }
+
+        public ContactTypeDto MapBaseEntitytoDto(ContactType entity)
+        {
+            if (entity == null)
+                return null;
+
+            ContactTypeDto dto = new ContactTypeDto
+            {
+                ContactTypeId = entity.ContactTypeId,
+                Description = entity.Description
+            };
+            return dto;
+        }
+
+        public MailAddressDto MapBaseEntitytoDto(MailAddress entity)
+        {
+            if (entity == null)
+                return null;
+
+            MailAddressDto dto = new MailAddressDto
+            {
+                MailAddressId = entity.MailAddressId,
+                Mail = entity.Mail
+            };
+            return dto;
+        }
+
+        public PhoneNumberDto MapBaseEntitytoDto(PhoneNumber entity)
+        {
+            if (entity == null)
+                return null;
+
+            PhoneNumberDto dto = new PhoneNumberDto
+            {
+                PhoneNumberId = entity.PhoneNumberId,
+                Number = entity.Number,
+                Prefix = entity.Prefix,
+                Nationality = entity.Nationality,
+                Priority = entity.Priority
+            };
+            return dto;
+        }
+
+        public CategoryDto MapBaseEntitytoDto(Category entity)
+        {
+            if (entity == null)
+                return null;
+
+            CategoryDto dto = new CategoryDto
+            {
+                CategoryId = entity.CategoryId,
+                Description = entity.Description
+            };
+            return dto;
+        }
+
     }
 }
