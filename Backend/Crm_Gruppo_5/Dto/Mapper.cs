@@ -1,6 +1,4 @@
 ﻿using CrmGruppo5.Data;
-using Microsoft.AspNetCore.Http.HttpResults;
-using System.ComponentModel.Design;
 
 namespace Crm_Gruppo_5.Dto
 {

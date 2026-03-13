@@ -2,7 +2,6 @@
 using CrmGruppo5.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Reflection;
 
 namespace Crm_Gruppo_5.Controllers
 {
