@@ -3,6 +3,7 @@ using CrmGruppo5.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
+
 namespace Crm_Gruppo_5.Controllers
 {
     [Route("api/[controller]")]
