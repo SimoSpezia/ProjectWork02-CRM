@@ -1,202 +1,523 @@
-import { applyTableStyles, createStyledCell, createStyledRow, DELETEBUTTON_STYLES, EDITBUTTON_STYLES, createStyledWebsiteCell, createStyledAddressCell } from './tableUtils.js';
-import { setupAddEntityForm } from './common.js';
-import { getCompanies, addCompany, deleteCompany, updateCompany, getCompanyWithDetails } from './apiAzienda.js';
-let companyData = [];
-initialize();
-async function initialize() {
-    setupAddEntityForm('add-company-btn', 'add-company-panel', 'cancel-add-company', 'add-company-form', () => ({
-        name: document.getElementById('company-name').value,
-        address: {
-            street: document.getElementById('company-address-street').value,
-            streetNumber: document.getElementById('company-address-streetNumber').value,
-            city: document.getElementById('company-address-city').value,
-            province: document.getElementById('company-address-province').value,
-            region: document.getElementById('company-address-region').value,
-            zip: document.getElementById('company-address-zip').value,
-            country: document.getElementById('company-address-country').value,
-        },
-        website: document.getElementById('company-website').value,
-        partitaIVA: document.getElementById('company-partitaIVA').value,
-        size: document.getElementById('company-size').value,
-        notes: document.getElementById('company-notes').value,
-    }), async (c) => {
-        await addCompany(c);
-        await loadCompanyData();
+import { createCompany, deleteCompany, getCompanies, getCompanyContacts, updateCompany } from "./apiAzienda.js";
+import { hidePanel, showPanel } from "./common.js";
+const tableBody = document.getElementById("table-company-body");
+const addButton = document.getElementById("add-company-btn");
+const addPanel = document.getElementById("add-company-panel");
+const addForm = document.getElementById("add-company-form");
+const addCancelButton = document.getElementById("cancel-add-company");
+const addError = document.getElementById("add-company-error");
+const addContactsList = document.getElementById("add-company-contacts-list");
+const addContactRowButton = document.getElementById("add-company-contact-row");
+const editPanel = document.getElementById("edit-company-panel");
+const editForm = document.getElementById("edit-company-form");
+const editCancelButton = document.getElementById("cancel-edit-company");
+const editError = document.getElementById("edit-company-error");
+const editContactsList = document.getElementById("edit-company-contacts-list");
+const editContactRowButton = document.getElementById("edit-company-contact-row");
+const popupOverlay = document.getElementById("company-popup-overlay");
+const popupTitle = document.getElementById("company-popup-title");
+const popupMessage = document.getElementById("company-popup-message");
+const popupCancelButton = document.getElementById("company-popup-cancel");
+const popupConfirmButton = document.getElementById("company-popup-confirm");
+let editingCompanyId = null;
+let popupResolver = null;
+let popupMode = null;
+function elementValue(id) {
+    var _a;
+    const element = document.getElementById(id);
+    return (_a = element === null || element === void 0 ? void 0 : element.value.trim()) !== null && _a !== void 0 ? _a : "";
+}
+function setElementValue(id, value) {
+    const element = document.getElementById(id);
+    if (element) {
+        element.value = value;
+    }
+}
+function showError(errorElement, message) {
+    if (!errorElement) {
+        return;
+    }
+    errorElement.textContent = message;
+}
+function clearError(errorElement) {
+    if (!errorElement) {
+        return;
+    }
+    errorElement.textContent = "";
+}
+function closePopup(result) {
+    if (!popupOverlay) {
+        popupResolver === null || popupResolver === void 0 ? void 0 : popupResolver(result);
+        popupResolver = null;
+        popupMode = null;
+        return;
+    }
+    popupOverlay.classList.remove("visible");
+    window.setTimeout(() => {
+        popupOverlay.hidden = true;
+    }, 180);
+    popupResolver === null || popupResolver === void 0 ? void 0 : popupResolver(result);
+    popupResolver = null;
+    popupMode = null;
+}
+function openPopup(options) {
+    var _a;
+    if (!popupOverlay || !popupTitle || !popupMessage || !popupConfirmButton || !popupCancelButton) {
+        return Promise.resolve(options.mode === "message");
+    }
+    popupMode = options.mode;
+    popupTitle.textContent = options.title;
+    popupMessage.textContent = options.message;
+    popupConfirmButton.textContent = options.confirmText;
+    popupConfirmButton.classList.toggle("is-danger", options.destructive === true);
+    if (options.mode === "confirm") {
+        popupCancelButton.hidden = false;
+        popupCancelButton.textContent = (_a = options.cancelText) !== null && _a !== void 0 ? _a : "Annulla";
+    }
+    else {
+        popupCancelButton.hidden = true;
+    }
+    popupOverlay.hidden = false;
+    window.requestAnimationFrame(() => {
+        popupOverlay.classList.add("visible");
     });
-    await loadCompanyData();
+    popupConfirmButton.focus();
+    return new Promise((resolve) => {
+        popupResolver = resolve;
+    });
 }
-async function loadCompanyData() {
-    try {
-        const data = await getCompanies();
-        companyData = data;
-        showCompany(companyData);
+async function showMessagePopup(title, message) {
+    await openPopup({
+        mode: "message",
+        title,
+        message,
+        confirmText: "Chiudi"
+    });
+}
+function setupPopup() {
+    popupConfirmButton === null || popupConfirmButton === void 0 ? void 0 : popupConfirmButton.addEventListener("click", () => {
+        closePopup(true);
+    });
+    popupCancelButton === null || popupCancelButton === void 0 ? void 0 : popupCancelButton.addEventListener("click", () => {
+        closePopup(false);
+    });
+    popupOverlay === null || popupOverlay === void 0 ? void 0 : popupOverlay.addEventListener("click", (event) => {
+        if (event.target !== popupOverlay) {
+            return;
+        }
+        closePopup(popupMode === "message");
+    });
+    document.addEventListener("keydown", (event) => {
+        if (event.key !== "Escape" || !popupMode) {
+            return;
+        }
+        closePopup(popupMode === "message");
+    });
+}
+function getCreateCompanyErrorMessage(error) {
+    if (!(error instanceof Error)) {
+        return "Compila i campi obbligatori mancanti e riprova.";
     }
-    catch (err) {
-        console.error('Errore nel recupero dati azienda:', err);
+    if (error.message.startsWith("MISSING_FIELDS:")) {
+        const rawFields = error.message.slice("MISSING_FIELDS:".length).trim();
+        if (!rawFields) {
+            return "Compila i campi obbligatori mancanti e riprova.";
+        }
+        const fields = rawFields
+            .split("|")
+            .map((field) => field.trim())
+            .filter(Boolean);
+        if (fields.length === 0) {
+            return "Compila i campi obbligatori mancanti e riprova.";
+        }
+        return `Campi mancanti: ${fields.join(", ")}.`;
     }
+    // Mantiene il messaggio di validazione locale dei contatti.
+    if (error.message.includes("Compila Nome, Cognome")) {
+        return error.message;
+    }
+    return "Compila i campi obbligatori mancanti e riprova.";
 }
-function getField(id) {
-    return document.getElementById(id);
+function toIsoDate(value) {
+    if (!value) {
+        return new Date().toISOString();
+    }
+    return new Date(`${value}T00:00:00`).toISOString();
 }
-function readAddress(prefix) {
+function toDateInputValue(value) {
+    if (!value) {
+        return "";
+    }
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+        return "";
+    }
+    return date.toISOString().slice(0, 10);
+}
+function createContactEditorRow(contact) {
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+    const row = document.createElement("div");
+    row.className = "contact-editor-row";
+    const id = (_a = contact === null || contact === void 0 ? void 0 : contact.contactId) !== null && _a !== void 0 ? _a : 0;
+    const dateAdded = (_b = contact === null || contact === void 0 ? void 0 : contact.dateAdded) !== null && _b !== void 0 ? _b : new Date().toISOString();
+    row.innerHTML = `
+        <input type="hidden" data-field="contactId" value="${id}">
+        <input type="hidden" data-field="dateAdded" value="${dateAdded}">
+
+        <label>Nome</label>
+        <input type="text" data-field="name" value="${(_c = contact === null || contact === void 0 ? void 0 : contact.name) !== null && _c !== void 0 ? _c : ""}" required>
+
+        <label>Cognome</label>
+        <input type="text" data-field="surname" value="${(_d = contact === null || contact === void 0 ? void 0 : contact.surname) !== null && _d !== void 0 ? _d : ""}" required>
+
+        <label>Titolo</label>
+        <input type="text" data-field="title" value="${(_e = contact === null || contact === void 0 ? void 0 : contact.title) !== null && _e !== void 0 ? _e : ""}">
+
+        <label>Ruolo</label>
+        <input type="text" data-field="workRole" value="${(_f = contact === null || contact === void 0 ? void 0 : contact.workRole) !== null && _f !== void 0 ? _f : ""}">
+
+        <label>Genere</label>
+        <input type="text" data-field="gender" value="${(_g = contact === null || contact === void 0 ? void 0 : contact.gender) !== null && _g !== void 0 ? _g : ""}">
+
+        <label>Data di nascita</label>
+        <input type="date" data-field="birthday" value="${toDateInputValue((_h = contact === null || contact === void 0 ? void 0 : contact.birthday) !== null && _h !== void 0 ? _h : "")}" required>
+
+        <label>Note contatto</label>
+        <textarea data-field="note" rows="2">${(_j = contact === null || contact === void 0 ? void 0 : contact.note) !== null && _j !== void 0 ? _j : ""}</textarea>
+    `;
+    return row;
+}
+function getFieldValue(row, fieldName) {
+    var _a;
+    const field = row.querySelector(`[data-field='${fieldName}']`);
+    return (_a = field === null || field === void 0 ? void 0 : field.value.trim()) !== null && _a !== void 0 ? _a : "";
+}
+function readContacts(listElement) {
+    if (!listElement) {
+        return [];
+    }
+    const rows = Array.from(listElement.querySelectorAll(".contact-editor-row"));
+    const parsed = [];
+    for (const row of rows) {
+        const name = getFieldValue(row, "name");
+        const surname = getFieldValue(row, "surname");
+        const birthdayRaw = getFieldValue(row, "birthday");
+        if (!name && !surname && !birthdayRaw) {
+            continue;
+        }
+        if (!name || !surname || !birthdayRaw) {
+            throw new Error("Compila Nome, Cognome e Data di nascita per ogni contatto inserito.");
+        }
+        parsed.push({
+            contactId: Number(getFieldValue(row, "contactId")) || 0,
+            name,
+            surname,
+            title: getFieldValue(row, "title") || undefined,
+            workRole: getFieldValue(row, "workRole") || undefined,
+            gender: getFieldValue(row, "gender") || undefined,
+            birthday: toIsoDate(birthdayRaw),
+            note: getFieldValue(row, "note") || undefined,
+            dateAdded: getFieldValue(row, "dateAdded") || new Date().toISOString()
+        });
+    }
+    return parsed;
+}
+function buildCompanyPayload(contactList) {
     return {
-        street: getField(`${prefix}-street`).value,
-        streetNumber: getField(`${prefix}-streetNumber`).value,
-        city: getField(`${prefix}-city`).value,
-        province: getField(`${prefix}-province`).value,
-        region: getField(`${prefix}-region`).value,
-        zip: getField(`${prefix}-zip`).value,
-        country: getField(`${prefix}-country`).value,
+        denomination: elementValue("company-name") || elementValue("edit-company-name"),
+        website: elementValue("company-website") || elementValue("edit-company-website") || undefined,
+        vatNumber: elementValue("company-partitaIVA") || elementValue("edit-company-partitaIVA"),
+        size: elementValue("company-size") || elementValue("edit-company-size") || undefined,
+        note: elementValue("company-notes") || elementValue("edit-company-notes") || undefined,
+        address: {
+            street: elementValue("company-address-street") || elementValue("edit-company-address-street"),
+            streetNumber: elementValue("company-address-streetNumber") || elementValue("edit-company-address-streetNumber"),
+            zip: elementValue("company-address-zip") || elementValue("edit-company-address-zip"),
+            city: elementValue("company-address-city") || elementValue("edit-company-address-city"),
+            province: elementValue("company-address-province") || elementValue("edit-company-address-province") || undefined,
+            region: elementValue("company-address-region") || elementValue("edit-company-address-region") || undefined,
+            country: elementValue("company-address-country") || elementValue("edit-company-address-country")
+        },
+        contacts: readContacts(contactList)
     };
 }
-function openEditForm(company) {
-    const panel = getField('edit-company-panel');
-    const form = getField('edit-company-form');
-    const cancelBtn = getField('cancel-edit-company');
-    const addBtn = getField('add-company-btn');
-    // Popola il form con i dati dell'azienda selezionata
-    getField('edit-company-name').value = company.name;
-    getField('edit-company-address-street').value = company.address.street;
-    getField('edit-company-address-streetNumber').value = company.address.streetNumber;
-    getField('edit-company-address-city').value = company.address.city;
-    getField('edit-company-address-province').value = company.address.province;
-    getField('edit-company-address-region').value = company.address.region;
-    getField('edit-company-address-zip').value = company.address.zip;
-    getField('edit-company-address-country').value = company.address.country;
-    getField('edit-company-website').value = company.website;
-    getField('edit-company-partitaIVA').value = company.partitaIVA;
-    getField('edit-company-size').value = company.size;
-    getField('edit-company-notes').value = company.notes;
-    // Mostra il pannello con animazione CSS
-    panel.style.display = 'block';
-    void panel.offsetHeight;
-    panel.classList.add('visible');
-    document.body.classList.add('modal-open');
-    const closePanel = () => {
-        panel.classList.remove('visible');
-        panel.addEventListener('transitionend', () => {
-            panel.style.display = 'none';
-        }, { once: true });
-        document.body.classList.remove('modal-open');
-        form.reset();
-        cancelBtn.removeEventListener('click', closePanel);
-        form.removeEventListener('submit', submitHandler);
+function buildAddCompanyPayload() {
+    return {
+        denomination: elementValue("company-name"),
+        website: elementValue("company-website") || undefined,
+        vatNumber: elementValue("company-partitaIVA"),
+        size: elementValue("company-size") || undefined,
+        note: elementValue("company-notes") || undefined,
+        address: {
+            street: elementValue("company-address-street"),
+            streetNumber: elementValue("company-address-streetNumber"),
+            zip: elementValue("company-address-zip"),
+            city: elementValue("company-address-city"),
+            province: elementValue("company-address-province") || undefined,
+            region: elementValue("company-address-region") || undefined,
+            country: elementValue("company-address-country")
+        },
+        contacts: readContacts(addContactsList)
     };
-    const submitHandler = async (e) => {
-        e.preventDefault();
-        const updatedCompany = {
-            id: company.id,
-            name: getField('edit-company-name').value,
-            address: readAddress('edit-company-address'),
-            website: getField('edit-company-website').value,
-            partitaIVA: getField('edit-company-partitaIVA').value,
-            size: getField('edit-company-size').value,
-            notes: getField('edit-company-notes').value,
-        };
+}
+function buildEditCompanyPayload() {
+    return {
+        denomination: elementValue("edit-company-name"),
+        website: elementValue("edit-company-website") || undefined,
+        vatNumber: elementValue("edit-company-partitaIVA"),
+        size: elementValue("edit-company-size") || undefined,
+        note: elementValue("edit-company-notes") || undefined,
+        address: {
+            street: elementValue("edit-company-address-street"),
+            streetNumber: elementValue("edit-company-address-streetNumber"),
+            zip: elementValue("edit-company-address-zip"),
+            city: elementValue("edit-company-address-city"),
+            province: elementValue("edit-company-address-province") || undefined,
+            region: elementValue("edit-company-address-region") || undefined,
+            country: elementValue("edit-company-address-country")
+        },
+        contacts: readContacts(editContactsList)
+    };
+}
+function buildAddressCell(company) {
+    var _a, _b;
+    const cell = document.createElement("td");
+    const summary = document.createElement("button");
+    summary.type = "button";
+    summary.className = "address-toggle";
+    summary.textContent = `${company.address.street} ${company.address.streetNumber}`.trim();
+    const details = document.createElement("div");
+    details.className = "address-details";
+    details.hidden = true;
+    details.textContent = `${company.address.street} ${company.address.streetNumber}, ${company.address.zip} ${company.address.city} (${(_a = company.address.province) !== null && _a !== void 0 ? _a : ""}), ${(_b = company.address.region) !== null && _b !== void 0 ? _b : ""}, ${company.address.country}`;
+    summary.addEventListener("click", () => {
+        details.hidden = !details.hidden;
+    });
+    cell.appendChild(summary);
+    cell.appendChild(details);
+    return cell;
+}
+function buildWebsiteCell(website) {
+    const cell = document.createElement("td");
+    if (!website) {
+        cell.textContent = "-";
+        return cell;
+    }
+    const link = document.createElement("a");
+    let linkLabel = website;
+    try {
+        linkLabel = new URL(website).hostname.replace(/^www\./, "");
+    }
+    catch (_a) {
+        linkLabel = website;
+    }
+    link.href = website;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.className = "company-website-link";
+    link.title = website;
+    link.textContent = linkLabel;
+    cell.appendChild(link);
+    return cell;
+}
+function buildNoteCell(note) {
+    const cell = document.createElement("td");
+    const wrapper = document.createElement("div");
+    wrapper.className = "note-cell";
+    wrapper.textContent = note || "-";
+    cell.appendChild(wrapper);
+    return cell;
+}
+function buildActionsCell(company) {
+    const cell = document.createElement("td");
+    const actions = document.createElement("div");
+    actions.className = "row-actions";
+    const editButton = document.createElement("button");
+    editButton.type = "button";
+    editButton.className = "edit-action-btn";
+    editButton.textContent = "Modifica";
+    editButton.addEventListener("click", () => openEditPanel(company));
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.className = "delete-action-btn";
+    deleteButton.textContent = "Elimina";
+    deleteButton.addEventListener("click", async () => {
+        const confirmed = await openPopup({
+            mode: "confirm",
+            title: "Conferma eliminazione",
+            message: `Vuoi eliminare l'azienda ${company.denomination}?`,
+            confirmText: "Elimina",
+            cancelText: "Annulla",
+            destructive: true
+        });
+        if (!confirmed) {
+            return;
+        }
         try {
-            await updateCompany(company.id, updatedCompany);
-            await loadCompanyData();
-            closePanel();
+            await deleteCompany(company.companyId);
+            await loadCompanies();
         }
-        catch (err) {
-            console.error('Errore aggiornamento azienda:', err);
+        catch (error) {
+            await showMessagePopup("Errore", `Errore durante eliminazione: ${error.message}`);
         }
-    };
-    cancelBtn.addEventListener('click', closePanel);
-    form.addEventListener('submit', submitHandler);
-}
-function populateInfoPanel(company) {
-    const panel = getField('company-detail-panel');
-    const div = getField('company-detail-content');
-    const nameDiv = getField('company-detail-name');
-    const addressDiv = getField('company-detail-address');
-    const partitaIVADiv = getField('company-detail-partitaIVA');
-    const sizeDiv = getField('company-detail-size');
-    const websiteDiv = getField('company-detail-website');
-    const contactsDiv = getField('company-detail-contacts');
-    const notesDiv = getField('company-detail-notes');
-    const cancelBtn = getField('cancel-edit-company');
-    nameDiv.textContent = `Nome: ${company.name}`;
-    addressDiv.textContent = `Indirizzo: ${company.address.street} ${company.address.streetNumber}, ${company.address.city}, ${company.address.province}, ${company.address.region}, ${company.address.zip}, ${company.address.country}`;
-    partitaIVADiv.textContent = `Partita IVA: ${company.partitaIVA}`;
-    sizeDiv.textContent = `Dimensione: ${company.size}`;
-    websiteDiv.textContent = `Sito Web: ${company.website}`;
-    contactsDiv.textContent = `Contatti: ${company.contacts ? company.contacts.map(c => `${c.name} (${c.role})`).join(', ') : 'N/A'}`;
-    notesDiv.textContent = `Note: ${company.notes}`;
-    // Mostra il pannello con animazione CSS
-    panel.style.display = 'block';
-    void panel.offsetHeight;
-    panel.classList.add('visible');
-    document.body.classList.add('modal-open');
-    const closePanel = () => {
-        panel.classList.remove('visible');
-        panel.addEventListener('transitionend', () => {
-            panel.style.display = 'none';
-        }, { once: true });
-        document.body.classList.remove('modal-open');
-        cancelBtn.removeEventListener('click', closePanel);
-    };
-    cancelBtn.addEventListener('click', closePanel);
-}
-function openInfoPanel(company) {
-    // need to fetch full details in case the company list endpoint returns only partial data
-    getCompanyWithDetails(company.id)
-        .then(fullCompany => {
-        populateInfoPanel(fullCompany);
-    })
-        .catch(err => {
-        console.error('Errore nel recupero dettagli azienda:', err);
-        // In caso di errore, mostra comunque il pannello con i dati parziali
-        populateInfoPanel(company);
     });
+    actions.appendChild(editButton);
+    actions.appendChild(deleteButton);
+    cell.appendChild(actions);
+    return cell;
 }
-function showCompany(data) {
-    const tableBody = document.getElementById('table-company-body');
-    const table = tableBody.closest('table');
-    tableBody.innerHTML = '';
-    applyTableStyles(table);
-    data.forEach(company => {
-        const row = createStyledRow();
-        const nameCell = createStyledCell(company.name);
-        nameCell.style.cursor = 'pointer';
-        nameCell.addEventListener('click', () => {
-            openInfoPanel(company);
-        });
+function renderTable(companies) {
+    if (!tableBody) {
+        return;
+    }
+    tableBody.innerHTML = "";
+    for (const company of companies) {
+        const row = document.createElement("tr");
+        const nameCell = document.createElement("td");
+        nameCell.textContent = company.denomination;
+        const vatCell = document.createElement("td");
+        vatCell.textContent = company.vatNumber;
+        const sizeCell = document.createElement("td");
+        sizeCell.textContent = company.size || "-";
         row.appendChild(nameCell);
-        row.appendChild(createStyledAddressCell(company.address));
-        row.appendChild(createStyledWebsiteCell(company.website));
-        row.appendChild(createStyledCell(company.partitaIVA));
-        row.appendChild(createStyledCell(company.size));
-        const notesCell = document.createElement('td');
-        const notesDiv = document.createElement('div');
-        notesDiv.className = 'note-cell';
-        notesDiv.textContent = company.notes;
-        notesCell.appendChild(notesDiv);
-        row.appendChild(notesCell);
-        const actionsCell = document.createElement('td');
-        actionsCell.style.verticalAlign = 'middle';
-        actionsCell.style.whiteSpace = 'nowrap';
-        actionsCell.style.padding = '0.5rem 0.75rem';
-        const editButton = document.createElement('button');
-        editButton.textContent = 'Modifica';
-        Object.assign(editButton.style, EDITBUTTON_STYLES);
-        editButton.style.marginRight = '0.4rem';
-        editButton.addEventListener('click', () => openEditForm(company));
-        const deleteButton = document.createElement('button');
-        deleteButton.textContent = 'Elimina';
-        Object.assign(deleteButton.style, DELETEBUTTON_STYLES);
-        deleteButton.addEventListener('click', async () => {
-            try {
-                await deleteCompany(company.id);
-                await loadCompanyData();
-            }
-            catch (err) {
-                console.error('Errore eliminazione azienda:', err);
-            }
-        });
-        actionsCell.appendChild(editButton);
-        actionsCell.appendChild(deleteButton);
-        row.appendChild(actionsCell);
+        row.appendChild(buildAddressCell(company));
+        row.appendChild(buildWebsiteCell(company.website));
+        row.appendChild(vatCell);
+        row.appendChild(sizeCell);
+        row.appendChild(buildNoteCell(company.note));
+        row.appendChild(buildActionsCell(company));
         tableBody.appendChild(row);
+    }
+}
+async function loadCompanies() {
+    const companies = await getCompanies();
+    renderTable(companies);
+}
+function clearAddContactRows() {
+    if (addContactsList) {
+        addContactsList.innerHTML = "";
+    }
+}
+function clearEditContactRows() {
+    if (editContactsList) {
+        editContactsList.innerHTML = "";
+    }
+}
+function openAddPanel() {
+    if (!addPanel || !addButton) {
+        return;
+    }
+    clearError(addError);
+    clearAddContactRows();
+    showPanel(addPanel, addButton);
+}
+async function openEditPanel(company) {
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+    if (!editPanel || !addButton) {
+        return;
+    }
+    editingCompanyId = company.companyId;
+    clearError(editError);
+    setElementValue("edit-company-name", company.denomination);
+    setElementValue("edit-company-address-street", (_a = company.address.street) !== null && _a !== void 0 ? _a : "");
+    setElementValue("edit-company-address-streetNumber", (_b = company.address.streetNumber) !== null && _b !== void 0 ? _b : "");
+    setElementValue("edit-company-address-zip", (_c = company.address.zip) !== null && _c !== void 0 ? _c : "");
+    setElementValue("edit-company-address-city", (_d = company.address.city) !== null && _d !== void 0 ? _d : "");
+    setElementValue("edit-company-address-province", (_e = company.address.province) !== null && _e !== void 0 ? _e : "");
+    setElementValue("edit-company-address-region", (_f = company.address.region) !== null && _f !== void 0 ? _f : "");
+    setElementValue("edit-company-address-country", (_g = company.address.country) !== null && _g !== void 0 ? _g : "");
+    setElementValue("edit-company-partitaIVA", company.vatNumber);
+    setElementValue("edit-company-size", (_h = company.size) !== null && _h !== void 0 ? _h : "");
+    setElementValue("edit-company-website", (_j = company.website) !== null && _j !== void 0 ? _j : "");
+    setElementValue("edit-company-notes", (_k = company.note) !== null && _k !== void 0 ? _k : "");
+    clearEditContactRows();
+    try {
+        const contacts = await getCompanyContacts(company.companyId);
+        if (editContactsList) {
+            contacts.forEach((contact) => {
+                editContactsList.appendChild(createContactEditorRow(contact));
+            });
+        }
+    }
+    catch (_l) {
+        if (editContactsList) {
+            editContactsList.innerHTML = "";
+        }
+    }
+    showPanel(editPanel, addButton);
+}
+function setupAddForm() {
+    if (!addForm || !addPanel || !addButton) {
+        return;
+    }
+    addForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        clearError(addError);
+        try {
+            const payload = buildAddCompanyPayload();
+            await createCompany(payload);
+            addForm.reset();
+            clearAddContactRows();
+            hidePanel(addPanel, addButton);
+            await loadCompanies();
+        }
+        catch (error) {
+            showError(addError, getCreateCompanyErrorMessage(error));
+        }
     });
 }
+function setupEditForm() {
+    if (!editForm || !editPanel || !addButton) {
+        return;
+    }
+    editForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        clearError(editError);
+        if (editingCompanyId == null) {
+            showError(editError, "Azienda non selezionata.");
+            return;
+        }
+        try {
+            const payload = buildEditCompanyPayload();
+            await updateCompany(editingCompanyId, payload);
+            hidePanel(editPanel, addButton);
+            await loadCompanies();
+        }
+        catch (error) {
+            showError(editError, error.message);
+        }
+    });
+}
+function setupButtons() {
+    addButton === null || addButton === void 0 ? void 0 : addButton.addEventListener("click", openAddPanel);
+    addCancelButton === null || addCancelButton === void 0 ? void 0 : addCancelButton.addEventListener("click", () => {
+        if (addPanel && addButton && addForm) {
+            hidePanel(addPanel, addButton);
+            addForm.reset();
+            clearAddContactRows();
+        }
+    });
+    editCancelButton === null || editCancelButton === void 0 ? void 0 : editCancelButton.addEventListener("click", () => {
+        if (editPanel && addButton) {
+            hidePanel(editPanel, addButton);
+            clearEditContactRows();
+            editingCompanyId = null;
+        }
+    });
+    addContactRowButton === null || addContactRowButton === void 0 ? void 0 : addContactRowButton.addEventListener("click", () => {
+        addContactsList === null || addContactsList === void 0 ? void 0 : addContactsList.appendChild(createContactEditorRow());
+    });
+    editContactRowButton === null || editContactRowButton === void 0 ? void 0 : editContactRowButton.addEventListener("click", () => {
+        editContactsList === null || editContactsList === void 0 ? void 0 : editContactsList.appendChild(createContactEditorRow());
+    });
+}
+async function init() {
+    setupPopup();
+    setupButtons();
+    setupAddForm();
+    setupEditForm();
+    await loadCompanies();
+}
+init().catch(async (error) => {
+    await showMessagePopup("Errore inizializzazione", `Errore inizializzazione pagina aziende: ${error.message}`);
+});

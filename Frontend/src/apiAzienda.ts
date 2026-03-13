@@ -1,80 +1,199 @@
+export const API_BASE_URL = "https://localhost:7090/api";
+
 export interface Address {
+    addressId?: number;
+    country: string;
+    region?: string;
+    province?: string;
+    city: string;
     street: string;
     streetNumber: string;
-    city: string;
-    province: string;
-    region: string;
     zip: string;
-    country: string;
+    companyId?: number | null;
+    contactId?: number | null;
 }
 
-export interface Company {
-    id?: string; 
+export interface ContactDto {
+    contactId: number;
     name: string;
+    surname: string;
+    title?: string;
+    workRole?: string;
+    gender?: string;
+    birthday: string;
+    note?: string;
+    dateAdded: string;
+}
+
+export interface CompanySimpleDto {
+    companyId: number;
+    denomination: string;
+    website?: string;
+    vatNumber: string;
+    size?: string;
+    note?: string;
+    countContacts?: number | null;
     address: Address;
-    contacts?: Contact[];
-    website: string;
-    partitaIVA: string;
-    size: string;
-    notes: string;
+    contacts?: ContactDto[];
 }
 
-export interface Contact {
-    id?: string; 
-    name: string;
-    role: string;
-    notes: string;
+export interface CompanyUpsertPayload {
+    companyId?: number;
+    denomination: string;
+    website?: string;
+    vatNumber: string;
+    size?: string;
+    note?: string;
+    address: Address;
+    contacts?: ContactDto[];
 }
 
-// Generic fetch wrapper that returns JSON and throws on non-ok response
-export async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
-    const resp = await fetch(url, options);
-    if (!resp.ok) {
-        throw new Error(`HTTP error ${resp.status} for ${url}`);
+const FIELD_LABELS: Record<string, string> = {
+    denomination: "Nome Azienda",
+    website: "Sito Web",
+    vatnumber: "Partita IVA",
+    size: "Dimensione",
+    note: "Note",
+    "address.street": "Via / Piazza",
+    "address.streetnumber": "Numero civico",
+    "address.zip": "CAP",
+    "address.city": "Citta",
+    "address.province": "Provincia",
+    "address.region": "Regione",
+    "address.country": "Nazione"
+};
+
+type ValidationProblemDetails = {
+    errors?: Record<string, string[]>;
+};
+
+function normalizeKey(rawKey: string): string {
+    return rawKey.trim().toLowerCase().replace(/\[(\d+)\]/g, "");
+}
+
+function mapFieldName(rawKey: string): string {
+    const key = normalizeKey(rawKey);
+    if (FIELD_LABELS[key]) {
+        return FIELD_LABELS[key];
     }
-    return resp.json();
+
+    const cleaned = key.replace(/\./g, " ");
+    return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
 }
 
-// Specific API helpers
-export function getCompanies(): Promise<Company[]> {
-    return fetchJson<Company[]>('http://localhost:3001/companies');
-}
-
-export function addCompany(company: Company): Promise<Company> {
-    return fetchJson<Company>('http://localhost:3001/companies', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(company),
-    });
-}
-export function updateCompany(id: string | undefined, company: Company): Promise<Company> {
-    if (!id) {
-        throw new Error('updateCompany: id is undefined');
+async function parseMissingFields(response: Response): Promise<string[]> {
+    const contentType = response.headers.get("content-type")?.toLowerCase() ?? "";
+    if (!contentType.includes("application/json")) {
+        return [];
     }
-    return fetchJson<Company>(`http://localhost:3001/companies/${id}`, {
-        method: 'PUT', // or 'PATCH' if you want partial updates
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(company),
-    });
-}
 
-export function deleteCompany(id: string|undefined): Promise<void> {
-    try {  
-        if (!id) {
-            throw new Error('deleteCompany: id is undefined');
+    let body: ValidationProblemDetails | null = null;
+    try {
+        body = await response.json() as ValidationProblemDetails;
+    } catch {
+        return [];
+    }
+
+    if (!body?.errors) {
+        return [];
+    }
+
+    const requiredKeys: string[] = [];
+    const allKeys: string[] = [];
+
+    for (const [key, messages] of Object.entries(body.errors)) {
+        allKeys.push(key);
+        const hasRequiredMessage = messages.some((message) =>
+            /required|obbligatori|obbligatorio/i.test(message)
+        );
+        if (hasRequiredMessage) {
+            requiredKeys.push(key);
         }
-    return fetchJson<void>(`http://localhost:3001/companies/${id}`, {
-        method: 'DELETE',
-        });
-    } catch (err) {
-        console.error('deleteCompany error:', err);
-        return Promise.reject(err);
     }
+
+    const sourceKeys = requiredKeys.length > 0 ? requiredKeys : allKeys;
+    const mapped = sourceKeys.map(mapFieldName);
+    return Array.from(new Set(mapped));
 }
 
-export function getCompanyWithDetails(id: string | undefined): Promise<Company> {
-    if (!id) {
-        throw new Error('getCompanyWithDetails: id is undefined');
+async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
+    const response = await fetch(url, {
+        headers: {
+            "Content-Type": "application/json"
+        },
+        ...init
+    });
+
+    if (!response.ok) {
+        const errorBody = await response.text();
+        throw new Error(errorBody || `HTTP ${response.status}`);
     }
-    return fetchJson<Company>(`http://localhost:3001/companies/${id}`);
+
+    if (response.status === 204) {
+        return undefined as T;
+    }
+
+    return response.json() as Promise<T>;
+}
+
+export function getCompanies(): Promise<CompanySimpleDto[]> {
+    return fetchJson<CompanySimpleDto[]>(`${API_BASE_URL}/Company/all`);
+}
+
+export function getCompanyContacts(companyId: number): Promise<ContactDto[]> {
+    return fetch(`${API_BASE_URL}/Company/${companyId}/contact`, {
+        headers: {
+            "Content-Type": "application/json"
+        }
+    }).then(async (response) => {
+        if (response.status === 204) {
+            return [];
+        }
+        if (!response.ok) {
+            const errorBody = await response.text();
+            throw new Error(errorBody || `HTTP ${response.status}`);
+        }
+        return response.json() as Promise<ContactDto[]>;
+    });
+}
+
+export function createCompany(payload: CompanyUpsertPayload): Promise<void> {
+    return fetch(`${API_BASE_URL}/Company`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+    }).then(async (response) => {
+        if (response.ok) {
+            return;
+        }
+
+        const missingFields = await parseMissingFields(response);
+        if (missingFields.length > 0) {
+            throw new Error(`MISSING_FIELDS:${missingFields.join("|")}`);
+        }
+
+        throw new Error("MISSING_FIELDS:");
+    });
+}
+
+export function updateCompany(companyId: number, payload: CompanyUpsertPayload): Promise<void> {
+    return fetchJson<void>(`${API_BASE_URL}/Company/${companyId}`, {
+        method: "PUT",
+        body: JSON.stringify(payload)
+    });
+}
+
+export async function deleteCompany(companyId: number): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/Company/${companyId}`, {
+        method: "DELETE"
+    });
+
+    if (response.status === 204) {
+        return;
+    }
+
+    const message = await response.text();
+    throw new Error(message || `HTTP ${response.status}`);
 }
