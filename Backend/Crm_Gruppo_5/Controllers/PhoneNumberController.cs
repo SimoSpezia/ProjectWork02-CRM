@@ -1,0 +1,158 @@
+﻿using Crm_Gruppo_5.Dto;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+
+namespace Crm_Gruppo_5.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class PhoneNumberController(Data.ContactDbContext ctx, ILogger<PhoneNumberController> logger, Mapper mapper) : ControllerBase
+    {
+
+        private readonly Data.ContactDbContext _ctx = ctx;
+        private readonly ILogger<PhoneNumberController> _logger = logger;
+        private readonly Mapper _mapper = mapper;
+
+        [HttpGet]
+        [Route("all")]
+        public IActionResult GetAll()
+        {
+            try
+            {
+                var result = _ctx.PhoneNumbers.ToList().ConvertAll(_mapper.MapBaseEntitytoDto);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message, ex);
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpGet]
+        [Route("{id}")]
+        public IActionResult GetSingle(int id)
+        {
+            var phoneNumber = _ctx.PhoneNumbers.SingleOrDefault(p => p.PhoneNumberId == id);
+            if (phoneNumber == null)
+            {
+                return NoContent();
+            }
+
+            return Ok(_mapper.MapBaseEntitytoDto(phoneNumber));
+        }
+
+        [HttpGet]
+        [Route("by-category/{categoryId}")]
+        public IActionResult GetByCategory(int categoryId, [FromQuery] int? Id)
+        {
+            var query = _ctx.PhoneNumbers
+                .Include(p => p.Contact)
+                    .ThenInclude(c => c.Categories)
+                .Include(p => p.PhoneNumberType)
+                .Where(p => p.Contact != null
+                            && p.Contact.Categories != null
+                            && p.Contact.Categories.Any(cat => cat.CategoryId == categoryId));
+
+            if (Id.HasValue)
+            {
+                query = query.Where(p => p.PhoneNumberType != null && p.PhoneNumberType.PhoneNumberTypeId == Id.Value);
+            }
+
+            var result = query
+                .ToList()
+                .ConvertAll(_mapper.MapEntityToPhoneNumberDetailsDto);
+
+            if (!result.Any())
+                return NoContent();
+
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Route("by-company/{companyId}")]
+        public IActionResult GetByCompany(int companyId, [FromQuery] int? Id)
+        {
+            var query = _ctx.PhoneNumbers
+                        .Include(p => p.Contact)
+                        .ThenInclude(c => c.Company)
+                        .Include(p => p.PhoneNumberType)
+                        .Where(p => p.Contact != null
+                            && p.Contact.Company != null
+                            && p.Contact.Company.CompanyId == companyId);
+
+            if (Id.HasValue)
+            {
+                query = query.Where(p => p.PhoneNumberType != null && p.PhoneNumberType.PhoneNumberTypeId == Id.Value);
+            }
+
+            var result = query
+                .ToList()
+                .ConvertAll(_mapper.MapEntityToPhoneNumberDetailsDto);
+
+            if (!result.Any())
+                return NoContent();
+
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Route("by-type/{Id}")]
+        public IActionResult GetByPhoneNumberType(int Id)
+        {
+            var result = _ctx.PhoneNumbers
+                .Include(p => p.PhoneNumberType)
+                .Where(p => p.PhoneNumberType != null && p.PhoneNumberType.PhoneNumberTypeId == Id)
+                .ToList()
+                .ConvertAll(_mapper.MapEntityToPhoneNumberDetailsDto);
+
+            if (!result.Any())
+                return NoContent();
+
+            return Ok(result);
+        }
+
+        [HttpPut]
+        [Route("{id}")]
+        public IActionResult Update([FromRoute] int id, [FromBody] PhoneNumberDto Dto)
+        {
+            var phoneNumber = _ctx.PhoneNumbers.SingleOrDefault(c => c.PhoneNumberId == id);
+
+            if (phoneNumber == null)
+            {
+                return NotFound();
+            }
+            if (!string.IsNullOrEmpty(Dto.Number))
+                phoneNumber.Number = Dto.Number;
+            if (!string.IsNullOrEmpty(Dto.Prefix))
+                phoneNumber.Prefix = Dto.Prefix;
+            if (!string.IsNullOrEmpty(Dto.Nationality))
+                phoneNumber.Nationality = Dto.Nationality;
+            _ctx.SaveChanges();
+
+            var result = _mapper.MapBaseEntitytoDto(phoneNumber);
+
+            return Ok(result);
+        }
+
+        [HttpDelete("{id}")]
+        public IActionResult Delete(int id)
+        {
+            var phoneNumber = _ctx.PhoneNumbers.SingleOrDefault(c => c.PhoneNumberId == id);
+
+            if (phoneNumber == null)
+            {
+                return NotFound();
+            }
+
+            _ctx.PhoneNumbers.Remove(phoneNumber);
+
+            if (_ctx.SaveChanges() > 0)
+                return NoContent();
+            else
+                return UnprocessableEntity("Impossibile eliminare il numero di telefono.");
+        }
+
+
+    }
+}

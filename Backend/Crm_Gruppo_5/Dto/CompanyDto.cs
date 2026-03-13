@@ -6,7 +6,6 @@ namespace Crm_Gruppo_5.Dto
     public class CompanyDto
     {
         public int CompanyId { get; set; }
-        [MinLength(2)]
         public required string Denomination { get; set; }
         public string? Website { get; set; }
         [MinLength(11)]

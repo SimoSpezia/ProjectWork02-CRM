@@ -176,8 +176,38 @@ namespace Crm_Gruppo_5.Dto
                 PhoneNumberId = entity.PhoneNumberId,
                 Number = entity.Number,
                 Prefix = entity.Prefix,
-                Nationality = entity.Nationality,
+                Nationality = entity.Nationality
+            };
+            return dto;
+        }
+
+        public PhoneNumberTypeDto MapBaseEntitytoDto(PhoneNumberType entity)
+        {
+            if (entity == null)
+                return null;
+
+            PhoneNumberTypeDto dto = new PhoneNumberTypeDto
+            {
+                PhoneNumberTypeId = entity.PhoneNumberTypeId,
+                Description = entity.Description,
                 Priority = entity.Priority
+            };
+            return dto;
+        }
+
+        public PhoneNumberDetailsDto MapEntityToPhoneNumberDetailsDto(PhoneNumber entity)
+        {
+            if (entity == null)
+                return null;
+
+            PhoneNumberDetailsDto dto = new PhoneNumberDetailsDto
+            {
+                PhoneNumberId = entity.PhoneNumberId,
+                Number = entity.Number,
+                Prefix = entity.Prefix,
+                Nationality = entity.Nationality,
+                Contact = entity.Contact != null ? MapBaseEntitytoDto(entity.Contact) : null,
+                PhoneNumberType = entity.PhoneNumberType != null ? MapBaseEntitytoDto(entity.PhoneNumberType) : null
             };
             return dto;
         }
