@@ -6,11 +6,16 @@
       "address": {
         "street": "via roma",
         "streetNumber": "1",
-        "city": "Va",
-        "province": "Lo",
+        "city": "Varese",
+        "province": "va",
         "region": "Lombardia",
         "zip": "21044",
         "country": "Italia"
+      },
+      "contact": {
+        "name": "Mario Rossi",
+        "role": "CEO",
+        "notes": "Contatto principale"
       },
       "website": "http://127.0.0.1:5500/Frontend/azienda.html",
       "partitaIVA": "U(SYN",

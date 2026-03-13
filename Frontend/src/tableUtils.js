@@ -83,6 +83,31 @@ export function createStyledWebsiteCell(content) {
     cell.appendChild(link);
     return cell;
 }
+// Utility per fare una cella apposita per l'address per fare un dropdown e vedere tutte le info 
+export function createStyledAddressCell(address) {
+    const cell = document.createElement('td');
+    const addressDiv = document.createElement('div');
+    addressDiv.textContent = `${address.street} ${address.streetNumber}`;
+    addressDiv.style.cursor = 'pointer';
+    addressDiv.style.color = '#3498db';
+    addressDiv.addEventListener('click', () => {
+        var _a, _b;
+        // Toggle display of full address info verso il basso allungando verticalmente la cella
+        if (addressDiv.nextSibling) {
+            (_a = addressDiv.parentElement) === null || _a === void 0 ? void 0 : _a.removeChild(addressDiv.nextSibling);
+        }
+        else {
+            const fullAddressDiv = document.createElement('div');
+            fullAddressDiv.style.marginTop = '5px';
+            fullAddressDiv.style.fontSize = '0.9em';
+            fullAddressDiv.style.color = '#555';
+            fullAddressDiv.textContent = `${address.city ? `– ${address.city} (${address.province})` : ''} ${address.zip} ${address.country}`;
+            (_b = addressDiv.parentElement) === null || _b === void 0 ? void 0 : _b.appendChild(fullAddressDiv);
+        }
+    });
+    cell.appendChild(addressDiv);
+    return cell;
+}
 export function createStyledCell(content, options) {
     const cell = document.createElement('td');
     cell.textContent = content;
