@@ -267,6 +267,17 @@
         </section>
     </main>
 
+       <div id="company-popup-overlay" class="company-popup-overlay" hidden>
+              <div class="company-popup" role="dialog" aria-modal="true" aria-labelledby="company-popup-title" aria-describedby="company-popup-message">
+                     <h3 id="company-popup-title">Conferma azione</h3>
+                     <p id="company-popup-message"></p>
+                     <div class="company-popup-actions">
+                            <button type="button" id="company-popup-cancel" class="company-popup-btn company-popup-btn-secondary">Annulla</button>
+                            <button type="button" id="company-popup-confirm" class="company-popup-btn company-popup-btn-primary">Conferma</button>
+                     </div>
+              </div>
+       </div>
+
     <script type="module" src="src/azienda.js"></script>
 </body>
 </html>
