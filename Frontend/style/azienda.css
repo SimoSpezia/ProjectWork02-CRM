@@ -300,6 +300,91 @@
     margin-top: 0.25rem;
 }
 
+/* ========================================
+   PANNELLO INFO) - MODAL
+   ======================================== */
+
+.info-company-panel {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.97);
+    background-color: white;
+    border-radius: 14px;
+    box-shadow:
+        0 4px 6px rgba(0,0,0,0.04),
+        0 12px 40px rgba(30,58,95,0.18),
+        0 0 0 1px rgba(30,58,95,0.06);
+    padding: 4rem;
+    z-index: 1000;
+    width: 90%;
+    max-width: 640px;
+    max-height: 88vh;
+    overflow-y: auto;
+    font-family: 'DM Sans', sans-serif;
+    opacity: 0;
+    transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.18s ease;
+}
+
+.info-company-panel.visible {
+    display: block;
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+/* Scrollbar pannello */
+.info-company-panel::-webkit-scrollbar {
+    width: 8px;
+}
+.info-company-panel::-webkit-scrollbar-track {
+    background: transparent;
+}
+.info-company-panel::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 10px;
+}
+
+/* Titolo pannello */
+.info-company-panel h2 {
+    margin: 0 0 1.75rem 0;
+    color: var(--primary-dark);
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--border);
+}
+
+/* Form layout */
+.info-company-panel form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem 1.25rem;
+}
+
+/* Campi che occupano tutta la larghezza */
+.info-company-panel form > label:first-of-type,
+.info-company-panel form > input:first-of-type,
+#edit-company-address-form,
+.info-company-panel label[for="company-notes"],
+.info-company-panel label[for="edit-company-notes"],
+.info-company-panel textarea,
+.info-company-panel .form-buttons {
+    grid-column: 1 / -1;
+}
+
+/* Sezione indirizzo */
+#edit-company-address-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem 1.25rem;
+    padding: 1.25rem;
+    background-color: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    margin-top: 0.25rem;
+}
 #edit-company-address-form label {
     font-size: 0.8rem;
     color: var(--text-light);
