@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Crm_Gruppo_5.Migrations
 {
     [DbContext(typeof(ContactDbContext))]
-    [Migration("20260312103318_nuovoDb")]
-    partial class nuovoDb
+    [Migration("20260313152641_DB2")]
+    partial class DB2
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -49,7 +49,6 @@ namespace Crm_Gruppo_5.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AddressId"));
 
                     b.Property<string>("City")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("CompanyId")
@@ -69,15 +68,12 @@ namespace Crm_Gruppo_5.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Street")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("StreetNumber")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("zip")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("AddressId");
@@ -154,7 +150,7 @@ namespace Crm_Gruppo_5.Migrations
                     b.Property<int?>("CompanyId")
                         .HasColumnType("int");
 
-                    b.Property<int>("ContactTypeId")
+                    b.Property<int?>("ContactTypeId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("DateAdded")
@@ -349,8 +345,7 @@ namespace Crm_Gruppo_5.Migrations
                     b.HasOne("CrmGruppo5.Data.ContactType", "ContactType")
                         .WithMany("Contacts")
                         .HasForeignKey("ContactTypeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Company");
 
@@ -400,8 +395,7 @@ namespace Crm_Gruppo_5.Migrations
 
             modelBuilder.Entity("CrmGruppo5.Data.Contact", b =>
                 {
-                    b.Navigation("Address")
-                        .IsRequired();
+                    b.Navigation("Address");
 
                     b.Navigation("MailAddresses");
 

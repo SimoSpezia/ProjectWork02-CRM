@@ -2,6 +2,6 @@
 {
     public class CompanySimpleDto: CompanyDto
     {
-        public required AddressDto Address { get; set; }
+        public  AddressDto? Address { get; set; }
     }
 }

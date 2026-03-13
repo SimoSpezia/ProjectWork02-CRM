@@ -93,12 +93,28 @@ namespace Crm_Gruppo_5.Controllers
         [HttpPost]
         public IActionResult Create(CompanySimpleDto company)
         {
-            company.CompanyId = 0;
-            _ctx.Companies.Add(_mapper.MapDtoToEntity(company));
+            if (company == null || string.IsNullOrWhiteSpace(company.Denomination) || string.IsNullOrWhiteSpace(company.VatNumber))
+            {
+                return BadRequest("Denomination and VatNumber are required");
+            }
+
+            var entity = new Company
+            {
+                Denomination = company.Denomination,
+                VatNumber = company.VatNumber,
+                Website = company.Website,
+                Size = company.Size,
+                Note = company.Note,
+                Address = company.Address != null ? _mapper.MapDtoToEntity(company.Address) : null
+            };
+
+            _ctx.Companies.Add(entity);
+
             if (_ctx.SaveChanges() > 0)
             {
                 return Ok();
             }
+
             return BadRequest();
         }
         [HttpPut]
