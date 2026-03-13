@@ -110,18 +110,35 @@ namespace Crm_Gruppo_5.Controllers
                 return BadRequest();
             }
 
-            company.Denomination = Dto.Denomination;
-            company.Website = Dto.Website;
-            company.VatNumber = Dto.VatNumber;
-            company.Size = Dto.Size;
-            company.Note = Dto.Note;
-            company.Address.Country = Dto.Address.Country;
-            company.Address.Region = Dto.Address.Region;
-            company.Address.Province = Dto.Address.Province;
-            company.Address.City = Dto.Address.City;
-            company.Address.Street = Dto.Address.Street;
-            company.Address.StreetNumber = Dto.Address.StreetNumber;
-            company.Address.zip = Dto.Address.zip;
+            if (!string.IsNullOrEmpty(Dto.Denomination))
+                company.Denomination = Dto.Denomination;
+            if (!string.IsNullOrEmpty(Dto.Website))
+                company.Website = Dto.Website;
+            if (!string.IsNullOrEmpty(Dto.VatNumber))
+                company.VatNumber = Dto.VatNumber;
+            if (!string.IsNullOrEmpty(Dto.Size))
+                company.Size = Dto.Size;
+            if (!string.IsNullOrEmpty(Dto.Note))
+                company.Note = Dto.Note;
+
+            if (Dto.Address != null)
+            {
+                if (!string.IsNullOrEmpty(Dto.Address.Country))
+                    company.Address.Country = Dto.Address.Country;
+                if (!string.IsNullOrEmpty(Dto.Address.Region))
+                    company.Address.Region = Dto.Address.Region;
+                if (!string.IsNullOrEmpty(Dto.Address.Province))
+                    company.Address.Province = Dto.Address.Province;
+                if (!string.IsNullOrEmpty(Dto.Address.City))
+                    company.Address.City = Dto.Address.City;
+                if (!string.IsNullOrEmpty(Dto.Address.Street))
+                    company.Address.Street = Dto.Address.Street;
+                if (!string.IsNullOrEmpty(Dto.Address.StreetNumber))
+                    company.Address.StreetNumber = Dto.Address.StreetNumber;
+                if (!string.IsNullOrEmpty(Dto.Address.zip))
+                    company.Address.zip = Dto.Address.zip;
+            }
+
             if (_ctx.SaveChanges() >0)
                 return NoContent();
             else
