@@ -139,7 +139,6 @@ namespace Crm_Gruppo_5.Controllers
                 if (!string.IsNullOrEmpty(Dto.Address.zip))
                     company.Address.zip = Dto.Address.zip;
             }
-
             if (_ctx.SaveChanges() >0)
                 return NoContent();
             else

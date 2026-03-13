@@ -2,7 +2,6 @@
 using CrmGruppo5.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Reflection;
 
 namespace Crm_Gruppo_5.Controllers
 {
@@ -45,6 +44,46 @@ namespace Crm_Gruppo_5.Controllers
             return Ok(_mapper.MapBaseEntitytoDto(contact));
         }
 
+        [HttpGet]
+        [Route("{id}/WithDetails")]
+        public IActionResult GetSingleWithDetails(int id)
+        {
+            var result = _ctx.Contacts
+                         .Include(c => c.MailAddresses)
+                         .ThenInclude(m => m.MailAddressType)
+                         .Include(c => c.PhoneNumbers)
+                         .ThenInclude(p => p.PhoneNumberType)
+                         .Include(c => c.Company)
+                         .Include(c => c.Categories)
+                         .Include(c => c.Address)
+                         .Include(c => c.ContactType)
+                         .SingleOrDefault(c => c.ContactId == id);
+
+            if (result == null)
+            {
+                return NotFound($"Contact with id {id} not found");
+            }
+
+            var resultDto = _mapper.MapEntityToContactDetailsDto(result);
+
+            if (resultDto.PhoneNumbers != null)
+            {
+                resultDto.PhoneNumbers = resultDto.PhoneNumbers
+                    .OrderBy(p => p.Priority)
+                    .ToList();
+            }
+
+            if (resultDto.Categories != null && resultDto.Categories.Count > 0)
+            {
+                resultDto.CategoriesAsString = string.Join(", ", resultDto.Categories.Select(c => c.Description));
+            }
+
+            resultDto.Categories = null;
+            return Ok(resultDto);
+        }
+
+
+
         [HttpPost]
         public IActionResult Create(ContactDto contact)
         {
@@ -73,14 +112,22 @@ namespace Crm_Gruppo_5.Controllers
                 return NotFound();
             }
 
-            contact.Name = Dto.Name;
-            contact.Surname = Dto.Surname;
-            contact.Title = Dto.Title;
-            contact.WorkRole = Dto.WorkRole;
-            contact.Gender = Dto.Gender;
-            contact.Birthday = Dto.Birthday;
-            contact.Note = Dto.Note;
-            contact.DateAdded = Dto.DateAdded;
+            if (!string.IsNullOrEmpty(Dto.Name))
+                contact.Name = Dto.Name;
+            if (!string.IsNullOrEmpty(Dto.Surname))
+                contact.Surname = Dto.Surname;
+            if (!string.IsNullOrEmpty(Dto.Title))
+                contact.Title = Dto.Title;
+            if (!string.IsNullOrEmpty(Dto.WorkRole))
+                contact.WorkRole = Dto.WorkRole;
+            if (!string.IsNullOrEmpty(Dto.Gender))
+                contact.Gender = Dto.Gender;
+            if (Dto.Birthday != default(DateTime))
+                contact.Birthday = Dto.Birthday;
+            if (!string.IsNullOrEmpty(Dto.Note))
+                contact.Note = Dto.Note;
+            if (Dto.DateAdded != default(DateTime))
+                contact.DateAdded = Dto.DateAdded;
 
             _ctx.SaveChanges();
 
