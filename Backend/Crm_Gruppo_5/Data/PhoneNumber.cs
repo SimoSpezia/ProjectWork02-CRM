@@ -8,6 +8,5 @@
         public required string Nationality { get; set; }
         public Contact? Contact { get; set; }
         public PhoneNumberType? PhoneNumberType { get; set; }
-        public required int Priority { get; set; }
     }
 }

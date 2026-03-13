@@ -64,14 +64,14 @@ namespace Crm_Gruppo_5.Controllers
                 return NotFound($"Contact with id {id} not found");
             }
 
-            var resultDto = _mapper.MapEntityToContactDetailsDto(result);
-
-            if (resultDto.PhoneNumbers != null)
+            if (result.PhoneNumbers != null)
             {
-                resultDto.PhoneNumbers = resultDto.PhoneNumbers
-                    .OrderBy(p => p.Priority)
+                result.PhoneNumbers = result.PhoneNumbers
+                    .OrderBy(p => p.PhoneNumberType != null ? p.PhoneNumberType.Priority : int.MaxValue)
                     .ToList();
             }
+
+            var resultDto = _mapper.MapEntityToContactDetailsDto(result);
 
             if (resultDto.Categories != null && resultDto.Categories.Count > 0)
             {
