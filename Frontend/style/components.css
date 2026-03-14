@@ -1,0 +1,269 @@
+/* ========================================
+   COMPONENTI RIUSABILI - CRM UI
+   ======================================== */
+
+:root {
+    --mx-radius-sm: 10px;
+    --mx-radius-md: 14px;
+    --mx-radius-lg: 22px;
+    --mx-elev-1: 0 6px 18px rgba(17, 51, 78, 0.09);
+    --mx-elev-2: 0 14px 34px rgba(17, 51, 78, 0.16);
+    --mx-ring: 0 0 0 3px rgba(13, 156, 144, 0.22);
+}
+
+:is(.mx-toolbar, .toolbar) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.8rem;
+    padding: 1.1rem 1.3rem;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+}
+
+:is(.mx-btn-primary, .add-company-btn) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    border: none;
+    border-radius: 999px;
+    padding: 0.64rem 1.15rem;
+    font-size: 0.84rem;
+    font-weight: 700;
+    font-family: 'Manrope', sans-serif;
+    letter-spacing: 0.02em;
+    color: #ffffff;
+    cursor: pointer;
+    background: linear-gradient(180deg, #176090 0%, #104466 100%);
+    box-shadow: 0 6px 14px rgba(19, 71, 106, 0.24);
+    transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
+}
+
+:is(.mx-btn-primary, .add-company-btn):hover {
+    transform: translateY(-1px);
+    box-shadow: 0 9px 18px rgba(19, 71, 106, 0.3);
+    filter: saturate(1.06);
+}
+
+:is(.mx-btn-primary, .add-company-btn):focus-visible {
+    outline: none;
+    box-shadow: var(--mx-ring);
+}
+
+:is(.mx-data-table, .table-company) {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: fixed;
+    font-size: 0.88rem;
+    font-family: 'Manrope', sans-serif;
+}
+
+:is(.mx-data-table, .table-company) thead {
+    background: linear-gradient(135deg, #0f4668 0%, #1b6d99 100%);
+}
+
+:is(.mx-data-table, .table-company) thead th {
+    padding: 0.68rem 0.95rem;
+    color: rgba(245, 252, 255, 0.94);
+    text-align: left;
+    font-size: 0.76rem;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+:is(.mx-data-table, .table-company) tbody tr {
+    transition: transform 0.14s ease, box-shadow 0.14s ease, background-color 0.14s ease;
+}
+
+:is(.mx-data-table, .table-company) tbody tr:hover {
+    background-color: #eff8ff;
+}
+
+:is(.mx-data-table, .table-company) tbody td {
+    border-bottom: 1px solid #e2ecf5;
+    color: var(--text-dark);
+    padding: 0.52rem 0.95rem;
+    vertical-align: middle;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 0;
+}
+
+:is(.mx-link-chip, .company-website-link) {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    border-radius: 999px;
+    border: 1px solid #bfd4ea;
+    background: linear-gradient(180deg, #f6fbff 0%, #ebf5ff 100%);
+    color: #154f78;
+    text-decoration: none;
+    font-size: 0.77rem;
+    font-weight: 700;
+    padding: 0.3rem 0.62rem;
+    transition: transform 0.14s ease, box-shadow 0.14s ease;
+}
+
+:is(.mx-link-chip, .company-website-link):hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(26, 83, 126, 0.2);
+}
+
+:is(.mx-link-chip, .company-website-link)::after {
+    content: "↗";
+    margin-left: 0.35rem;
+    font-size: 0.7rem;
+    opacity: 0.76;
+}
+
+:is(.mx-inline-actions, .row-actions) {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+}
+
+:is(.mx-action-btn, .edit-action-btn, .delete-action-btn) {
+    min-width: 84px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    padding: 0.36rem 0.68rem;
+    font-family: 'Manrope', sans-serif;
+    font-size: 0.73rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 0.14s ease, box-shadow 0.14s ease, filter 0.14s ease;
+}
+
+:is(.mx-action-btn-edit, .edit-action-btn) {
+    color: #1b4c73;
+    border-color: #c3daef;
+    background: linear-gradient(180deg, #f0f7ff 0%, #e1effc 100%);
+}
+
+:is(.mx-action-btn-delete, .delete-action-btn) {
+    color: #8e2130;
+    border-color: #efc6cd;
+    background: linear-gradient(180deg, #fff2f4 0%, #ffe4e8 100%);
+}
+
+:is(.mx-action-btn, .edit-action-btn, .delete-action-btn):hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(17, 51, 78, 0.16);
+    filter: saturate(1.03);
+}
+
+:is(.mx-action-btn, .edit-action-btn, .delete-action-btn):focus-visible {
+    outline: none;
+    box-shadow: var(--mx-ring);
+}
+
+:is(.mx-toggle-btn, .address-toggle) {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    border: 1px solid #cad8e8;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #ffffff 0%, #f4f8fd 100%);
+    padding: 0.38rem 0.62rem;
+    color: #184a70;
+    font-size: 0.79rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+:is(.mx-toggle-btn, .address-toggle)::after {
+    content: "Apri";
+    margin-left: auto;
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #5d758b;
+}
+
+:is(.mx-detail-panel, .address-details) {
+    margin-top: 0.45rem;
+    padding: 0.52rem 0.65rem;
+    background: #f5fafe;
+    border: 1px solid #dbe8f4;
+    border-radius: var(--mx-radius-sm);
+    font-size: 0.77rem;
+    line-height: 1.34;
+    white-space: normal;
+    color: var(--text-light);
+}
+
+:is(.mx-scroll-note, .note-cell) {
+    height: 2.5rem;
+    overflow-y: auto;
+    white-space: normal;
+    font-size: 0.76rem;
+    line-height: 1.42;
+}
+
+:is(.mx-modal, .add-company-panel, .info-company-panel) {
+    border: 1px solid #dce8f3;
+    border-radius: var(--mx-radius-lg);
+    box-shadow: var(--mx-elev-2);
+}
+
+:is(.mx-form-grid, .add-company-panel form) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.72rem 1rem;
+}
+
+:is(.mx-input, .add-company-panel input, .add-company-panel textarea) {
+    border-radius: var(--mx-radius-sm);
+    border: 1.5px solid var(--border);
+    background: #f7fbff;
+}
+
+:is(.mx-input, .add-company-panel input, .add-company-panel textarea):focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: var(--mx-ring);
+    background: #ffffff;
+}
+
+:is(.mx-form-buttons, .form-buttons) {
+    display: flex;
+    gap: 0.7rem;
+}
+
+:is(.mx-popup, .company-popup) {
+    border-radius: var(--mx-radius-md);
+    border: 1px solid #dce8f3;
+    box-shadow: var(--mx-elev-2);
+}
+
+:is(.mx-popup-btn, .company-popup-btn) {
+    border-radius: var(--mx-radius-sm);
+    font-family: 'Manrope', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+@media (max-width: 768px) {
+    :is(.mx-data-table, .table-company) thead th,
+    :is(.mx-data-table, .table-company) tbody td {
+        font-size: 0.8rem;
+        padding: 0.68rem 0.62rem;
+    }
+
+    :is(.mx-action-btn, .edit-action-btn, .delete-action-btn) {
+        min-width: 72px;
+        font-size: 0.68rem;
+    }
+
+    :is(.mx-form-grid, .add-company-panel form) {
+        grid-template-columns: 1fr;
+    }
+}

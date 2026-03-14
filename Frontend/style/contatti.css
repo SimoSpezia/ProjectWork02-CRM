@@ -2,13 +2,227 @@
    PAGINA CONTATTI - STILI SPECIFICI
    ======================================== */
 
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
 .page-container {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    min-height: calc(100vh - 60px);
-    padding: 2rem 1rem;
+    min-height: calc(100vh - 64px);
+    padding: 2.5rem 1.5rem;
+    font-family: 'DM Sans', sans-serif;
 }
 
-/* Aggiungere here gli stili specifici per la pagina contatti */
+.content-section {
+    width: 100%;
+    max-width: 1400px;
+    background-color: var(--surface);
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(30, 58, 95, 0.08);
+    overflow: hidden;
+}
+
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+.table-wrapper::-webkit-scrollbar {
+    height: 7px;
+}
+
+.table-wrapper::-webkit-scrollbar-track {
+    background: #eef3f8;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb {
+    background: #c8d7e7;
+    border-radius: 999px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #aebfd2;
+}
+
+.table-contact {
+    width: 100%;
+    min-width: 1220px;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    table-layout: fixed;
+    font-family: 'DM Sans', sans-serif;
+}
+
+.table-contact thead {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-medium) 100%);
+}
+
+.table-contact thead th {
+    padding: 0.72rem 0.95rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.77rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.92);
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.table-contact tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background-color 0.15s ease;
+}
+
+.table-contact tbody tr:nth-child(even) {
+    background-color: #f8fafc;
+}
+
+.table-contact tbody tr:hover {
+    background-color: #eef5fc;
+}
+
+.table-contact tbody td {
+    padding: 0.55rem 0.95rem;
+    color: var(--text-dark);
+    vertical-align: middle;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.table-contact th:nth-child(1),
+.table-contact td:nth-child(1) {
+    width: 10%;
+}
+
+.table-contact th:nth-child(2),
+.table-contact td:nth-child(2) {
+    width: 10%;
+}
+
+.table-contact th:nth-child(3),
+.table-contact td:nth-child(3) {
+    width: 10%;
+}
+
+.table-contact th:nth-child(4),
+.table-contact td:nth-child(4) {
+    width: 11%;
+}
+
+.table-contact th:nth-child(5),
+.table-contact td:nth-child(5) {
+    width: 7%;
+}
+
+.table-contact th:nth-child(6),
+.table-contact td:nth-child(6) {
+    width: 10%;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.82rem;
+    color: var(--text-light);
+}
+
+.table-contact th:nth-child(7),
+.table-contact td:nth-child(7) {
+    width: 19%;
+}
+
+.table-contact th:nth-child(8),
+.table-contact td:nth-child(8) {
+    width: 10%;
+    color: var(--text-light);
+}
+
+.table-contact th:nth-child(9),
+.table-contact td:nth-child(9) {
+    width: 13%;
+}
+
+.table-contact td:nth-child(7) {
+    white-space: normal;
+    overflow: visible;
+}
+
+.table-contact td:nth-child(7) {
+    max-height: 3rem;
+    overflow-y: auto;
+    line-height: 1.45;
+    font-size: 0.8rem;
+    color: var(--text-light);
+}
+
+.table-contact td:nth-child(7)::-webkit-scrollbar {
+    width: 4px;
+}
+
+.table-contact td:nth-child(7)::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.table-contact td:nth-child(7)::-webkit-scrollbar-thumb {
+    background: #c3d3e3;
+    border-radius: 4px;
+}
+
+.table-contact td:nth-child(9) {
+    white-space: normal;
+}
+
+.contact-note-cell {
+    max-height: 3rem;
+    overflow-y: auto;
+    line-height: 1.45;
+    font-size: 0.8rem;
+    color: var(--text-light);
+}
+
+.form-error {
+    grid-column: 1 / -1;
+    min-height: 1.1rem;
+    color: #9b1f2f;
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+body.modal-open::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-color: rgba(15, 25, 40, 0.45);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    z-index: 999;
+}
+
+.company-popup-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background-color: rgba(15, 25, 40, 0.44);
+    z-index: 1400;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease;
+}
+
+.company-popup-overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+@media (max-width: 1024px) {
+    .page-container {
+        padding: 1.5rem 0.75rem;
+    }
+
+    .content-section {
+        border-radius: 10px;
+    }
+}
