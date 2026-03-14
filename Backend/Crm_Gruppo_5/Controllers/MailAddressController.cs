@@ -43,6 +43,22 @@ namespace Crm_Gruppo_5.Controllers
             return Ok(_mapper.MapBaseEntitytoDto(mail));
         }
 
+        [HttpGet]
+        [Route("by-type/{Id}")]
+        public IActionResult GetByMailAddressType(int Id)
+        {
+            var result = _ctx.MailAddresses
+                .Include(m => m.MailAddressType)
+                .Where(m => m.MailAddressType != null && m.MailAddressType.MailAddressTypeId == Id)
+                .ToList()
+                .ConvertAll(_mapper.MapEntityToMailAddressDetailsDto);
+
+            if (!result.Any())
+                return NoContent();
+
+            return Ok(result);
+        }
+
         [HttpPut]
         [Route("{id}")]
         public IActionResult Update([FromRoute] int id, [FromBody] MailAddressDto Dto)
