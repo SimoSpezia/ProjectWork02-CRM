@@ -18,7 +18,6 @@ namespace Crm_Gruppo_5.Dto
             return dto;
         }
 
-        // CORRETTO: Il tipo di ritorno ora è CompanySimpleDto (prima era CompanyDto e dava errore)
         public CompanySimpleDto MapEntitytoSimpleDto(Company entity)
         {
             CompanySimpleDto simpledto = new CompanySimpleDto
@@ -166,6 +165,21 @@ namespace Crm_Gruppo_5.Dto
             return dto;
         }
 
+        public MailAddressDetailsDto MapEntityToMailAddressDetailsDto(MailAddress entity)
+        {
+            if (entity == null)
+                return null;
+
+            MailAddressDetailsDto dto = new MailAddressDetailsDto
+            {
+                MailAddressId = entity.MailAddressId,
+                Mail = entity.Mail,
+                Contact = entity.Contact != null ? MapBaseEntitytoDto(entity.Contact) : null,
+                MailAddressType = entity.MailAddressType != null ? MapBaseEntitytoDto(entity.MailAddressType) : null
+            };
+            return dto;
+        }
+
         public PhoneNumberDto MapBaseEntitytoDto(PhoneNumber entity)
         {
             if (entity == null)
@@ -224,6 +238,21 @@ namespace Crm_Gruppo_5.Dto
             };
             return dto;
         }
+
+        public MailAddressTypeDto MapBaseEntitytoDto(MailAddressType entity)
+        {
+            if (entity == null)
+                return null;
+
+            MailAddressTypeDto dto = new MailAddressTypeDto
+            {
+                MailAddressTypeId = entity.MailAddressTypeId,
+                Description = entity.Description,
+                Priority = entity.Priority
+            };
+            return dto;
+        }
+
 
     }
 }
