@@ -42,6 +42,60 @@ namespace Crm_Gruppo_5.Controllers
             }
             return Ok(_mapper.MapBaseEntitytoDto(mail));
         }
+            
+        [HttpGet]
+        [Route("by-category/{categoryId}")]
+        public IActionResult GetByCategory(int categoryId, [FromQuery] int? Id)
+        {
+            var query = _ctx.PhoneNumbers
+                .Include(p => p.Contact)
+                    .ThenInclude(c => c.Categories)
+                .Include(p => p.PhoneNumberType)
+                .Where(p => p.Contact != null
+                            && p.Contact.Categories != null
+                            && p.Contact.Categories.Any(cat => cat.CategoryId == categoryId));
+
+            if (Id.HasValue)
+            {
+                query = query.Where(p => p.PhoneNumberType != null && p.PhoneNumberType.PhoneNumberTypeId == Id.Value);
+            }
+
+            var result = query
+                .ToList()
+                .ConvertAll(_mapper.MapEntityToPhoneNumberDetailsDto);
+
+            if (!result.Any())
+                return NoContent();
+
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Route("by-company/{companyId}")]
+        public IActionResult GetByCompany(int companyId, [FromQuery] int? Id)
+        {
+            var query = _ctx.PhoneNumbers
+                        .Include(p => p.Contact)
+                        .ThenInclude(c => c.Company)
+                        .Include(p => p.PhoneNumberType)
+                        .Where(p => p.Contact != null
+                            && p.Contact.Company != null
+                            && p.Contact.Company.CompanyId == companyId);
+
+            if (Id.HasValue)
+            {
+                query = query.Where(p => p.PhoneNumberType != null && p.PhoneNumberType.PhoneNumberTypeId == Id.Value);
+            }
+
+            var result = query
+                .ToList()
+                .ConvertAll(_mapper.MapEntityToPhoneNumberDetailsDto);
+
+            if (!result.Any())
+                return NoContent();
+
+            return Ok(result);
+        }
 
         [HttpGet]
         [Route("by-type/{Id}")]
