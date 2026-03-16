@@ -172,7 +172,7 @@ namespace Crm_Gruppo_5.Controllers
 
             if (company.Contacts != null && company.Contacts.Any())
             {
-                return Conflict("VUnable to delete the company");
+                return Conflict("Unable to delete the company");
             }
             else
             {
