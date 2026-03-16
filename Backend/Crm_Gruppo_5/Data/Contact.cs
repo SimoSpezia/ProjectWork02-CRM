@@ -13,7 +13,7 @@
         public Address? Address { get; set; }
         public Company? Company { get; set; } = null;
         public string? Note { get; set; }
-        public required DateTime DateAdded { get; set; }
+        public DateTime DateAdded { get; set; } = DateTime.UtcNow;
         public ContactType? ContactType { get; set; }
         public List<MailAddress>? MailAddresses { get; set; }
         public List<Category>? Categories { get; set; }

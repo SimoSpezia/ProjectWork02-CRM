@@ -99,7 +99,6 @@ namespace Crm_Gruppo_5.Controllers
             }
 
             contact.ContactId = 0;
-            contact.DateAdded = DateTime.Now;
 
             var result = _mapper.MapDtoToEntity(contact);
             result.Company = company;
@@ -118,7 +117,6 @@ namespace Crm_Gruppo_5.Controllers
         public IActionResult Create(ContactDto contact)
         {
             contact.ContactId = 0;
-            contact.DateAdded = DateTime.Now;
 
             var result = _mapper.MapDtoToEntity(contact);
 
@@ -159,8 +157,6 @@ namespace Crm_Gruppo_5.Controllers
                 contact.Birthday = Dto.Birthday;
             if (!string.IsNullOrEmpty(Dto.Note))
                 contact.Note = Dto.Note;
-            if (Dto.DateAdded != default(DateTime))
-                contact.DateAdded = Dto.DateAdded;
 
             _ctx.SaveChanges();
 
