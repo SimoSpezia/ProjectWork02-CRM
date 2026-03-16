@@ -49,6 +49,36 @@ namespace Crm_Gruppo_5.Dto
             return entity;
         }
 
+        public PhoneNumber MapDtoToEntity(PhoneNumberDto dto)
+        {
+            PhoneNumber entity = new PhoneNumber
+            {
+                Number = dto.Number,
+                Prefix = dto.Prefix,
+                Nationality = dto.Nationality
+            };
+            return entity;
+        }
+
+        public MailAddress MapDtoToEntity(MailAddressDto dto)
+        {
+            MailAddress entity = new MailAddress
+            {
+                Mail = dto.Mail
+            };
+            return entity;
+        }
+
+        public MailAddressType MapDtoToEntity(MailAddressTypeDto dto)
+        {
+            MailAddressType entity = new MailAddressType
+            {
+                Description = dto.Description,
+                Priority = dto.Priority
+            };
+            return entity;
+        }
+
         public Address MapDtoToEntity(AddressDto dto)
         {
             Address entity = new Address
@@ -262,5 +292,15 @@ namespace Crm_Gruppo_5.Dto
             };
             return entity;
         }
+
+        public Category MapDtoToEntity(CategoryDto dto)
+        {
+            Category entity = new Category
+            {
+                Description = dto.Description
+            };
+            return entity;
+        }
+
     }
 }

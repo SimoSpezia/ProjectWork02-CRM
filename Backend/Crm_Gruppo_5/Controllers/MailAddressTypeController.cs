@@ -41,6 +41,23 @@ namespace Crm_Gruppo_5.Controllers
             return Ok(_mapper.MapBaseEntitytoDto(mail));
         }
 
+        [HttpPost]
+        public IActionResult Create(MailAddressTypeDto mailAddressType)
+        {
+            mailAddressType.MailAddressTypeId = 0;
+
+            var entity = _mapper.MapDtoToEntity(mailAddressType);
+
+            _ctx.MailAddressTypes.Add(entity);
+
+            if (_ctx.SaveChanges() > 0)
+            {
+                return CreatedAtAction(nameof(GetSingle), new { id = entity.MailAddressTypeId }, _mapper.MapBaseEntitytoDto(entity));
+            }
+
+            return BadRequest();
+        }
+
         [HttpPut]
         [Route("{id}")]
         public IActionResult Update([FromRoute] int id, [FromBody] MailAddressTypeDto Dto)
