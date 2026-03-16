@@ -301,14 +301,5 @@ namespace Crm_Gruppo_5.Dto
             };
             return entity;
         }
-
-        public ContactType MapDtoToEntity(ContactTypeDto dto)
-        {
-            ContactType entity = new ContactType
-            {
-                Description = dto.Description
-            };
-            return entity;
-        }
     }
 }
