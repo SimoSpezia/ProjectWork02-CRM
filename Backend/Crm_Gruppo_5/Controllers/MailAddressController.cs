@@ -164,7 +164,7 @@ namespace Crm_Gruppo_5.Controllers
             if (_ctx.SaveChanges() > 0)
                 return NoContent();
             else
-                return UnprocessableEntity("Impossibile eliminare la mail.");
+                return UnprocessableEntity("Unable to delete themail.");
         }
     }
 }
