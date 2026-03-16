@@ -10,7 +10,7 @@
 <body>
     <div class="header">
         <div class="header-title">
-            <h1>Numeri</h1>
+            <h1>Tipi Numero</h1>
         </div>
         <button class="menu-toggle" aria-label="Toggle menu">☰</button>
         <div class="menu">
@@ -22,8 +22,88 @@
     <div class="menu-overlay"></div>
     <div class="page-container">
         <div class="content-section">
-            <!-- Aggiungere il contenuto della pagina qui -->
+            <div class="toolbar">
+                <button id="add-phone-type-btn" class="add-phone-type-btn" aria-haspopup="dialog">
+                    Aggiungi Tipo Numero
+                </button>
+            </div>
+
+            <div id="add-phone-type-panel"
+                 class="add-phone-panel"
+                 role="dialog"
+                 aria-modal="true"
+                 aria-labelledby="add-phone-title"
+                 style="display:none;">
+                <h2 id="add-phone-title">Aggiungi Tipo Numero</h2>
+                <form id="add-phone-type-form" novalidate>
+                    <label for="phone-type-description">Descrizione</label>
+                    <input type="text" id="phone-type-description" placeholder="Es. Cellulare" required>
+
+                    <label for="phone-type-priority">Priorita</label>
+                    <input type="number" id="phone-type-priority" min="0" step="1" placeholder="Es. 1" required>
+
+                    <p id="add-phone-type-error" class="form-error" role="alert" aria-live="polite"></p>
+
+                    <div class="form-buttons">
+                        <button type="submit">Salva</button>
+                        <button type="button" id="cancel-add-phone-type">Annulla</button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="edit-phone-type-panel"
+                 class="add-phone-panel"
+                 role="dialog"
+                 aria-modal="true"
+                 aria-labelledby="edit-phone-title"
+                 style="display:none;">
+                <h2 id="edit-phone-title">Modifica Tipo Numero</h2>
+                <form id="edit-phone-type-form" novalidate>
+                    <input type="hidden" id="edit-phone-type-id">
+
+                    <label for="edit-phone-type-description">Descrizione</label>
+                    <input type="text" id="edit-phone-type-description" required>
+
+                    <label for="edit-phone-type-priority">Priorita</label>
+                    <input type="number" id="edit-phone-type-priority" min="0" step="1" required>
+
+                    <p id="edit-phone-type-error" class="form-error" role="alert" aria-live="polite"></p>
+
+                    <div class="form-buttons">
+                        <button type="submit">Salva Modifiche</button>
+                        <button type="button" id="cancel-edit-phone-type">Annulla</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="phone-type-table" aria-label="Elenco tipi numero di telefono">
+                    <thead>
+                        <tr>
+                            <th>Id</th>
+                            <th>Descrizione</th>
+                            <th>Priorita</th>
+                            <th>Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody id="phone-type-table-body">
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="phone-popup-overlay" class="phone-popup-overlay" hidden>
+                <div class="phone-popup" role="dialog" aria-modal="true" aria-labelledby="phone-popup-title" aria-describedby="phone-popup-message">
+                    <h3 id="phone-popup-title">Conferma azione</h3>
+                    <p id="phone-popup-message"></p>
+                    <div class="phone-popup-actions">
+                        <button type="button" id="phone-popup-cancel" class="phone-popup-btn phone-popup-btn-secondary">Annulla</button>
+                        <button type="button" id="phone-popup-confirm" class="phone-popup-btn phone-popup-btn-primary">Conferma</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+
+    <script type="module" src="src/numeri.js"></script>
 </body>
 </html>

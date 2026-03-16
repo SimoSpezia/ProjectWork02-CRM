@@ -53,8 +53,7 @@ namespace Crm_Gruppo_5.Controllers
             }
             if (!string.IsNullOrEmpty(Dto.Description))
                 mailType.Description = Dto.Description;
-            if (Dto.Priority != 0)
-                mailType.Priority = Dto.Priority;
+            mailType.Priority = Dto.Priority;
     
             _ctx.SaveChanges();
 

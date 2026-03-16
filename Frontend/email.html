@@ -10,7 +10,7 @@
 <body>
     <div class="header">
         <div class="header-title">
-            <h1>Email</h1>
+            <h1>Tipi Email</h1>
         </div>
         <button class="menu-toggle" aria-label="Toggle menu">☰</button>
         <div class="menu">
@@ -22,8 +22,88 @@
     <div class="menu-overlay"></div>
     <div class="page-container">
         <div class="content-section">
-            <!-- Aggiungere il contenuto della pagina qui -->
+            <div class="toolbar">
+                <button id="add-email-type-btn" class="add-email-type-btn" aria-haspopup="dialog">
+                    Aggiungi Tipo Email
+                </button>
+            </div>
+
+            <div id="add-email-type-panel"
+                 class="add-email-panel"
+                 role="dialog"
+                 aria-modal="true"
+                 aria-labelledby="add-email-title"
+                 style="display:none;">
+                <h2 id="add-email-title">Aggiungi Tipo Email</h2>
+                <form id="add-email-type-form" novalidate>
+                    <label for="email-type-description">Descrizione</label>
+                    <input type="text" id="email-type-description" placeholder="Es. Lavoro" required>
+
+                    <label for="email-type-priority">Priorita</label>
+                    <input type="number" id="email-type-priority" min="0" step="1" placeholder="Es. 1" required>
+
+                    <p id="add-email-type-error" class="form-error" role="alert" aria-live="polite"></p>
+
+                    <div class="form-buttons">
+                        <button type="submit">Salva</button>
+                        <button type="button" id="cancel-add-email-type">Annulla</button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="edit-email-type-panel"
+                 class="add-email-panel"
+                 role="dialog"
+                 aria-modal="true"
+                 aria-labelledby="edit-email-title"
+                 style="display:none;">
+                <h2 id="edit-email-title">Modifica Tipo Email</h2>
+                <form id="edit-email-type-form" novalidate>
+                    <input type="hidden" id="edit-email-type-id">
+
+                    <label for="edit-email-type-description">Descrizione</label>
+                    <input type="text" id="edit-email-type-description" required>
+
+                    <label for="edit-email-type-priority">Priorita</label>
+                    <input type="number" id="edit-email-type-priority" min="0" step="1" required>
+
+                    <p id="edit-email-type-error" class="form-error" role="alert" aria-live="polite"></p>
+
+                    <div class="form-buttons">
+                        <button type="submit">Salva Modifiche</button>
+                        <button type="button" id="cancel-edit-email-type">Annulla</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="email-type-table" aria-label="Elenco tipi email">
+                    <thead>
+                        <tr>
+                            <th>Id</th>
+                            <th>Descrizione</th>
+                            <th>Priorita</th>
+                            <th>Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody id="email-type-table-body">
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="email-popup-overlay" class="email-popup-overlay" hidden>
+                <div class="email-popup" role="dialog" aria-modal="true" aria-labelledby="email-popup-title" aria-describedby="email-popup-message">
+                    <h3 id="email-popup-title">Conferma azione</h3>
+                    <p id="email-popup-message"></p>
+                    <div class="email-popup-actions">
+                        <button type="button" id="email-popup-cancel" class="email-popup-btn email-popup-btn-secondary">Annulla</button>
+                        <button type="button" id="email-popup-confirm" class="email-popup-btn email-popup-btn-primary">Conferma</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+
+    <script type="module" src="src/email.js"></script>
 </body>
 </html>
