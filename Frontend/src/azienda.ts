@@ -8,6 +8,12 @@ import {
     getCompanyContacts,
     updateCompany
 } from "./apiAzienda.js";
+import {
+    ContactUpsertPayload,
+    createContact,
+    updateContact
+} from "./apiContact.js";
+import { createAddressSelectBinding } from "./address.js";
 import { hidePanel, showPanel } from "./common.js";
 
 const tableBody = document.getElementById("table-company-body") as HTMLTableSectionElement | null;
@@ -34,16 +40,31 @@ const popupCancelButton = document.getElementById("company-popup-cancel") as HTM
 const popupConfirmButton = document.getElementById("company-popup-confirm") as HTMLButtonElement | null;
 
 let editingCompanyId: number | null = null;
+let editingCompanySnapshot: CompanyUpsertPayload | null = null;
 let popupResolver: ((result: boolean) => void) | null = null;
 let popupMode: "confirm" | "message" | null = null;
 
+const addAddressBinding = createAddressSelectBinding({
+    countryId: "company-address-country",
+    regionId: "company-address-region",
+    provinceId: "company-address-province",
+    cityId: "company-address-city"
+});
+
+const editAddressBinding = createAddressSelectBinding({
+    countryId: "edit-company-address-country",
+    regionId: "edit-company-address-region",
+    provinceId: "edit-company-address-province",
+    cityId: "edit-company-address-city"
+});
+
 function elementValue(id: string): string {
-    const element = document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | null;
+    const element = document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null;
     return element?.value.trim() ?? "";
 }
 
 function setElementValue(id: string, value: string): void {
-    const element = document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | null;
+    const element = document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null;
     if (element) {
         element.value = value;
     }
@@ -126,6 +147,32 @@ async function showMessagePopup(title: string, message: string): Promise<void> {
         message,
         confirmText: "Chiudi"
     });
+}
+
+function getUpsertContactErrorMessage(error: unknown): string {
+    if (!(error instanceof Error)) {
+        return "Compila i campi obbligatori del contatto e riprova.";
+    }
+
+    if (error.message.startsWith("MISSING_FIELDS:")) {
+        const rawFields = error.message.slice("MISSING_FIELDS:".length).trim();
+        if (!rawFields) {
+            return "Compila i campi obbligatori del contatto e riprova.";
+        }
+
+        const fields = rawFields
+            .split("|")
+            .map((field) => field.trim())
+            .filter(Boolean);
+
+        if (fields.length === 0) {
+            return "Compila i campi obbligatori del contatto e riprova.";
+        }
+
+        return `Campi contatto mancanti: ${fields.join(", ")}.`;
+    }
+
+    return error.message;
 }
 
 function setupPopup(): void {
@@ -234,7 +281,14 @@ function createContactEditorRow(contact?: ContactDto): HTMLDivElement {
 
         <label>Note contatto</label>
         <textarea data-field="note" rows="2">${contact?.note ?? ""}</textarea>
+
+        <button type="button" class="delete-action-btn" data-action="remove-contact-row">Rimuovi contatto</button>
     `;
+
+    const removeButton = row.querySelector("[data-action='remove-contact-row']") as HTMLButtonElement | null;
+    removeButton?.addEventListener("click", () => {
+        row.remove();
+    });
 
     return row;
 }
@@ -281,24 +335,80 @@ function readContacts(listElement: HTMLDivElement | null): ContactDto[] {
     return parsed;
 }
 
-function buildCompanyPayload(contactList: HTMLDivElement | null): CompanyUpsertPayload {
+function mapCompanyToPayload(company: CompanySimpleDto): CompanyUpsertPayload {
     return {
-        denomination: elementValue("company-name") || elementValue("edit-company-name"),
-        website: elementValue("company-website") || elementValue("edit-company-website") || undefined,
-        vatNumber: elementValue("company-partitaIVA") || elementValue("edit-company-partitaIVA"),
-        size: elementValue("company-size") || elementValue("edit-company-size") || undefined,
-        note: elementValue("company-notes") || elementValue("edit-company-notes") || undefined,
+        denomination: company.denomination,
+        website: company.website || undefined,
+        vatNumber: company.vatNumber,
+        size: company.size || undefined,
+        note: company.note || undefined,
         address: {
-            street: elementValue("company-address-street") || elementValue("edit-company-address-street"),
-            streetNumber: elementValue("company-address-streetNumber") || elementValue("edit-company-address-streetNumber"),
-            zip: elementValue("company-address-zip") || elementValue("edit-company-address-zip"),
-            city: elementValue("company-address-city") || elementValue("edit-company-address-city"),
-            province: elementValue("company-address-province") || elementValue("edit-company-address-province") || undefined,
-            region: elementValue("company-address-region") || elementValue("edit-company-address-region") || undefined,
-            country: elementValue("company-address-country") || elementValue("edit-company-address-country")
-        },
-        contacts: readContacts(contactList)
+            street: company.address.street,
+            streetNumber: company.address.streetNumber,
+            zip: company.address.zip,
+            city: company.address.city,
+            province: company.address.province || undefined,
+            region: company.address.region || undefined,
+            country: company.address.country
+        }
     };
+}
+
+function normalized(value?: string): string {
+    return (value ?? "").trim();
+}
+
+function hasCompanyChanges(current: CompanyUpsertPayload, original: CompanyUpsertPayload | null): boolean {
+    if (!original) {
+        return true;
+    }
+
+    return (
+        normalized(current.denomination) !== normalized(original.denomination) ||
+        normalized(current.website) !== normalized(original.website) ||
+        normalized(current.vatNumber) !== normalized(original.vatNumber) ||
+        normalized(current.size) !== normalized(original.size) ||
+        normalized(current.note) !== normalized(original.note) ||
+        normalized(current.address.street) !== normalized(original.address.street) ||
+        normalized(current.address.streetNumber) !== normalized(original.address.streetNumber) ||
+        normalized(current.address.zip) !== normalized(original.address.zip) ||
+        normalized(current.address.city) !== normalized(original.address.city) ||
+        normalized(current.address.province) !== normalized(original.address.province) ||
+        normalized(current.address.region) !== normalized(original.address.region) ||
+        normalized(current.address.country) !== normalized(original.address.country)
+    );
+}
+
+function toContactUpsertPayload(contact: ContactDto, companyDenomination: string): ContactUpsertPayload {
+    return {
+        contactId: contact.contactId > 0 ? contact.contactId : undefined,
+        name: contact.name,
+        surname: contact.surname,
+        title: contact.title,
+        workRole: contact.workRole,
+        gender: contact.gender,
+        birthday: contact.birthday,
+        note: contact.note,
+        dateAdded: contact.dateAdded || new Date().toISOString(),
+        companyDenomination
+    };
+}
+
+async function upsertCompanyContacts(editedContacts: ContactDto[], companyDenomination: string): Promise<void> {
+    if (editedContacts.length === 0) {
+        return;
+    }
+
+    for (const contact of editedContacts) {
+        const payload = toContactUpsertPayload(contact, companyDenomination);
+
+        if (contact.contactId > 0) {
+            await updateContact(contact.contactId, payload);
+            continue;
+        }
+
+        await createContact(payload);
+    }
 }
 
 function buildAddCompanyPayload(): CompanyUpsertPayload {
@@ -316,8 +426,7 @@ function buildAddCompanyPayload(): CompanyUpsertPayload {
             province: elementValue("company-address-province") || undefined,
             region: elementValue("company-address-region") || undefined,
             country: elementValue("company-address-country")
-        },
-        contacts: readContacts(addContactsList)
+        }
     };
 }
 
@@ -336,8 +445,7 @@ function buildEditCompanyPayload(): CompanyUpsertPayload {
             province: elementValue("edit-company-address-province") || undefined,
             region: elementValue("edit-company-address-region") || undefined,
             country: elementValue("edit-company-address-country")
-        },
-        contacts: readContacts(editContactsList)
+        }
     };
 }
 
@@ -494,6 +602,14 @@ function openAddPanel(): void {
     }
     clearError(addError);
     clearAddContactRows();
+    addAddressBinding?.setAddress({
+        country: "",
+        region: "",
+        province: "",
+        city: ""
+    }).catch((error) => {
+        console.error("Errore reset indirizzo (add)", error);
+    });
     showPanel(addPanel, addButton);
 }
 
@@ -503,16 +619,19 @@ async function openEditPanel(company: CompanySimpleDto): Promise<void> {
     }
 
     editingCompanyId = company.companyId;
+    editingCompanySnapshot = mapCompanyToPayload(company);
     clearError(editError);
 
     setElementValue("edit-company-name", company.denomination);
     setElementValue("edit-company-address-street", company.address.street ?? "");
     setElementValue("edit-company-address-streetNumber", company.address.streetNumber ?? "");
     setElementValue("edit-company-address-zip", company.address.zip ?? "");
-    setElementValue("edit-company-address-city", company.address.city ?? "");
-    setElementValue("edit-company-address-province", company.address.province ?? "");
-    setElementValue("edit-company-address-region", company.address.region ?? "");
-    setElementValue("edit-company-address-country", company.address.country ?? "");
+    await editAddressBinding?.setAddress({
+        country: company.address.country ?? "",
+        region: company.address.region ?? "",
+        province: company.address.province ?? "",
+        city: company.address.city ?? ""
+    });
     setElementValue("edit-company-partitaIVA", company.vatNumber);
     setElementValue("edit-company-size", company.size ?? "");
     setElementValue("edit-company-website", company.website ?? "");
@@ -549,6 +668,12 @@ function setupAddForm(): void {
             const payload = buildAddCompanyPayload();
             await createCompany(payload);
             addForm.reset();
+            await addAddressBinding?.setAddress({
+                country: "",
+                region: "",
+                province: "",
+                city: ""
+            });
             clearAddContactRows();
             hidePanel(addPanel, addButton);
             await loadCompanies();
@@ -574,11 +699,31 @@ function setupEditForm(): void {
 
         try {
             const payload = buildEditCompanyPayload();
-            await updateCompany(editingCompanyId, payload);
+            const contacts = readContacts(editContactsList);
+
+            if (hasCompanyChanges(payload, editingCompanySnapshot)) {
+                try {
+                    await updateCompany(editingCompanyId, payload);
+                } catch (error) {
+                    if (!(error instanceof Error) || !error.message.includes("HTTP 422")) {
+                        throw error;
+                    }
+                }
+            }
+
+            await upsertCompanyContacts(contacts, payload.denomination);
             hidePanel(editPanel, addButton);
+            editingCompanyId = null;
+            editingCompanySnapshot = null;
             await loadCompanies();
         } catch (error) {
-            showError(editError, (error as Error).message);
+            const companyMessage = getCreateCompanyErrorMessage(error);
+            if (companyMessage !== "Compila i campi obbligatori mancanti e riprova.") {
+                showError(editError, companyMessage);
+                return;
+            }
+
+            showError(editError, getUpsertContactErrorMessage(error));
         }
     });
 }
@@ -590,6 +735,14 @@ function setupButtons(): void {
         if (addPanel && addButton && addForm) {
             hidePanel(addPanel, addButton);
             addForm.reset();
+            addAddressBinding?.setAddress({
+                country: "",
+                region: "",
+                province: "",
+                city: ""
+            }).catch((error) => {
+                console.error("Errore reset indirizzo (cancel add)", error);
+            });
             clearAddContactRows();
         }
     });
@@ -599,6 +752,15 @@ function setupButtons(): void {
             hidePanel(editPanel, addButton);
             clearEditContactRows();
             editingCompanyId = null;
+            editingCompanySnapshot = null;
+            editAddressBinding?.setAddress({
+                country: "",
+                region: "",
+                province: "",
+                city: ""
+            }).catch((error) => {
+                console.error("Errore reset indirizzo (cancel edit)", error);
+            });
         }
     });
 
@@ -612,6 +774,8 @@ function setupButtons(): void {
 }
 
 async function init(): Promise<void> {
+    await addAddressBinding?.initialize();
+    await editAddressBinding?.initialize();
     setupPopup();
     setupButtons();
     setupAddForm();

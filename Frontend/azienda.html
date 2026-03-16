@@ -74,29 +74,24 @@
                                required>
 
                         <label for="company-address-city">Città</label>
-                        <input type="text"
-                               id="company-address-city"
-                               placeholder="Milano"
-                               required>
+                                          <select id="company-address-city" required>
+                                                 <option value="">Seleziona città</option>
+                                          </select>
 
                         <label for="company-address-province">Provincia</label>
-                        <input type="text"
-                               id="company-address-province"
-                               placeholder="MI"
-                               maxlength="2"
-                               required>
+                                          <select id="company-address-province" required>
+                                                 <option value="">Seleziona provincia</option>
+                                          </select>
 
                         <label for="company-address-region">Regione</label>
-                        <input type="text"
-                               id="company-address-region"
-                               placeholder="Lombardia"
-                               required>
+                                          <select id="company-address-region" required>
+                                                 <option value="">Seleziona regione</option>
+                                          </select>
 
                         <label for="company-address-country">Nazione</label>
-                        <input type="text"
-                               id="company-address-country"
-                               placeholder="Italia"
-                               required>
+                                          <select id="company-address-country" required>
+                                                 <option value="">Seleziona nazione</option>
+                                          </select>
                     </div>
 
                     <label for="company-partitaIVA">Partita IVA</label>
@@ -167,29 +162,24 @@
                                required>
 
                         <label for="edit-company-address-city">Città</label>
-                        <input type="text"
-                               id="edit-company-address-city"
-                               placeholder="Milano"
-                               required>
+                                          <select id="edit-company-address-city" required>
+                                                 <option value="">Seleziona città</option>
+                                          </select>
 
                         <label for="edit-company-address-province">Provincia</label>
-                        <input type="text"
-                               id="edit-company-address-province"
-                               placeholder="MI"
-                               maxlength="2"
-                               required>
+                                          <select id="edit-company-address-province" required>
+                                                 <option value="">Seleziona provincia</option>
+                                          </select>
 
                         <label for="edit-company-address-region">Regione</label>
-                        <input type="text"
-                               id="edit-company-address-region"
-                               placeholder="Lombardia"
-                               required>
+                                          <select id="edit-company-address-region" required>
+                                                 <option value="">Seleziona regione</option>
+                                          </select>
 
                         <label for="edit-company-address-country">Nazione</label>
-                        <input type="text"
-                               id="edit-company-address-country"
-                               placeholder="Italia"
-                               required>
+                                          <select id="edit-company-address-country" required>
+                                                 <option value="">Seleziona nazione</option>
+                                          </select>
                     </div>
 
                     <label for="edit-company-partitaIVA">Partita IVA</label>
@@ -212,6 +202,14 @@
                     <label for="edit-company-notes">Note</label>
                     <textarea id="edit-company-notes"
                               placeholder="Informazioni aggiuntive sull'azienda..."></textarea>
+
+                                   <div class="company-contacts-section" aria-label="Contatti associati all'azienda">
+                                          <div class="company-contacts-header">
+                                                 <h3>Contatti associati</h3>
+                                                 <button type="button" id="edit-company-contact-row" class="contact-add-btn">Aggiungi contatto</button>
+                                          </div>
+                                          <div id="edit-company-contacts-list" class="company-contacts-list"></div>
+                                   </div>
 
                     <div class="form-buttons">
                         <button type="submit">Salva Modifiche</button>

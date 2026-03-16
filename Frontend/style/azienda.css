@@ -531,11 +531,82 @@
 .add-company-panel form > label:first-of-type,
 .add-company-panel form > input:first-of-type,
 #edit-company-address-form,
+.company-contacts-section,
 .add-company-panel label[for="company-notes"],
 .add-company-panel label[for="edit-company-notes"],
 .add-company-panel textarea,
 .add-company-panel .form-buttons {
     grid-column: 1 / -1;
+}
+
+.company-contacts-section {
+    margin-top: 0.35rem;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: #f8fbff;
+}
+
+.company-contacts-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.85rem;
+}
+
+.company-contacts-header h3 {
+    margin: 0;
+    color: var(--primary-dark);
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+}
+
+.contact-add-btn {
+    border: 1px solid #c5d8f3;
+    border-radius: 999px;
+    padding: 0.35rem 0.8rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #1f4a7e;
+    background: linear-gradient(180deg, #eef5ff 0%, #ddeafc 100%);
+    cursor: pointer;
+    transition: transform 0.12s ease, box-shadow 0.15s ease;
+}
+
+.contact-add-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(45, 90, 138, 0.2);
+}
+
+.contact-add-btn:active {
+    transform: translateY(0);
+}
+
+.company-contacts-list {
+    display: grid;
+    gap: 0.85rem;
+}
+
+.contact-editor-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem 0.9rem;
+    padding: 0.9rem;
+    background-color: #ffffff;
+    border: 1px solid #dce7f5;
+    border-radius: 9px;
+}
+
+.contact-editor-row label {
+    margin-bottom: -0.2rem;
+}
+
+.contact-editor-row textarea {
+    grid-column: 1 / -1;
+    min-height: 72px;
 }
 
 /* Sezione indirizzo */
@@ -655,8 +726,9 @@
     align-self: end;
 }
 
-/* Input e textarea */
+/* Input, select e textarea */
 .add-company-panel input,
+.add-company-panel select,
 .add-company-panel textarea {
     padding: 0.65rem 0.9rem;
     border: 1.5px solid var(--border);
@@ -669,12 +741,14 @@
 }
 
 .add-company-panel input:hover,
+.add-company-panel select:hover,
 .add-company-panel textarea:hover {
     border-color: var(--primary-light);
     background-color: #fff;
 }
 
 .add-company-panel input:focus,
+.add-company-panel select:focus,
 .add-company-panel textarea:focus {
     outline: none;
     border-color: var(--accent);
@@ -846,5 +920,14 @@ body.modal-open::before {
 
     .form-buttons {
         flex-direction: column;
+    }
+
+    .company-contacts-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .contact-editor-row {
+        grid-template-columns: 1fr;
     }
 }

@@ -1,4 +1,5 @@
 import { hidePanel, showPanel } from "./common.js";
+import { createAddressSelectBinding } from "./address.js";
 import {
     ContactDto,
     ContactUpsertPayload,
@@ -32,6 +33,20 @@ let editingContactId: number | null = null;
 let popupResolver: ((result: boolean) => void) | null = null;
 let popupMode: "confirm" | "message" | null = null;
 let companyOptions: string[] = [];
+
+const addAddressBinding = createAddressSelectBinding({
+    countryId: "contact-address-country",
+    regionId: "contact-address-region",
+    provinceId: "contact-address-province",
+    cityId: "contact-address-city"
+});
+
+const editAddressBinding = createAddressSelectBinding({
+    countryId: "edit-contact-address-country",
+    regionId: "edit-contact-address-region",
+    provinceId: "edit-contact-address-province",
+    cityId: "edit-contact-address-city"
+});
 
 function elementValue(id: string): string {
     const element = document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null;
@@ -501,6 +516,8 @@ function setupButtons(): void {
 }
 
 async function init(): Promise<void> {
+    await addAddressBinding?.initialize();
+    await editAddressBinding?.initialize();
     setupPopup();
     await loadCompanyOptions();
     setupButtons();

@@ -1,4 +1,5 @@
 import { hidePanel, showPanel } from "./common.js";
+import { createAddressSelectBinding } from "./address.js";
 import { getContact, createContact, deleteContact, updateContact } from "./apiContact.js";
 import { getCompanies } from "./apiAzienda.js";
 const tableBody = document.getElementById("table-contact-body");
@@ -20,6 +21,18 @@ let editingContactId = null;
 let popupResolver = null;
 let popupMode = null;
 let companyOptions = [];
+const addAddressBinding = createAddressSelectBinding({
+    countryId: "contact-address-country",
+    regionId: "contact-address-region",
+    provinceId: "contact-address-province",
+    cityId: "contact-address-city"
+});
+const editAddressBinding = createAddressSelectBinding({
+    countryId: "edit-contact-address-country",
+    regionId: "edit-contact-address-region",
+    provinceId: "edit-contact-address-province",
+    cityId: "edit-contact-address-city"
+});
 function elementValue(id) {
     var _a;
     const element = document.getElementById(id);
@@ -405,6 +418,8 @@ function setupButtons() {
     });
 }
 async function init() {
+    await (addAddressBinding === null || addAddressBinding === void 0 ? void 0 : addAddressBinding.initialize());
+    await (editAddressBinding === null || editAddressBinding === void 0 ? void 0 : editAddressBinding.initialize());
     setupPopup();
     await loadCompanyOptions();
     setupButtons();
