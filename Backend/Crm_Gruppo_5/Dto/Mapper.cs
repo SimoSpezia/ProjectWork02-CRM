@@ -301,6 +301,5 @@ namespace Crm_Gruppo_5.Dto
             };
             return entity;
         }
-
     }
 }
