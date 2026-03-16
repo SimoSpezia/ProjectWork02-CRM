@@ -19,7 +19,10 @@ namespace Crm_Gruppo_5.Controllers
         {
             try
             {
-                var result = _ctx.Contacts.ToList().ConvertAll(_mapper.MapBaseEntitytoDto);
+                var result = _ctx.Contacts
+                    .Include(c => c.Company)
+                    .ToList()
+                    .ConvertAll(_mapper.MapBaseEntitytoDto);
                 return Ok(result);
             }
             catch (Exception ex)

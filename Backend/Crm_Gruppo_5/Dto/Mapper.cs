@@ -112,7 +112,8 @@ namespace Crm_Gruppo_5.Dto
                 Gender = entity.Gender,
                 Birthday = entity.Birthday,
                 Note = entity.Note,
-                DateAdded = entity.DateAdded
+                DateAdded = entity.DateAdded,
+                CompanyDenomination = entity.Company != null ? entity.Company.Denomination : null
             };
             return dto;
         }

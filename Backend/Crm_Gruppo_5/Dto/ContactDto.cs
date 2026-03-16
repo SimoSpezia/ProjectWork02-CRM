@@ -16,5 +16,6 @@ namespace Crm_Gruppo_5.Dto
         public required DateTime Birthday { get; set; }
         public string? Note { get; set; }
         public required DateTime DateAdded { get; set; }
+        public string? CompanyDenomination { get; set; }
     }
 }
