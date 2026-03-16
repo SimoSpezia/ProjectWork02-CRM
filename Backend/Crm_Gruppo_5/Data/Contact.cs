@@ -8,7 +8,7 @@
         public string? Title { get; set; }
         public string? WorkRole { get; set; }
         public string? Gender { get; set; }
-        public required DateTime Birthday { get; set; }
+        public DateTime? Birthday { get; set; }
         public Address? Address { get; set; }
         public Company? Company { get; set; } = null;
         public string? Note { get; set; }

@@ -11,7 +11,7 @@ namespace Crm_Gruppo_5.Dto
         public string? Title { get; set; }
         public string? WorkRole { get; set; }
         public string? Gender { get; set; }
-        public required DateTime Birthday { get; set; }
+        public DateTime? Birthday { get; set; }
         public string? Note { get; set; }
         public required DateTime DateAdded { get; set; }
         public string? CompanyDenomination { get; set; }
