@@ -13,6 +13,6 @@ namespace Crm_Gruppo_5.Dto
         public string? Gender { get; set; }
         public DateOnly? Birthday { get; set; }
         public string? Note { get; set; }
-        public DateTime? DateAdded { get; set; }
+        public required DateTime DateAdded { get; set; }
     }
 }
