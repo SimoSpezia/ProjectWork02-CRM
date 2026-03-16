@@ -85,9 +85,37 @@ namespace Crm_Gruppo_5.Controllers
 
 
         [HttpPost]
+        [Route("withCompany/{id}")]
+        public IActionResult CreateWithCompany([FromRoute] int id, [FromBody] ContactDto contact)
+        {
+            var company = _ctx.Companies.SingleOrDefault(c => c.CompanyId == id);
+
+            if (company == null)
+            {
+                return NotFound($"Company with id {id} not found");
+            }
+
+            contact.ContactId = 0;
+            contact.DateAdded = DateTime.Now;
+
+            var result = _mapper.MapDtoToEntity(contact);
+            result.Company = company;
+
+            _ctx.Contacts.Add(result);
+
+            if (_ctx.SaveChanges() > 0)
+            {
+                return CreatedAtAction(nameof(GetSingle), new { id = result.ContactId }, _mapper.MapBaseEntitytoDto(result));
+            }
+
+            return BadRequest();
+        }
+
+        [HttpPost]
         public IActionResult Create(ContactDto contact)
         {
             contact.ContactId = 0;
+            contact.DateAdded = DateTime.Now;
 
             var result = _mapper.MapDtoToEntity(contact);
 
@@ -100,6 +128,8 @@ namespace Crm_Gruppo_5.Controllers
 
             return BadRequest();
         }
+
+
 
         [HttpPut]
         [Route("{id}")]
@@ -122,7 +152,7 @@ namespace Crm_Gruppo_5.Controllers
                 contact.WorkRole = Dto.WorkRole;
             if (!string.IsNullOrEmpty(Dto.Gender))
                 contact.Gender = Dto.Gender;
-            if (Dto.Birthday != default(DateTime))
+            if (Dto.Birthday != default(DateOnly))
                 contact.Birthday = Dto.Birthday;
             if (!string.IsNullOrEmpty(Dto.Note))
                 contact.Note = Dto.Note;

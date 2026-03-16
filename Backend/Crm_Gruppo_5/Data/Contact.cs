@@ -8,11 +8,11 @@
         public string? Title { get; set; }
         public string? WorkRole { get; set; }
         public string? Gender { get; set; }
-        public required DateTime Birthday { get; set; }
+        public DateOnly? Birthday { get; set; }
         public Address? Address { get; set; }
         public Company? Company { get; set; } = null;
         public string? Note { get; set; }
-        public required DateTime DateAdded { get; set; }
+        public DateTime? DateAdded { get; set; }
         public ContactType? ContactType { get; set; }
         public List<MailAddress>? MailAddresses { get; set; }
         public List<Category>? Categories { get; set; }
