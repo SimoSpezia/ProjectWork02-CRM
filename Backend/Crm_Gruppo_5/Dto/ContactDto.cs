@@ -6,9 +6,7 @@ namespace Crm_Gruppo_5.Dto
     public class ContactDto
     {
         public int ContactId { get; set; }
-        [MinLength(2)]
         public required string Name { get; set; }
-        [MinLength(2)]
         public required string Surname { get; set; }
         public string? Title { get; set; }
         public string? WorkRole { get; set; }

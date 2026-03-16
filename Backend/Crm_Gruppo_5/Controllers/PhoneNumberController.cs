@@ -1,4 +1,5 @@
 ﻿using Crm_Gruppo_5.Dto;
+using CrmGruppo5.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -110,6 +111,23 @@ namespace Crm_Gruppo_5.Controllers
                 return NoContent();
 
             return Ok(result);
+        }
+
+        [HttpPost]
+        public IActionResult Create(PhoneNumberDto phoneNumber)
+        {
+            phoneNumber.PhoneNumberId = 0;
+
+            var entity = _mapper.MapDtoToEntity(phoneNumber);
+
+            _ctx.PhoneNumbers.Add(entity);
+
+            if (_ctx.SaveChanges() > 0)
+            {
+                return CreatedAtAction(nameof(GetSingle), new { id = entity.PhoneNumberId }, _mapper.MapBaseEntitytoDto(entity));
+            }
+
+            return BadRequest();
         }
 
         [HttpPut]
