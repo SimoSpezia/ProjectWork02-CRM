@@ -44,7 +44,6 @@ namespace Crm_Gruppo_5.Dto
                 Gender = dto.Gender,
                 Birthday = dto.Birthday,
                 Note = dto.Note,
-                DateAdded = dto.DateAdded
             };
             return entity;
         }
@@ -141,7 +140,6 @@ namespace Crm_Gruppo_5.Dto
                 Gender = entity.Gender,
                 Birthday = entity.Birthday,
                 Note = entity.Note,
-                DateAdded = entity.DateAdded,
                 CompanyDenomination = entity.Company != null ? entity.Company.Denomination : null
             };
             return dto;
@@ -159,7 +157,6 @@ namespace Crm_Gruppo_5.Dto
                 Gender = entity.Gender,
                 Birthday = entity.Birthday,
                 Note = entity.Note,
-                DateAdded = entity.DateAdded,
                 ContactType = entity.ContactType != null ? MapBaseEntitytoDto(entity.ContactType) : null,
                 Address = entity.Address != null ? MapBaseEntityToDto(entity.Address) : null,
                 Company = entity.Company != null ? MapBaseEntitytoDto(entity.Company) : null,
