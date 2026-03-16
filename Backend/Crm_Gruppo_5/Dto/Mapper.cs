@@ -44,7 +44,36 @@ namespace Crm_Gruppo_5.Dto
                 Gender = dto.Gender,
                 Birthday = dto.Birthday,
                 Note = dto.Note,
-                DateAdded = dto.DateAdded
+            };
+            return entity;
+        }
+
+        public PhoneNumber MapDtoToEntity(PhoneNumberDto dto)
+        {
+            PhoneNumber entity = new PhoneNumber
+            {
+                Number = dto.Number,
+                Prefix = dto.Prefix,
+                Nationality = dto.Nationality
+            };
+            return entity;
+        }
+
+        public MailAddress MapDtoToEntity(MailAddressDto dto)
+        {
+            MailAddress entity = new MailAddress
+            {
+                Mail = dto.Mail
+            };
+            return entity;
+        }
+
+        public MailAddressType MapDtoToEntity(MailAddressTypeDto dto)
+        {
+            MailAddressType entity = new MailAddressType
+            {
+                Description = dto.Description,
+                Priority = dto.Priority
             };
             return entity;
         }
@@ -111,7 +140,6 @@ namespace Crm_Gruppo_5.Dto
                 Gender = entity.Gender,
                 Birthday = entity.Birthday,
                 Note = entity.Note,
-                DateAdded = entity.DateAdded,
                 CompanyDenomination = entity.Company != null ? entity.Company.Denomination : null
             };
             return dto;
@@ -129,7 +157,6 @@ namespace Crm_Gruppo_5.Dto
                 Gender = entity.Gender,
                 Birthday = entity.Birthday,
                 Note = entity.Note,
-                DateAdded = entity.DateAdded,
                 ContactType = entity.ContactType != null ? MapBaseEntitytoDto(entity.ContactType) : null,
                 Address = entity.Address != null ? MapBaseEntityToDto(entity.Address) : null,
                 Company = entity.Company != null ? MapBaseEntitytoDto(entity.Company) : null,
@@ -257,6 +284,15 @@ namespace Crm_Gruppo_5.Dto
         public ContactType MapDtoToEntity(ContactTypeDto dto)
         {
             ContactType entity = new ContactType
+            {
+                Description = dto.Description
+            };
+            return entity;
+        }
+
+        public Category MapDtoToEntity(CategoryDto dto)
+        {
+            Category entity = new Category
             {
                 Description = dto.Description
             };

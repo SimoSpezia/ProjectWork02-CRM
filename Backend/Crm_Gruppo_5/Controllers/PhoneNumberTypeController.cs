@@ -3,12 +3,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Crm_Gruppo_5.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class MailAddressTypeController(Data.ContactDbContext ctx, ILogger<MailAddressTypeController> logger, Mapper mapper) : ControllerBase
+    public class PhoneNumberTypeController(Data.ContactDbContext ctx, ILogger<PhoneNumberTypeController> logger, Mapper mapper) : ControllerBase
     {
         private readonly Data.ContactDbContext _ctx = ctx;
-        private readonly ILogger<MailAddressTypeController> _logger = logger;
+        private readonly ILogger<PhoneNumberTypeController> _logger = logger;
         private readonly Mapper _mapper = mapper;
 
         [HttpGet]
@@ -70,8 +68,9 @@ namespace Crm_Gruppo_5.Controllers
             }
             if (!string.IsNullOrEmpty(Dto.Description))
                 mailType.Description = Dto.Description;
-            mailType.Priority = Dto.Priority;
-    
+            if (Dto.Priority != 0)
+                mailType.Priority = Dto.Priority;
+
             _ctx.SaveChanges();
 
             var result = _mapper.MapBaseEntitytoDto(mailType);
@@ -96,6 +95,5 @@ namespace Crm_Gruppo_5.Controllers
             else
                 return UnprocessableEntity("Unable to delete the mail address type.");
         }
-
     }
 }
