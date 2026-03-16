@@ -172,7 +172,7 @@ namespace Crm_Gruppo_5.Controllers
 
             if (company.Contacts != null && company.Contacts.Any())
             {
-                return Conflict("Violazione vincolo FK!");
+                return Conflict("Unable to delete the company");
             }
             else
             {
