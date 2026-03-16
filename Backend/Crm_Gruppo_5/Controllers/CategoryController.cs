@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Crm_Gruppo_5.Controllers
 {
+    [Route("api/[controller]")]
+    [ApiController]
     public class CategoryController(Data.ContactDbContext ctx, ILogger<CategoryController> logger, Mapper mapper) : ControllerBase
     {
         private readonly Data.ContactDbContext _ctx = ctx;
@@ -42,6 +44,26 @@ namespace Crm_Gruppo_5.Controllers
 
             return Ok(_mapper.MapBaseEntitytoDto(category));
         }
+
+        [HttpGet]
+        [Route("WithContacts/{id}")]
+        public IActionResult GetContacts(int id)
+        {
+            var category = _ctx.Categories
+                          .Include(c => c.Contacts)
+                          .ThenInclude(c=> c.Company)
+                          .SingleOrDefault(c => c.CategoryId == id);
+            if (category == null)
+            {
+                return NotFound($"Category with id {id} not found");
+            }
+            var result = category.Contacts
+                                 .ToList()
+                                 .ConvertAll(_mapper.MapEntityToContactDetailsDto);
+            var finalResult = result.Where(c => c.Company != null).GroupBy(c => c.Company!.CompanyId);
+            return Ok(finalResult);
+        }
+
 
         [HttpPost]
         public IActionResult Create(CategoryDto category)
