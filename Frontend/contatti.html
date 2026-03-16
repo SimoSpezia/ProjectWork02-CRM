@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style/shared.css">
+    <link rel="stylesheet" href="style/azienda.css">
     <link rel="stylesheet" href="style/contatti.css">
     <title>Contatti</title>
 </head>
@@ -20,10 +21,126 @@
         </div>
     </div>
     <div class="menu-overlay"></div>
-    <div class="page-container">
-        <div class="content-section">
-            <!-- Aggiungere il contenuto della pagina qui -->
-        </div>
-    </div>
+    <main class="page-container">
+        <section class="content-section">
+            <div class="toolbar">
+                <button id="add-contact-btn" class="add-company-btn" aria-haspopup="dialog">
+                    Aggiungi Contatto
+                </button>
+            </div>
+
+            <div id="add-contact-panel"
+                 class="add-company-panel"
+                 role="dialog"
+                 aria-modal="true"
+                 aria-labelledby="add-contact-title"
+                 style="display:none;">
+                <h2 id="add-contact-title">Aggiungi Nuovo Contatto</h2>
+                <form id="add-contact-form" novalidate>
+                    <label for="contact-name">Nome</label>
+                    <input type="text" id="contact-name" placeholder="Es. Mario" required>
+
+                    <label for="contact-surname">Cognome</label>
+                    <input type="text" id="contact-surname" placeholder="Es. Rossi" required>
+
+                    <label for="contact-title">Titolo</label>
+                    <input type="text" id="contact-title" placeholder="Es. Dott.">
+
+                    <label for="contact-work-role">Ruolo</label>
+                    <input type="text" id="contact-work-role" placeholder="Es. Sales Manager">
+
+                    <label for="contact-gender">Genere</label>
+                    <input type="text" id="contact-gender" placeholder="Es. M / F / Altro">
+
+                    <label for="contact-birthday">Data di nascita</label>
+                    <input type="date" id="contact-birthday" required>
+
+                    <label for="contact-note">Note</label>
+                    <textarea id="contact-note" rows="3" placeholder="Informazioni aggiuntive..."></textarea>
+
+                    <p id="add-contact-error" class="form-error" role="alert" aria-live="polite"></p>
+
+                    <div class="form-buttons">
+                        <button type="submit">Salva</button>
+                        <button type="button" id="cancel-add-contact">Annulla</button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="edit-contact-panel"
+                 class="add-company-panel"
+                 role="dialog"
+                 aria-modal="true"
+                 aria-labelledby="edit-contact-title"
+                 style="display:none;">
+                <h2 id="edit-contact-title">Modifica Contatto</h2>
+                <form id="edit-contact-form" novalidate>
+                    <input type="hidden" id="edit-contact-id">
+                    <input type="hidden" id="edit-contact-date-added">
+
+                    <label for="edit-contact-name">Nome</label>
+                    <input type="text" id="edit-contact-name" required>
+
+                    <label for="edit-contact-surname">Cognome</label>
+                    <input type="text" id="edit-contact-surname" required>
+
+                    <label for="edit-contact-title-input">Titolo</label>
+                    <input type="text" id="edit-contact-title-input">
+
+                    <label for="edit-contact-work-role">Ruolo</label>
+                    <input type="text" id="edit-contact-work-role">
+
+                    <label for="edit-contact-gender">Genere</label>
+                    <input type="text" id="edit-contact-gender">
+
+                    <label for="edit-contact-birthday">Data di nascita</label>
+                    <input type="date" id="edit-contact-birthday" required>
+
+                    <label for="edit-contact-note">Note</label>
+                    <textarea id="edit-contact-note" rows="3"></textarea>
+
+                    <p id="edit-contact-error" class="form-error" role="alert" aria-live="polite"></p>
+
+                    <div class="form-buttons">
+                        <button type="submit">Salva Modifiche</button>
+                        <button type="button" id="cancel-edit-contact">Annulla</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="table-contact" aria-label="Elenco contatti">
+                    <thead>
+                        <tr>
+                            <th scope="col">Nome </th>
+                            <th scope="col">Cognome</th>
+                            <th scope="col">Titolo</th>
+                            <th scope="col">Ruolo</th>
+                            <th scope="col">Sesso</th>
+                            <th scope="col">Data di nascita</th>
+                            <th scope="col">Note</th>
+                            <th scope="col">Aggiunto il</th>
+                            <th scope="col">Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-contact-body">
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="company-popup-overlay" class="company-popup-overlay" hidden>
+                <div class="company-popup" role="dialog" aria-modal="true" aria-labelledby="company-popup-title" aria-describedby="company-popup-message">
+                    <h3 id="company-popup-title">Conferma azione</h3>
+                    <p id="company-popup-message"></p>
+                    <div class="company-popup-actions">
+                        <button type="button" id="company-popup-cancel" class="company-popup-btn company-popup-btn-secondary">Annulla</button>
+                        <button type="button" id="company-popup-confirm" class="company-popup-btn company-popup-btn-primary">Conferma</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script type="module" src="src/contatti.js"></script>
 </body>
 </html>

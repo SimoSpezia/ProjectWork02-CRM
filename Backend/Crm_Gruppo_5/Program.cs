@@ -24,6 +24,7 @@ builder.Services.AddSingleton<Mapper>();
 
 var app = builder.Build();
 
+
 app.MapOpenApi();
 app.MapScalarApiReference();
 
