@@ -43,6 +43,11 @@
                     <label for="contact-surname">Cognome</label>
                     <input type="text" id="contact-surname" placeholder="Es. Rossi" required>
 
+                    <label for="contact-company">Azienda</label>
+                    <select id="contact-company">
+                        <option value="">Seleziona azienda</option>
+                    </select>
+
                     <label for="contact-title">Titolo</label>
                     <input type="text" id="contact-title" placeholder="Es. Dott.">
 
@@ -84,6 +89,11 @@
                     <label for="edit-contact-surname">Cognome</label>
                     <input type="text" id="edit-contact-surname" required>
 
+                    <label for="edit-contact-company">Azienda</label>
+                    <select id="edit-contact-company">
+                        <option value="">Seleziona azienda</option>
+                    </select>
+
                     <label for="edit-contact-title-input">Titolo</label>
                     <input type="text" id="edit-contact-title-input">
 
@@ -114,6 +124,7 @@
                         <tr>
                             <th scope="col">Nome </th>
                             <th scope="col">Cognome</th>
+                            <th scope="col">Azienda</th>
                             <th scope="col">Titolo</th>
                             <th scope="col">Ruolo</th>
                             <th scope="col">Sesso</th>
@@ -141,6 +152,6 @@
         </section>
     </main>
 
-    <script type="module" src="src/contatti.js"></script>
+    <script type="module" src="src/contacts.js"></script>
 </body>
 </html>

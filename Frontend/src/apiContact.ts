@@ -10,6 +10,7 @@ export interface ContactDto {
     birthday: string,
     note?: string,
     dateAdded: string
+    companyDenomination?: string;
 }
 
 export interface ContactUpsertPayload {
@@ -22,6 +23,7 @@ export interface ContactUpsertPayload {
     birthday: string;
     note?: string;
     dateAdded: string;
+    companyDenomination?: string;
 }
 
 
@@ -34,7 +36,8 @@ const FIELD_LABELS: Record<string, string> = {
     gender: "Genere",
     birthday: "Data di nascita",
     note: "Note",
-    dateadded: "Data inserimento"
+    dateadded: "Data inserimento",
+    companydenomination: "Denominazione azienda"
 };
 
 type ValidationProblemDetails = {
