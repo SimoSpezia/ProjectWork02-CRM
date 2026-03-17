@@ -18,5 +18,6 @@
         public List<MailAddress>? MailAddresses { get; set; }
         public List<Category>? Categories { get; set; }
         public List<PhoneNumber>? PhoneNumbers { get; set; }
+        public bool IsDeleted { get; set; } = false;
     }
 }

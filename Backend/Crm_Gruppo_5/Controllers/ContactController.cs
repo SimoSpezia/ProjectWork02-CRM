@@ -21,6 +21,7 @@ namespace Crm_Gruppo_5.Controllers
             try
             {
                 var result = _ctx.Contacts
+                    .Where(c => !c.IsDeleted)
                     .Include(c => c.Company)
                     .ToList()
                     .ConvertAll(_mapper.MapBaseEntitytoDto);
@@ -38,7 +39,7 @@ namespace Crm_Gruppo_5.Controllers
         public IActionResult GetSingle(int id)
         {
             var contact = _ctx.Contacts
-                          .SingleOrDefault(c => c.ContactId == id);
+                          .SingleOrDefault(c => c.ContactId == id && !c.IsDeleted);
 
             if (contact == null)
             {
@@ -61,7 +62,7 @@ namespace Crm_Gruppo_5.Controllers
                          .Include(c => c.Categories)
                          .Include(c => c.Address)
                          .Include(c => c.ContactType)
-                         .SingleOrDefault(c => c.ContactId == id);
+                         .SingleOrDefault(c => c.ContactId == id && !c.IsDeleted);
 
             if (result == null)
             {
@@ -134,7 +135,7 @@ namespace Crm_Gruppo_5.Controllers
         [Route("{id}")]
         public IActionResult Update([FromRoute] int id, [FromBody] ContactDto Dto)
         {
-            var contact = _ctx.Contacts.SingleOrDefault(c => c.ContactId == id);
+            var contact = _ctx.Contacts.SingleOrDefault(c => c.ContactId == id && !c.IsDeleted);
 
             if (contact == null)
             {
@@ -163,17 +164,45 @@ namespace Crm_Gruppo_5.Controllers
             return Ok(result);
         }
 
-        [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        [HttpPatch]
+        [Route("SoftDelete/{id}")]
+        public IActionResult SoftDelete(int id)
         {
-            var contact = _ctx.Contacts.SingleOrDefault(c => c.ContactId == id);
+            var contact = _ctx.Contacts
+                .Include(c => c.Categories)
+                .SingleOrDefault(c => c.ContactId == id && !c.IsDeleted);
+
+            if (contact == null)
+            {
+                return NotFound($"Contact with id {id} not found");
+            }
+
+            contact.IsDeleted = true;
+
+            if (_ctx.SaveChanges() > 0)
+                return NoContent();
+            else
+                return UnprocessableEntity("Unable to soft delete the contact.");
+        }
+
+        [HttpDelete("HardDelete/{id}")]
+        public IActionResult HardDelete(int id)
+        {
+            var contact = _ctx.Contacts
+                .Include(c => c.Categories)
+                .SingleOrDefault(c => c.ContactId == id && !c.IsDeleted);
 
             if (contact == null)
             {
                 return NotFound();
             }
 
-            _ctx.Contacts.Remove(contact);
+            if (contact.Categories != null && contact.Categories.Count > 0)
+            {
+                return Conflict($"Cannot delete contact with id {id} because it is associated with a category!");
+            }
+
+            contact.IsDeleted = true;
 
             if (_ctx.SaveChanges() > 0)
                 return NoContent();
@@ -189,7 +218,7 @@ namespace Crm_Gruppo_5.Controllers
         {
             var contact = _ctx.Contacts
                          .Include(c => c.Categories)
-                         .SingleOrDefault(c => c.ContactId == id);
+                         .SingleOrDefault(c => c.ContactId == id && !c.IsDeleted);
 
             if (contact == null)
             {
@@ -215,7 +244,7 @@ namespace Crm_Gruppo_5.Controllers
         {
             var contact = _ctx.Contacts
                 .Include(c => c.Categories)
-                .SingleOrDefault(c => c.ContactId == id);
+                .SingleOrDefault(c => c.ContactId == id && !c.IsDeleted);
 
             if (contact == null)
             {
@@ -253,7 +282,7 @@ namespace Crm_Gruppo_5.Controllers
         {
             var contact = _ctx.Contacts
                 .Include(c => c.Categories)
-                .SingleOrDefault(c => c.ContactId == id);
+                .SingleOrDefault(c => c.ContactId == id && !c.IsDeleted);
 
             if (contact == null)
             {

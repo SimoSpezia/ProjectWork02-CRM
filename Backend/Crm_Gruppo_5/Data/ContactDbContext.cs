@@ -10,6 +10,9 @@ namespace Crm_Gruppo_5.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<Contact>()
+                .HasQueryFilter(c => !c.IsDeleted);
+
             // Contact - Company (N-a-1) [RESTRICT]
             modelBuilder.Entity<Contact>()
                 .HasOne(c => c.Company)
