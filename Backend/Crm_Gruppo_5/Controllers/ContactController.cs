@@ -17,6 +17,7 @@ namespace Crm_Gruppo_5.Controllers
         [Route("all")]
         public IActionResult GetAll()
         {
+
             try
             {
                 var result = _ctx.Contacts
