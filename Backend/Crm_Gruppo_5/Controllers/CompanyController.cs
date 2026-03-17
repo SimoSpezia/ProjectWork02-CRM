@@ -67,7 +67,7 @@ namespace Crm_Gruppo_5.Controllers
         }
 
         [HttpGet]
-        [Route("/NumberContacts")]
+        [Route("NumberContacts")]
         public IActionResult GetNumberContacts()
         {
             var companiesDto = _ctx.Companies

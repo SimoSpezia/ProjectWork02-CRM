@@ -17,7 +17,7 @@ namespace Crm_Gruppo_5.Controllers
         {
             try
             {
-                var result = _ctx.MailAddressTypes.ToList().ConvertAll(_mapper.MapBaseEntitytoDto);
+                var result = _ctx.PhoneNumberTypes.ToList().ConvertAll(_mapper.MapBaseEntitytoDto);
                 return Ok(result);
             }
             catch (Exception ex)
@@ -31,28 +31,28 @@ namespace Crm_Gruppo_5.Controllers
         [Route("{id}")]
         public IActionResult GetSingle(int id)
         {
-            var mail = _ctx.MailAddressTypes.SingleOrDefault(m => m.MailAddressTypeId == id);
+            var phoneType = _ctx.PhoneNumberTypes.SingleOrDefault(p => p.PhoneNumberTypeId == id);
 
-            if (mail == null)
+            if (phoneType == null)
             {
-                return BadRequest($"MailAddressType with id {id} not found");
+                return NotFound($"PhoneNumberType with id {id} not found");
 
             }
-            return Ok(_mapper.MapBaseEntitytoDto(mail));
+            return Ok(_mapper.MapBaseEntitytoDto(phoneType));
         }
 
         [HttpPost]
-        public IActionResult Create(MailAddressTypeDto mailAddressType)
+        public IActionResult Create(PhoneNumberTypeDto phoneNumberType)
         {
-            mailAddressType.MailAddressTypeId = 0;
+            phoneNumberType.PhoneNumberTypeId = 0;
 
-            var entity = _mapper.MapDtoToEntity(mailAddressType);
+            var entity = _mapper.MapDtoToEntity(phoneNumberType);
 
-            _ctx.MailAddressTypes.Add(entity);
+            _ctx.PhoneNumberTypes.Add(entity);
 
             if (_ctx.SaveChanges() > 0)
             {
-                return CreatedAtAction(nameof(GetSingle), new { id = entity.MailAddressTypeId }, _mapper.MapBaseEntitytoDto(entity));
+                return CreatedAtAction(nameof(GetSingle), new { id = entity.PhoneNumberTypeId }, _mapper.MapBaseEntitytoDto(entity));
             }
 
             return BadRequest();
@@ -60,22 +60,22 @@ namespace Crm_Gruppo_5.Controllers
 
         [HttpPut]
         [Route("{id}")]
-        public IActionResult Update([FromRoute] int id, [FromBody] MailAddressTypeDto Dto)
+        public IActionResult Update([FromRoute] int id, [FromBody] PhoneNumberTypeDto Dto)
         {
-            var mailType = _ctx.MailAddressTypes.SingleOrDefault(m => m.MailAddressTypeId == id);
+            var phoneType = _ctx.PhoneNumberTypes.SingleOrDefault(p => p.PhoneNumberTypeId == id);
 
-            if (mailType == null)
+            if (phoneType == null)
             {
                 return NotFound();
             }
             if (!string.IsNullOrEmpty(Dto.Description))
-                mailType.Description = Dto.Description;
+                phoneType.Description = Dto.Description;
             if (Dto.Priority != 0)
-                mailType.Priority = Dto.Priority;
+                phoneType.Priority = Dto.Priority;
 
             _ctx.SaveChanges();
 
-            var result = _mapper.MapBaseEntitytoDto(mailType);
+            var result = _mapper.MapBaseEntitytoDto(phoneType);
 
             return Ok(result);
         }
@@ -83,19 +83,19 @@ namespace Crm_Gruppo_5.Controllers
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-            var mailType = _ctx.MailAddressTypes.SingleOrDefault(m => m.MailAddressTypeId == id);
+            var phoneType = _ctx.PhoneNumberTypes.SingleOrDefault(p => p.PhoneNumberTypeId == id);
 
-            if (mailType == null)
+            if (phoneType == null)
             {
                 return NotFound();
             }
 
-            _ctx.MailAddressTypes.Remove(mailType);
+            _ctx.PhoneNumberTypes.Remove(phoneType);
 
             if (_ctx.SaveChanges() > 0)
                 return NoContent();
             else
-                return UnprocessableEntity("Unable to delete the mail address type.");
+                return UnprocessableEntity("Unable to delete the phone number type.");
         }
     }
 }

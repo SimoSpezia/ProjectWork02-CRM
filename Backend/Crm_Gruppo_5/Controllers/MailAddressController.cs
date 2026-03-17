@@ -47,22 +47,22 @@ namespace Crm_Gruppo_5.Controllers
         [Route("by-category/{categoryId}")]
         public IActionResult GetByCategory(int categoryId, [FromQuery] int? Id)
         {
-            var query = _ctx.PhoneNumbers
-                .Include(p => p.Contact)
+            var query = _ctx.MailAddresses
+                .Include(m => m.Contact)
                     .ThenInclude(c => c.Categories)
-                .Include(p => p.PhoneNumberType)
-                .Where(p => p.Contact != null
-                            && p.Contact.Categories != null
-                            && p.Contact.Categories.Any(cat => cat.CategoryId == categoryId));
+                .Include(m => m.MailAddressType)
+                .Where(m => m.Contact != null
+                            && m.Contact.Categories != null
+                            && m.Contact.Categories.Any(cat => cat.CategoryId == categoryId));
 
             if (Id.HasValue)
             {
-                query = query.Where(p => p.PhoneNumberType != null && p.PhoneNumberType.PhoneNumberTypeId == Id.Value);
+                query = query.Where(m => m.MailAddressType != null && m.MailAddressType.MailAddressTypeId == Id.Value);
             }
 
             var result = query
                 .ToList()
-                .ConvertAll(_mapper.MapEntityToPhoneNumberDetailsDto);
+                .ConvertAll(_mapper.MapEntityToMailAddressDetailsDto);
 
             if (!result.Any())
                 return NoContent();
@@ -74,22 +74,22 @@ namespace Crm_Gruppo_5.Controllers
         [Route("by-company/{companyId}")]
         public IActionResult GetByCompany(int companyId, [FromQuery] int? Id)
         {
-            var query = _ctx.PhoneNumbers
-                        .Include(p => p.Contact)
+            var query = _ctx.MailAddresses
+                        .Include(m => m.Contact)
                         .ThenInclude(c => c.Company)
-                        .Include(p => p.PhoneNumberType)
-                        .Where(p => p.Contact != null
-                            && p.Contact.Company != null
-                            && p.Contact.Company.CompanyId == companyId);
+                        .Include(m => m.MailAddressType)
+                        .Where(m => m.Contact != null
+                            && m.Contact.Company != null
+                            && m.Contact.Company.CompanyId == companyId);
 
             if (Id.HasValue)
             {
-                query = query.Where(p => p.PhoneNumberType != null && p.PhoneNumberType.PhoneNumberTypeId == Id.Value);
+                query = query.Where(m => m.MailAddressType != null && m.MailAddressType.MailAddressTypeId == Id.Value);
             }
 
             var result = query
                 .ToList()
-                .ConvertAll(_mapper.MapEntityToPhoneNumberDetailsDto);
+                .ConvertAll(_mapper.MapEntityToMailAddressDetailsDto);
 
             if (!result.Any())
                 return NoContent();

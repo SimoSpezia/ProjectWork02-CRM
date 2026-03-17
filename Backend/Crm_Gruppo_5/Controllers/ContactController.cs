@@ -87,7 +87,7 @@ namespace Crm_Gruppo_5.Controllers
             return Ok(resultDto);
         }
 
-        [HttpGet]
+        [HttpPost]
         [Route("withCompany/{id}")]
         public IActionResult CreateWithCompany([FromRoute] int id, [FromBody] ContactDto contact)
         {
@@ -202,7 +202,7 @@ namespace Crm_Gruppo_5.Controllers
                 return Conflict($"Cannot delete contact with id {id} because it is associated with a category!");
             }
 
-            contact.IsDeleted = true;
+            _ctx.Contacts.Remove(contact);
 
             if (_ctx.SaveChanges() > 0)
                 return NoContent();

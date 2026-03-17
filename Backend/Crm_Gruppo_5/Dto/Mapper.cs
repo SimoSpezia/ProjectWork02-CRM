@@ -223,6 +223,16 @@ namespace Crm_Gruppo_5.Dto
             return dto;
         }
 
+        public PhoneNumberType MapDtoToEntity(PhoneNumberTypeDto dto)
+        {
+            PhoneNumberType entity = new PhoneNumberType
+            {
+                Description = dto.Description,
+                Priority = dto.Priority
+            };
+            return entity;
+        }
+
         public PhoneNumberTypeDto MapBaseEntitytoDto(PhoneNumberType entity)
         {
             if (entity == null)
