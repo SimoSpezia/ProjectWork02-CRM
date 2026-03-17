@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Crm_Gruppo_5.Controllers
 {
+    [Route("api/[controller]")]
+    [ApiController]
     public class PhoneNumberTypeController(Data.ContactDbContext ctx, ILogger<PhoneNumberTypeController> logger, Mapper mapper) : ControllerBase
     {
         private readonly Data.ContactDbContext _ctx = ctx;

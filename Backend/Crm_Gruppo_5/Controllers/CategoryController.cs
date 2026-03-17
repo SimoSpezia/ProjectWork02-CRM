@@ -120,6 +120,5 @@ namespace Crm_Gruppo_5.Controllers
             else
                 return UnprocessableEntity("Unable to delete the category.");
         }
-
     }
 }
