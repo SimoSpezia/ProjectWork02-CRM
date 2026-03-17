@@ -87,7 +87,7 @@ namespace Crm_Gruppo_5.Dto
                 City = dto.City,
                 Province = dto.Province,
                 Region = dto.Region,
-                zip = dto.zip,
+                Zip = dto.Zip,
                 Country = dto.Country,
                 CompanyId = dto.CompanyId,
                 ContactId = dto.ContactId
@@ -105,7 +105,7 @@ namespace Crm_Gruppo_5.Dto
                 City = entity.City,
                 Province = entity.Province,
                 Region = entity.Region,
-                zip = entity.zip,
+                Zip = entity.Zip,
                 Country = entity.Country,
                 CompanyId = entity.CompanyId,
                 ContactId = entity.ContactId

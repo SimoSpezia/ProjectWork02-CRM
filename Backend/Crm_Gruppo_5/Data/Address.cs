@@ -9,7 +9,7 @@
         public string? City { get; set; }
         public string? Street { get; set; }
         public string? StreetNumber { get; set; }
-        public  string? zip { get; set; }
+        public  string? Zip { get; set; }
         public int? ContactId { get; set; }
         public Contact? Contact { get; set; }
         public int? CompanyId { get; set; }

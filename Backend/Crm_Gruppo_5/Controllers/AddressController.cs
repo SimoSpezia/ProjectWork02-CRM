@@ -82,8 +82,8 @@ namespace Crm_Gruppo_5.Controllers
                 address.Street = Dto.Street;
             if (!string.IsNullOrEmpty(Dto.StreetNumber))
                 address.StreetNumber = Dto.StreetNumber;
-            if (!string.IsNullOrEmpty(Dto.zip))
-                address.zip = Dto.zip;
+            if (!string.IsNullOrEmpty(Dto.Zip))
+                address.Zip = Dto.Zip;
             if (Dto.CompanyId.HasValue)
                 address.CompanyId = Dto.CompanyId;
             if (Dto.ContactId.HasValue)

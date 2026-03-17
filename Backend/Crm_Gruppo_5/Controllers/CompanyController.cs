@@ -152,8 +152,8 @@ namespace Crm_Gruppo_5.Controllers
                     company.Address.Street = Dto.Address.Street;
                 if (!string.IsNullOrEmpty(Dto.Address.StreetNumber))
                     company.Address.StreetNumber = Dto.Address.StreetNumber;
-                if (!string.IsNullOrEmpty(Dto.Address.zip))
-                    company.Address.zip = Dto.Address.zip;
+                if (!string.IsNullOrEmpty(Dto.Address.Zip))
+                    company.Address.Zip = Dto.Address.Zip;
             }
             if (_ctx.SaveChanges() >0)
                 return NoContent();

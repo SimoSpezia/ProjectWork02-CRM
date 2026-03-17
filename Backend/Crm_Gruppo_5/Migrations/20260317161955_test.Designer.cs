@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Crm_Gruppo_5.Migrations
 {
     [DbContext(typeof(ContactDbContext))]
-    [Migration("20260313152641_DB2")]
-    partial class DB2
+    [Migration("20260317161955_test")]
+    partial class test
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -58,7 +58,6 @@ namespace Crm_Gruppo_5.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Country")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Province")
@@ -73,7 +72,7 @@ namespace Crm_Gruppo_5.Migrations
                     b.Property<string>("StreetNumber")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("zip")
+                    b.Property<string>("Zip")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("AddressId");
@@ -144,8 +143,8 @@ namespace Crm_Gruppo_5.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ContactId"));
 
-                    b.Property<DateTime>("Birthday")
-                        .HasColumnType("datetime2");
+                    b.Property<DateOnly?>("Birthday")
+                        .HasColumnType("date");
 
                     b.Property<int?>("CompanyId")
                         .HasColumnType("int");
@@ -158,6 +157,9 @@ namespace Crm_Gruppo_5.Migrations
 
                     b.Property<string>("Gender")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -274,9 +276,6 @@ namespace Crm_Gruppo_5.Migrations
                     b.Property<string>("Prefix")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Priority")
-                        .HasColumnType("int");
-
                     b.HasKey("PhoneNumberId");
 
                     b.HasIndex("ContactId");
@@ -297,6 +296,9 @@ namespace Crm_Gruppo_5.Migrations
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("int");
 
                     b.HasKey("PhoneNumberTypeId");
 
