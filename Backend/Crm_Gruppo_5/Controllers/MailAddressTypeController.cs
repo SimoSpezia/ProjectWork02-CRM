@@ -29,7 +29,7 @@ namespace Crm_Gruppo_5.Controllers
 
         [HttpGet]
         [Route("{id}")]
-        public IActionResult GetSingle(int id)
+        public IActionResult GetSingle([FromRoute] int id)
         {
             var mail = _ctx.MailAddressTypes.SingleOrDefault(m => m.MailAddressTypeId == id);
 
@@ -71,7 +71,7 @@ namespace Crm_Gruppo_5.Controllers
             if (!string.IsNullOrEmpty(Dto.Description))
                 mailType.Description = Dto.Description;
             mailType.Priority = Dto.Priority;
-    
+
             _ctx.SaveChanges();
 
             var result = _mapper.MapBaseEntitytoDto(mailType);
@@ -80,7 +80,7 @@ namespace Crm_Gruppo_5.Controllers
         }
 
         [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        public IActionResult Delete([FromRoute] int id)
         {
             var mailType = _ctx.MailAddressTypes.SingleOrDefault(m => m.MailAddressTypeId == id);
 

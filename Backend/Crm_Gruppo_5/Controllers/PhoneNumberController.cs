@@ -32,7 +32,7 @@ namespace Crm_Gruppo_5.Controllers
 
         [HttpGet]
         [Route("{id}")]
-        public IActionResult GetSingle(int id)
+        public IActionResult GetSingle([FromRoute] int id)
         {
             var phoneNumber = _ctx.PhoneNumbers.SingleOrDefault(p => p.PhoneNumberId == id);
             if (phoneNumber == null)
@@ -45,7 +45,7 @@ namespace Crm_Gruppo_5.Controllers
 
         [HttpGet]
         [Route("by-category/{categoryId}")]
-        public IActionResult GetByCategory(int categoryId, [FromQuery] int? Id)
+        public IActionResult GetByCategory([FromRoute] int categoryId, [FromQuery] int? Id)
         {
             var query = _ctx.PhoneNumbers
                 .Include(p => p.Contact)
@@ -72,7 +72,7 @@ namespace Crm_Gruppo_5.Controllers
 
         [HttpGet]
         [Route("by-company/{companyId}")]
-        public IActionResult GetByCompany(int companyId, [FromQuery] int? Id)
+        public IActionResult GetByCompany([FromRoute] int companyId, [FromQuery] int? Id)
         {
             var query = _ctx.PhoneNumbers
                         .Include(p => p.Contact)
@@ -99,7 +99,7 @@ namespace Crm_Gruppo_5.Controllers
 
         [HttpGet]
         [Route("by-type/{Id}")]
-        public IActionResult GetByPhoneNumberType(int Id)
+        public IActionResult GetByPhoneNumberType([FromRoute] int Id)
         {
             var result = _ctx.PhoneNumbers
                 .Include(p => p.PhoneNumberType)
@@ -114,11 +114,18 @@ namespace Crm_Gruppo_5.Controllers
         }
 
         [HttpPost]
-        public IActionResult Create(PhoneNumberDto phoneNumber)
+        [Route("{Id}")]
+        public IActionResult Create([FromRoute] int Id, PhoneNumberDto phoneNumber)
         {
+            var contact = _ctx.Contacts.SingleOrDefault(c => c.ContactId == Id);
+            if (contact == null)
+            {
+                return NotFound($"Contact with id {Id} not found");
+            }
             phoneNumber.PhoneNumberId = 0;
 
             var entity = _mapper.MapDtoToEntity(phoneNumber);
+            entity.Contact = contact;
 
             _ctx.PhoneNumbers.Add(entity);
 
@@ -154,7 +161,7 @@ namespace Crm_Gruppo_5.Controllers
         }
 
         [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        public IActionResult Delete([FromRoute] int id)
         {
             var phoneNumber = _ctx.PhoneNumbers.SingleOrDefault(c => c.PhoneNumberId == id);
 

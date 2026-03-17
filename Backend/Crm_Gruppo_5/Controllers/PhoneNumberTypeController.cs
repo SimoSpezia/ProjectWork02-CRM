@@ -29,7 +29,7 @@ namespace Crm_Gruppo_5.Controllers
 
         [HttpGet]
         [Route("{id}")]
-        public IActionResult GetSingle(int id)
+        public IActionResult GetSingle([FromRoute] int id)
         {
             var phoneType = _ctx.PhoneNumberTypes.SingleOrDefault(p => p.PhoneNumberTypeId == id);
 
@@ -81,7 +81,7 @@ namespace Crm_Gruppo_5.Controllers
         }
 
         [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        public IActionResult Delete([FromRoute] int id)
         {
             var phoneType = _ctx.PhoneNumberTypes.SingleOrDefault(p => p.PhoneNumberTypeId == id);
 

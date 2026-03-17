@@ -35,22 +35,22 @@ namespace Crm_Gruppo_5.Controllers
 
         [HttpGet]
         [Route("{id}")]
-        public IActionResult GetSingle(int id)
+        public IActionResult GetSingle([FromRoute] int id)
         {
-            var company =  _ctx.Companies.Include(c => c.Address)
-                               .SingleOrDefault(c => c.CompanyId == id); 
+            var company = _ctx.Companies.Include(c => c.Address)
+                               .SingleOrDefault(c => c.CompanyId == id);
 
             if (company == null)
             {
                 return BadRequest($"Company with id {id} not found");
-               
+
             }
             return Ok(_mapper.MapEntitytoSimpleDto(company));
         }
 
         [HttpGet]
         [Route("{id}/contact")]
-        public IActionResult GetContacts(int id)
+        public IActionResult GetContacts([FromRoute] int id)
         {
             var company = _ctx.Companies.Include(c => c.Contacts)
                                .SingleOrDefault(c => c.CompanyId == id);
@@ -119,7 +119,7 @@ namespace Crm_Gruppo_5.Controllers
         }
         [HttpPut]
         [Route("{id}")]
-        public IActionResult Update([FromRoute]int id, [FromBody] CompanySimpleDto Dto)
+        public IActionResult Update([FromRoute] int id, [FromBody] CompanySimpleDto Dto)
         {
             var company = _ctx.Companies.Include(c => c.Address).SingleOrDefault(c => c.CompanyId == id);
             if (company == null)
@@ -140,6 +140,7 @@ namespace Crm_Gruppo_5.Controllers
 
             if (Dto.Address != null)
             {
+                company.Address ??= new Address();
                 if (!string.IsNullOrEmpty(Dto.Address.Country))
                     company.Address.Country = Dto.Address.Country;
                 if (!string.IsNullOrEmpty(Dto.Address.Region))
@@ -155,13 +156,13 @@ namespace Crm_Gruppo_5.Controllers
                 if (!string.IsNullOrEmpty(Dto.Address.Zip))
                     company.Address.Zip = Dto.Address.Zip;
             }
-            if (_ctx.SaveChanges() >0)
+            if (_ctx.SaveChanges() > 0)
                 return NoContent();
             else
                 return UnprocessableEntity();
         }
         [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        public IActionResult Delete([FromRoute] int id)
         {
             var company = _ctx.Companies.Include(c => c.Contacts).SingleOrDefault(c => c.CompanyId == id);
 
@@ -180,7 +181,7 @@ namespace Crm_Gruppo_5.Controllers
                 _ctx.SaveChanges();
                 return NoContent();
             }
-           
+
         }
     }
 }

@@ -32,7 +32,7 @@ namespace Crm_Gruppo_5.Controllers
 
         [HttpGet]
         [Route("{id}")]
-        public IActionResult GetSingle(int id)
+        public IActionResult GetSingle([FromRoute] int id)
         {
             var category = _ctx.Categories
                           .SingleOrDefault(c => c.CategoryId == id);
@@ -47,11 +47,11 @@ namespace Crm_Gruppo_5.Controllers
 
         [HttpGet]
         [Route("WithContacts/{id}")]
-        public IActionResult GetContacts(int id)
+        public IActionResult GetContacts([FromRoute] int id)
         {
             var category = _ctx.Categories
                           .Include(c => c.Contacts)
-                          .ThenInclude(c=> c.Company)
+                          .ThenInclude(c => c.Company)
                           .SingleOrDefault(c => c.CategoryId == id);
             if (category == null)
             {
@@ -104,7 +104,7 @@ namespace Crm_Gruppo_5.Controllers
         }
 
         [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        public IActionResult Delete([FromRoute] int id)
         {
             var category = _ctx.Categories.SingleOrDefault(c => c.CategoryId == id);
 
