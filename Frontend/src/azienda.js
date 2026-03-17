@@ -1,7 +1,7 @@
 import { createCompany, deleteCompany, getCompanies, getCompanyContacts, updateCompany } from "./apiAzienda.js";
 import { createContact, updateContact } from "./apiContact.js";
 import { createAddressSelectBinding } from "./address.js";
-import { hidePanel, showPanel } from "./common.js";
+import { hidePanel, initializeMenuAndTheme, showPanel } from "./common.js";
 const tableBody = document.getElementById("table-company-body");
 const addButton = document.getElementById("add-company-btn");
 const addPanel = document.getElementById("add-company-panel");
@@ -649,6 +649,7 @@ function setupButtons() {
     });
 }
 async function init() {
+    initializeMenuAndTheme();
     await (addAddressBinding === null || addAddressBinding === void 0 ? void 0 : addAddressBinding.initialize());
     await (editAddressBinding === null || editAddressBinding === void 0 ? void 0 : editAddressBinding.initialize());
     setupPopup();

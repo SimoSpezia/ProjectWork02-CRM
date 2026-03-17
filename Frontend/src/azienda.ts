@@ -14,7 +14,7 @@ import {
     updateContact
 } from "./apiContact.js";
 import { createAddressSelectBinding } from "./address.js";
-import { hidePanel, showPanel } from "./common.js";
+import { hidePanel, initializeMenuAndTheme, showPanel } from "./common.js";
 
 const tableBody = document.getElementById("table-company-body") as HTMLTableSectionElement | null;
 
@@ -774,6 +774,7 @@ function setupButtons(): void {
 }
 
 async function init(): Promise<void> {
+    initializeMenuAndTheme();
     await addAddressBinding?.initialize();
     await editAddressBinding?.initialize();
     setupPopup();

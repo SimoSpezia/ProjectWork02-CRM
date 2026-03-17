@@ -4,7 +4,7 @@ import {
     getMailAddressTypes,
     updateMailAddressType
 } from "./apiMailAddressType.js";
-import { hidePanel, showPanel } from "./common.js";
+import { hidePanel, initializeMenuAndTheme, showPanel } from "./common.js";
 
 const tableBody = document.getElementById("email-type-table-body");
 
@@ -365,6 +365,7 @@ function setupButtons() {
 }
 
 async function init() {
+    initializeMenuAndTheme();
     setupPopup();
     setupButtons();
     setupAddForm();

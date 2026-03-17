@@ -1,4 +1,4 @@
-export const API_BASE_URL = "https://localhost:7090/api";
+export const API_BASE_URL = "https://crm5-backend-ayfdhhgubsaybmfj.germanywestcentral-01.azurewebsites.net/api";
 
 interface MailAddressType {
     mailAddressTypeId: number;
@@ -112,4 +112,20 @@ export function updateMailAddressType(typeId: number, payload: MailAddressTypePa
         },
         body: JSON.stringify(payload)
     }).then(handleTypeUpsertResponse);
+}
+
+export function deleteMailAddressType(typeId: number): Promise<void> {
+    return fetch(`${API_BASE_URL}/MailAddressType/${typeId}`, {
+        method: "DELETE",
+        headers: { 
+            "Content-Type": "application/json"
+        }
+        }).then(async (response) => {
+            if (response.ok) {
+                return;
+            }
+
+            const errorBody = await response.text();
+            throw new Error(errorBody || `HTTP ${response.status}`);
+        });
 }

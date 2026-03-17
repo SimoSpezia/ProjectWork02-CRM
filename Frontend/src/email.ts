@@ -4,7 +4,7 @@ import {
     getMailAddressTypes,
     updateMailAddressType
 } from "./apiMailAddressType.js";
-import { hidePanel, showPanel } from "./common.js";
+import { hidePanel, initializeMenuAndTheme, showPanel } from "./common.js";
 
 interface MailAddressType {
     mailAddressTypeId: number;
@@ -386,6 +386,7 @@ function setupButtons(): void {
 }
 
 async function init(): Promise<void> {
+    initializeMenuAndTheme();
     setupPopup();
     setupButtons();
     setupAddForm();

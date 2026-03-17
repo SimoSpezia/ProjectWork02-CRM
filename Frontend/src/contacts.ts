@@ -1,4 +1,4 @@
-import { hidePanel, showPanel } from "./common.js";
+import { hidePanel, initializeMenuAndTheme, showPanel } from "./common.js";
 import { createAddressSelectBinding } from "./address.js";
 import {
     ContactDto,
@@ -516,6 +516,7 @@ function setupButtons(): void {
 }
 
 async function init(): Promise<void> {
+    initializeMenuAndTheme();
     await addAddressBinding?.initialize();
     await editAddressBinding?.initialize();
     setupPopup();

@@ -1,4 +1,4 @@
-export const API_BASE_URL = "https://localhost:7090/api";
+export const API_BASE_URL = "https://crm5-backend-ayfdhhgubsaybmfj.germanywestcentral-01.azurewebsites.net/api";
 
 export interface Address {
     addressId?: number;

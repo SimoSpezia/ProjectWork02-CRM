@@ -4,7 +4,7 @@ import {
     getPhoneNumberTypes,
     updatePhoneNumberType
 } from "./apiPhoneNumberType.js";
-import { hidePanel, showPanel } from "./common.js";
+import { hidePanel, initializeMenuAndTheme, showPanel } from "./common.js";
 
 interface PhoneNumberType {
     phoneNumberTypeId: number;
@@ -386,6 +386,7 @@ function setupButtons(): void {
 }
 
 async function init(): Promise<void> {
+    initializeMenuAndTheme();
     setupPopup();
     setupButtons();
     setupAddForm();

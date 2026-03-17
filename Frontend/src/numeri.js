@@ -4,7 +4,7 @@ import {
     getPhoneNumberTypes,
     updatePhoneNumberType
 } from "./apiPhoneNumberType.js";
-import { hidePanel, showPanel } from "./common.js";
+import { hidePanel, initializeMenuAndTheme, showPanel } from "./common.js";
 
 const tableBody = document.getElementById("phone-type-table-body");
 
@@ -365,6 +365,7 @@ function setupButtons() {
 }
 
 async function init() {
+    initializeMenuAndTheme();
     setupPopup();
     setupButtons();
     setupAddForm();

@@ -40,3 +40,54 @@ export function setupAddEntityForm(addButtonId, panelId, cancelButtonId, formId,
             .catch(err => console.error('Form submission error', err));
     });
 }
+const THEME_STORAGE_KEY = 'crm5-theme';
+function readStoredTheme() {
+    const value = localStorage.getItem(THEME_STORAGE_KEY);
+    if (value === 'light' || value === 'dark') {
+        return value;
+    }
+    return null;
+}
+function saveTheme(theme) {
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
+}
+function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+}
+export function initializeMenuAndTheme() {
+    const menu = document.querySelector('.menu');
+    const menuToggle = document.querySelector('.menu-toggle');
+    const menuOverlay = document.querySelector('.menu-overlay');
+    const themeSwitch = document.getElementById('theme-toggle');
+    const closeMenu = () => {
+        if (!menu || !menuToggle || !menuOverlay) {
+            return;
+        }
+        menu.classList.remove('active');
+        menuOverlay.classList.remove('active');
+        menuToggle.setAttribute('aria-expanded', 'false');
+    };
+    if (menu && menuToggle && menuOverlay) {
+        menuToggle.addEventListener('click', () => {
+            const isOpen = menu.classList.toggle('active');
+            menuOverlay.classList.toggle('active', isOpen);
+            menuToggle.setAttribute('aria-expanded', String(isOpen));
+        });
+        menuOverlay.addEventListener('click', closeMenu);
+        menu.querySelectorAll('.menu-link').forEach((link) => {
+            link.addEventListener('click', closeMenu);
+        });
+    }
+    const defaultTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    const initialTheme = readStoredTheme() ?? defaultTheme;
+    applyTheme(initialTheme);
+    if (!themeSwitch) {
+        return;
+    }
+    themeSwitch.checked = initialTheme === 'dark';
+    themeSwitch.addEventListener('change', () => {
+        const nextTheme = themeSwitch.checked ? 'dark' : 'light';
+        applyTheme(nextTheme);
+        saveTheme(nextTheme);
+    });
+}

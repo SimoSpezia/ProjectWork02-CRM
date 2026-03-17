@@ -1,4 +1,4 @@
-import { hidePanel, showPanel } from "./common.js";
+import { hidePanel, initializeMenuAndTheme, showPanel } from "./common.js";
 import { createAddressSelectBinding } from "./address.js";
 import { getContact, createContact, deleteContact, updateContact } from "./apiContact.js";
 import { getCompanies } from "./apiAzienda.js";
@@ -418,6 +418,7 @@ function setupButtons() {
     });
 }
 async function init() {
+    initializeMenuAndTheme();
     await (addAddressBinding === null || addAddressBinding === void 0 ? void 0 : addAddressBinding.initialize());
     await (editAddressBinding === null || editAddressBinding === void 0 ? void 0 : editAddressBinding.initialize());
     setupPopup();

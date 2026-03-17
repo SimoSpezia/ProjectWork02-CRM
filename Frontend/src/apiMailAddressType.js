@@ -1,83 +1,65 @@
-export const API_BASE_URL = "https://localhost:7090/api";
-
+export const API_BASE_URL = "https://crm5-backend-ayfdhhgubsaybmfj.germanywestcentral-01.azurewebsites.net/api";
 const FIELD_LABELS = {
     description: "Descrizione",
     priority: "Priorita"
 };
-
 function normalizeKey(rawKey) {
     return rawKey.trim().toLowerCase().replace(/\[(\d+)\]/g, "");
 }
-
 function mapFieldName(rawKey) {
     const key = normalizeKey(rawKey);
     if (FIELD_LABELS[key]) {
         return FIELD_LABELS[key];
     }
-
     const cleaned = key.replace(/\./g, " ");
     return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
 }
-
 async function parseMissingFields(response) {
-    const contentType = response.headers.get("content-type")?.toLowerCase() ?? "";
+    var _a, _b;
+    const contentType = (_b = (_a = response.headers.get("content-type")) === null || _a === void 0 ? void 0 : _a.toLowerCase()) !== null && _b !== void 0 ? _b : "";
     if (!contentType.includes("application/json")) {
         return [];
     }
-
     let body = null;
     try {
         body = await response.json();
-    } catch {
+    }
+    catch (_c) {
         return [];
     }
-
-    if (!body?.errors) {
+    if (!(body === null || body === void 0 ? void 0 : body.errors)) {
         return [];
     }
-
     const keys = Object.keys(body.errors);
     return Array.from(new Set(keys.map(mapFieldName)));
 }
-
 async function fetchJson(url, init) {
-    const response = await fetch(url, {
-        headers: {
+    const response = await fetch(url, Object.assign({ headers: {
             "Content-Type": "application/json"
-        },
-        ...init
-    });
-
+        } }, init));
     if (!response.ok) {
         const errorBody = await response.text();
         throw new Error(errorBody || `HTTP ${response.status}`);
     }
-
     if (response.status === 204) {
         return undefined;
     }
-
     return response.json();
 }
-
 async function handleTypeUpsertResponse(response) {
     if (response.ok) {
         return;
     }
-
     const missingFields = await parseMissingFields(response);
     if (missingFields.length > 0) {
         throw new Error(`MISSING_FIELDS:${missingFields.join("|")}`);
     }
-
     const errorBody = await response.text();
     throw new Error(errorBody || `HTTP ${response.status}`);
 }
-
 export function getMailAddressTypes() {
     return fetchJson(`${API_BASE_URL}/MailAddressType/all`);
 }
-
 export function createMailAddressType(payload) {
     return fetch(`${API_BASE_URL}/MailAddressType`, {
         method: "POST",
@@ -87,7 +69,6 @@ export function createMailAddressType(payload) {
         body: JSON.stringify(payload)
     }).then(handleTypeUpsertResponse);
 }
-
 export function updateMailAddressType(typeId, payload) {
     return fetch(`${API_BASE_URL}/MailAddressType/${typeId}`, {
         method: "PUT",
@@ -97,16 +78,17 @@ export function updateMailAddressType(typeId, payload) {
         body: JSON.stringify(payload)
     }).then(handleTypeUpsertResponse);
 }
-
-export async function deleteMailAddressType(typeId) {
-    const response = await fetch(`${API_BASE_URL}/MailAddressType/${typeId}`, {
-        method: "DELETE"
+export function deleteMailAddressType(typeId) {
+    return fetch(`${API_BASE_URL}/MailAddressType/${typeId}`, {
+        method: "DELETE",
+        headers: {
+            "Content-Type": "application/json"
+        }
+    }).then(async (response) => {
+        if (response.ok) {
+            return;
+        }
+        const errorBody = await response.text();
+        throw new Error(errorBody || `HTTP ${response.status}`);
     });
-
-    if (response.status === 204) {
-        return;
-    }
-
-    const message = await response.text();
-    throw new Error(message || `HTTP ${response.status}`);
 }
