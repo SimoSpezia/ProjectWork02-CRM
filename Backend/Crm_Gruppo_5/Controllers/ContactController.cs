@@ -85,9 +85,7 @@ namespace Crm_Gruppo_5.Controllers
             return Ok(resultDto);
         }
 
-
-
-        [HttpPost]
+        [HttpGet]
         [Route("withCompany/{id}")]
         public IActionResult CreateWithCompany([FromRoute] int id, [FromBody] ContactDto contact)
         {
@@ -129,7 +127,6 @@ namespace Crm_Gruppo_5.Controllers
 
             return BadRequest();
         }
-
 
 
         [HttpPut]
@@ -182,5 +179,108 @@ namespace Crm_Gruppo_5.Controllers
             else
                 return UnprocessableEntity("Unable to delete the contact.");
         }
+
+        //API per gestione relazione tra Category e Contact (Groups nel DB)
+
+        [HttpGet]
+        [Route("CategoryByContact/{id}")]
+        public IActionResult GetCategory(int id)
+        {
+            var contact = _ctx.Contacts
+                         .Include(c => c.Categories)
+                         .SingleOrDefault(c => c.ContactId == id);
+
+            if (contact == null)
+            {
+                return NotFound($"Contact with id {id} not found");
+            }
+
+            var categories = contact.Categories != null
+                ? contact.Categories.ConvertAll(_mapper.MapBaseEntitytoDto)
+                : new List<CategoryDto>();
+
+            var result = new GroupContactDto
+            {
+                ContactId = contact.ContactId,
+                Categories = categories
+            };
+
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("{id}/Category/{categoryId}")]
+        public IActionResult AddCategoryToContact([FromRoute] int id, [FromRoute] int categoryId)
+        {
+            var contact = _ctx.Contacts
+                .Include(c => c.Categories)
+                .SingleOrDefault(c => c.ContactId == id);
+
+            if (contact == null)
+            {
+                return NotFound($"Contact with id {id} not found");
+            }
+
+            var category = _ctx.Categories.SingleOrDefault(c => c.CategoryId == categoryId);
+            if (category == null)
+            {
+                return NotFound($"Category with id {categoryId} not found");
+            }
+
+            contact.Categories ??= new List<Category>();
+
+            if (contact.Categories.Any(c => c.CategoryId == categoryId))
+            {
+                return Conflict($"Category with id {categoryId} is already linked to contact {id}");
+            }
+
+            contact.Categories.Add(category);
+            _ctx.SaveChanges();
+
+            var result = new GroupContactDto
+            {
+                ContactId = contact.ContactId,
+                Categories = contact.Categories.ConvertAll(_mapper.MapBaseEntitytoDto)
+            };
+
+            return Ok(result);
+        }
+
+        [HttpDelete]
+        [Route("{id}/Category/{categoryId}")]
+        public IActionResult RemoveCategoryFromContact([FromRoute] int id, [FromRoute] int categoryId)
+        {
+            var contact = _ctx.Contacts
+                .Include(c => c.Categories)
+                .SingleOrDefault(c => c.ContactId == id);
+
+            if (contact == null)
+            {
+                return NotFound($"Contact with id {id} not found");
+            }
+
+            if (contact.Categories == null)
+            {
+                return NotFound($"Category with id {categoryId} is not linked to contact {id}");
+            }
+
+            var category = contact.Categories.SingleOrDefault(c => c.CategoryId == categoryId);
+            if (category == null)
+            {
+                return NotFound($"Category with id {categoryId} is not linked to contact {id}");
+            }
+
+            contact.Categories.Remove(category);
+            _ctx.SaveChanges();
+
+            var result = new GroupContactDto
+            {
+                ContactId = contact.ContactId,
+                Categories = contact.Categories.ConvertAll(_mapper.MapBaseEntitytoDto)
+            };
+
+            return Ok(result);
+        }
+
     }
 }
