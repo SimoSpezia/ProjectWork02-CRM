@@ -192,8 +192,8 @@ export function updateContact(contactId: number, payload: ContactUpsertPayload):
 }
 
 export async function deleteContact(contactId: number): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/Contact/${contactId}`, {
-        method: "DELETE"
+    const response = await fetch(`${API_BASE_URL}/Contact/SoftDelete/${contactId}`, {
+        method: "PATCH"
     });
 
     if (response.status === 204) {
@@ -205,7 +205,11 @@ export async function deleteContact(contactId: number): Promise<void> {
 }
 
 export function createMailAddress(payload: MailAddressDto): Promise<void> {
-    return fetch(`${API_BASE_URL}/MailAddress`, {
+    if (!payload.contactId) {
+        return Promise.reject(new Error("contactId is required to create a mail address"));
+    }
+
+    return fetch(`${API_BASE_URL}/MailAddress/${payload.contactId}`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -238,7 +242,11 @@ export async function deleteMailAddress(mailAddressId: number): Promise<void> {
 }
 
 export function createPhoneNumber(payload: PhoneNumberDto): Promise<void> {
-    return fetch(`${API_BASE_URL}/PhoneNumber`, {
+    if (!payload.contactId) {
+        return Promise.reject(new Error("contactId is required to create a phone number"));
+    }
+
+    return fetch(`${API_BASE_URL}/PhoneNumber/${payload.contactId}`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"

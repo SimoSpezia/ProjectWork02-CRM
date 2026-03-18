@@ -394,22 +394,30 @@ function readContacts(listElement: HTMLDivElement | null): ContactDto[] {
     return parsed;
 }
 
+function resolveCompanyAddress(company: CompanySimpleDto): CompanyUpsertPayload["address"] {
+    const source = (company as { address?: Partial<CompanyUpsertPayload["address"]> | null }).address;
+
+    return {
+        street: source?.street ?? "",
+        streetNumber: source?.streetNumber ?? "",
+        zip: source?.zip ?? "",
+        city: source?.city ?? "",
+        province: source?.province || undefined,
+        region: source?.region || undefined,
+        country: source?.country ?? ""
+    };
+}
+
 function mapCompanyToPayload(company: CompanySimpleDto): CompanyUpsertPayload {
+    const address = resolveCompanyAddress(company);
+
     return {
         denomination: company.denomination,
         website: company.website || undefined,
         vatNumber: company.vatNumber,
         size: company.size || undefined,
         note: company.note || undefined,
-        address: {
-            street: company.address.street,
-            streetNumber: company.address.streetNumber,
-            zip: company.address.zip,
-            city: company.address.city,
-            province: company.address.province || undefined,
-            region: company.address.region || undefined,
-            country: company.address.country
-        }
+        address
     };
 }
 
@@ -507,16 +515,18 @@ function buildEditCompanyPayload(): CompanyUpsertPayload {
 }
 
 function buildAddressCell(company: CompanySimpleDto): HTMLTableCellElement {
+    const address = resolveCompanyAddress(company);
+
     const cell = document.createElement("td");
     const summary = document.createElement("button");
     summary.type = "button";
     summary.className = "address-toggle";
-    summary.textContent = `${company.address.street} ${company.address.streetNumber}`.trim();
+    summary.textContent = `${address.street} ${address.streetNumber}`.trim() || "-";
 
     const details = document.createElement("div");
     details.className = "address-details";
     details.hidden = true;
-    details.textContent = `${company.address.street} ${company.address.streetNumber}, ${company.address.zip} ${company.address.city} (${company.address.province ?? ""}), ${company.address.region ?? ""}, ${company.address.country}`;
+    details.textContent = `${address.street} ${address.streetNumber}, ${address.zip} ${address.city} (${address.province ?? ""}), ${address.region ?? ""}, ${address.country}`;
 
     summary.addEventListener("click", () => {
         details.hidden = !details.hidden;
@@ -675,19 +685,21 @@ async function openEditPanel(company: CompanySimpleDto): Promise<void> {
         return;
     }
 
+    const address = resolveCompanyAddress(company);
+
     editingCompanyId = company.companyId;
     editingCompanySnapshot = mapCompanyToPayload(company);
     clearError(editError);
 
     setElementValue("edit-company-name", company.denomination);
-    setElementValue("edit-company-address-street", company.address.street ?? "");
-    setElementValue("edit-company-address-streetNumber", company.address.streetNumber ?? "");
-    setElementValue("edit-company-address-zip", company.address.zip ?? "");
+    setElementValue("edit-company-address-street", address.street);
+    setElementValue("edit-company-address-streetNumber", address.streetNumber);
+    setElementValue("edit-company-address-zip", address.zip);
     await editAddressBinding?.setAddress({
-        country: company.address.country ?? "",
-        region: company.address.region ?? "",
-        province: company.address.province ?? "",
-        city: company.address.city ?? ""
+        country: address.country,
+        region: address.region ?? "",
+        province: address.province ?? "",
+        city: address.city
     });
     setElementValue("edit-company-partitaIVA", company.vatNumber);
     setElementValue("edit-company-size", company.size ?? "");

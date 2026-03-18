@@ -315,22 +315,28 @@ function readContacts(listElement) {
     }
     return parsed;
 }
+function resolveCompanyAddress(company) {
+    var _a, _b;
+    const source = (_a = company.address) !== null && _a !== void 0 ? _a : null;
+    return {
+        street: (_b = source === null || source === void 0 ? void 0 : source.street) !== null && _b !== void 0 ? _b : "",
+        streetNumber: (source === null || source === void 0 ? void 0 : source.streetNumber) || "",
+        zip: (source === null || source === void 0 ? void 0 : source.zip) || "",
+        city: (source === null || source === void 0 ? void 0 : source.city) || "",
+        province: (source === null || source === void 0 ? void 0 : source.province) || undefined,
+        region: (source === null || source === void 0 ? void 0 : source.region) || undefined,
+        country: (source === null || source === void 0 ? void 0 : source.country) || ""
+    };
+}
 function mapCompanyToPayload(company) {
+    const address = resolveCompanyAddress(company);
     return {
         denomination: company.denomination,
         website: company.website || undefined,
         vatNumber: company.vatNumber,
         size: company.size || undefined,
         note: company.note || undefined,
-        address: {
-            street: company.address.street,
-            streetNumber: company.address.streetNumber,
-            zip: company.address.zip,
-            city: company.address.city,
-            province: company.address.province || undefined,
-            region: company.address.region || undefined,
-            country: company.address.country
-        }
+        address
     };
 }
 function normalized(value) {
@@ -416,15 +422,16 @@ function buildEditCompanyPayload() {
 }
 function buildAddressCell(company) {
     var _a, _b;
+    const address = resolveCompanyAddress(company);
     const cell = document.createElement("td");
     const summary = document.createElement("button");
     summary.type = "button";
     summary.className = "address-toggle";
-    summary.textContent = `${company.address.street} ${company.address.streetNumber}`.trim();
+    summary.textContent = `${address.street} ${address.streetNumber}`.trim() || "-";
     const details = document.createElement("div");
     details.className = "address-details";
     details.hidden = true;
-    details.textContent = `${company.address.street} ${company.address.streetNumber}, ${company.address.zip} ${company.address.city} (${(_a = company.address.province) !== null && _a !== void 0 ? _a : ""}), ${(_b = company.address.region) !== null && _b !== void 0 ? _b : ""}, ${company.address.country}`;
+    details.textContent = `${address.street} ${address.streetNumber}, ${address.zip} ${address.city} (${(_a = address.province) !== null && _a !== void 0 ? _a : ""}), ${(_b = address.region) !== null && _b !== void 0 ? _b : ""}, ${address.country}`;
     summary.addEventListener("click", () => {
         details.hidden = !details.hidden;
     });
@@ -555,27 +562,28 @@ function openAddPanel() {
     showPanel(addPanel, addButton);
 }
 async function openEditPanel(company) {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+    var _a, _b, _c;
     if (!editPanel || !addButton) {
         return;
     }
+    const address = resolveCompanyAddress(company);
     editingCompanyId = company.companyId;
     editingCompanySnapshot = mapCompanyToPayload(company);
     clearError(editError);
     setElementValue("edit-company-name", company.denomination);
-    setElementValue("edit-company-address-street", (_a = company.address.street) !== null && _a !== void 0 ? _a : "");
-    setElementValue("edit-company-address-streetNumber", (_b = company.address.streetNumber) !== null && _b !== void 0 ? _b : "");
-    setElementValue("edit-company-address-zip", (_c = company.address.zip) !== null && _c !== void 0 ? _c : "");
+    setElementValue("edit-company-address-street", address.street);
+    setElementValue("edit-company-address-streetNumber", address.streetNumber);
+    setElementValue("edit-company-address-zip", address.zip);
     await (editAddressBinding === null || editAddressBinding === void 0 ? void 0 : editAddressBinding.setAddress({
-        country: (_d = company.address.country) !== null && _d !== void 0 ? _d : "",
-        region: (_e = company.address.region) !== null && _e !== void 0 ? _e : "",
-        province: (_f = company.address.province) !== null && _f !== void 0 ? _f : "",
-        city: (_g = company.address.city) !== null && _g !== void 0 ? _g : ""
+        country: address.country,
+        region: (_a = address.region) !== null && _a !== void 0 ? _a : "",
+        province: (_b = address.province) !== null && _b !== void 0 ? _b : "",
+        city: address.city
     }));
     setElementValue("edit-company-partitaIVA", company.vatNumber);
-    setElementValue("edit-company-size", (_h = company.size) !== null && _h !== void 0 ? _h : "");
-    setElementValue("edit-company-website", (_j = company.website) !== null && _j !== void 0 ? _j : "");
-    setElementValue("edit-company-notes", (_k = company.note) !== null && _k !== void 0 ? _k : "");
+    setElementValue("edit-company-size", (_c = company.size) !== null && _c !== void 0 ? _c : "");
+    setElementValue("edit-company-website", company.website !== null && company.website !== void 0 ? company.website : "");
+    setElementValue("edit-company-notes", company.note !== null && company.note !== void 0 ? company.note : "");
     await loadEditContactRows(company.companyId);
     showPanel(editPanel, addButton);
 }
