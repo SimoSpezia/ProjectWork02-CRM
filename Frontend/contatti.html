@@ -110,6 +110,16 @@
                     <label for="edit-contact-work-role">Ruolo</label>
                     <input type="text" id="edit-contact-work-role">
 
+                    <label for="edit-contact-type-denomination">Tipo contatto</label>
+                    <select id="edit-contact-type-denomination">
+                        <option value="">Seleziona tipo contatto</option>
+                    </select>
+
+                    <label for="edit-contact-category">Categoria</label>
+                    <select id="edit-contact-category">
+                        <option value="">Seleziona categoria</option>
+                    </select>
+
                     <label for="edit-contact-gender">Genere</label>
                     <select id="edit-contact-gender">
                         <option value="">Seleziona genere</option>
@@ -119,9 +129,9 @@
 
                     <label for="edit-contact-birthday">Data di nascita</label>
                     <input type="date" id="edit-contact-birthday" required>
-
-                    <label>Email</label>
-                    <div class="contact-subitems-block">
+                    
+                    <label class="contact-channels-start">Email</label>
+                    <div class="contact-subitems-block contact-channels-start-block">
                         <div id="edit-contact-emails-list" class="contact-subitems-list"></div>
                         <button type="button" id="edit-contact-email-add-btn" class="secondary-inline-btn">Aggiungi email</button>
                     </div>

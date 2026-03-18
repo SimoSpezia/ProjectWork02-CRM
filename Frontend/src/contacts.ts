@@ -3,11 +3,14 @@ import { createAddressSelectBinding } from "./address.js";
 import { getMailAddressTypes } from "./apiMailAddressType.js";
 import { getPhoneNumberTypes } from "./apiPhoneNumberType.js";
 import {
+    CategoryDto,
+    ContactTypeDto,
     ContactDetailsDto,
     ContactDto,
     ContactUpsertPayload,
     MailAddressDto,
     PhoneNumberDto,
+    addCategoryToContact,
     createContact,
     createContactWithCompany,
     createMailAddress,
@@ -15,8 +18,12 @@ import {
     deleteContact,
     deleteMailAddress,
     deletePhoneNumber,
+    getCategories,
+    getCategoriesByContact,
     getContact,
+    getContactTypes,
     getContactWithDetails,
+    removeCategoryFromContact,
     updateContact,
     updateMailAddress,
     updatePhoneNumber
@@ -58,8 +65,11 @@ let editingContactDetails: ContactDetailsDto | null = null;
 let popupResolver: ((result: boolean) => void) | null = null;
 let popupMode: "confirm" | "message" | null = null;
 let companyOptions: CompanySimpleDto[] = [];
+let categoryOptions: CategoryDto[] = [];
+let contactTypeOptions: ContactTypeDto[] = [];
 let mailAddressTypeOptions: ContactChannelTypeOption[] = [];
 let phoneNumberTypeOptions: ContactChannelTypeOption[] = [];
+let editingCategoryIds: number[] = [];
 let allContacts: ContactDto[] = [];
 let contactNameFilter = "";
 let contactSortField: "name" | "surname" | "company" | "birthday" = "name";
@@ -233,6 +243,64 @@ function getSelectedCompanyId(selectId: string): number | null {
     return parsed;
 }
 
+function getSelectedPositiveNumber(selectId: string): number | null {
+    const rawValue = elementValue(selectId);
+    const parsed = Number(rawValue);
+    if (!Number.isInteger(parsed) || parsed <= 0) {
+        return null;
+    }
+
+    return parsed;
+}
+
+function populateSimpleSelect(
+    selectId: string,
+    options: Array<{ value: string; label: string }>,
+    placeholder: string,
+    selectedValue = ""
+): void {
+    const select = document.getElementById(selectId) as HTMLSelectElement | null;
+    if (!select) {
+        return;
+    }
+
+    select.innerHTML = "";
+
+    const placeholderOption = document.createElement("option");
+    placeholderOption.value = "";
+    placeholderOption.textContent = placeholder;
+    select.appendChild(placeholderOption);
+
+    for (const option of options) {
+        const item = document.createElement("option");
+        item.value = option.value;
+        item.textContent = option.label;
+        select.appendChild(item);
+    }
+
+    select.value = selectedValue;
+    if (select.value !== selectedValue) {
+        select.value = "";
+    }
+}
+
+function populateContactTypeSelect(selectedTypeDescription = ""): void {
+    const options = contactTypeOptions.map((item) => ({
+        value: item.description,
+        label: item.description
+    }));
+    populateSimpleSelect("edit-contact-type-denomination", options, "Seleziona tipo contatto", selectedTypeDescription);
+}
+
+function populateCategorySelect(selectedCategoryId: number | null): void {
+    const options = categoryOptions.map((item) => ({
+        value: String(item.categoryId),
+        label: item.description
+    }));
+    const selectedValue = selectedCategoryId != null && selectedCategoryId > 0 ? String(selectedCategoryId) : "";
+    populateSimpleSelect("edit-contact-category", options, "Seleziona categoria", selectedValue);
+}
+
 async function loadCompanyOptions(): Promise<void> {
     const companies: CompanySimpleDto[] = await getCompanies();
     companyOptions = companies
@@ -241,6 +309,30 @@ async function loadCompanyOptions(): Promise<void> {
 
     populateCompanySelect("contact-company");
     populateCompanySelect("edit-contact-company");
+}
+
+async function loadContactMetadataOptions(): Promise<void> {
+    try {
+        const [categories, contactTypes] = await Promise.all([
+            getCategories(),
+            getContactTypes()
+        ]);
+
+        categoryOptions = [...categories]
+            .filter((item) => item.description?.trim().length > 0)
+            .sort((a, b) => a.description.localeCompare(b.description, "it", { sensitivity: "base" }));
+
+        contactTypeOptions = [...contactTypes]
+            .filter((item) => item.description?.trim().length > 0)
+            .sort((a, b) => a.description.localeCompare(b.description, "it", { sensitivity: "base" }));
+    } catch (error) {
+        console.error("Errore caricamento categorie/tipi contatto", error);
+        categoryOptions = [];
+        contactTypeOptions = [];
+    }
+
+    populateContactTypeSelect();
+    populateCategorySelect(null);
 }
 
 async function loadContactChannelTypeOptions(): Promise<void> {
@@ -447,7 +539,7 @@ function contactSortValue(contact: ContactDto, field: "name" | "surname" | "comp
     case "surname":
         return normalizeText(contact.surname);
     case "company":
-        return normalizeText(contact.companyDenomination || "");
+        return normalizeText(contact.companydenomination || "");
     case "birthday": {
         const timestamp = new Date(contact.birthday || "").getTime();
         return Number.isNaN(timestamp) ? Number.MIN_SAFE_INTEGER : timestamp;
@@ -567,6 +659,7 @@ function buildEditPayload(): ContactUpsertPayload {
         surname: elementValue("edit-contact-surname"),
         title: elementValue("edit-contact-title-input") || undefined,
         workRole: elementValue("edit-contact-work-role") || undefined,
+        typeDenomination: elementValue("edit-contact-type-denomination") || undefined,
         gender: elementValue("edit-contact-gender") || undefined,
         birthday: toIsoDate(elementValue("edit-contact-birthday")),
         note: elementValue("edit-contact-note") || undefined,
@@ -574,8 +667,8 @@ function buildEditPayload(): ContactUpsertPayload {
 }
 
 function getContactCompanyDenomination(contact: ContactDto): string {
-    if ((contact.companyDenomination ?? "").trim()) {
-        return contact.companyDenomination ?? "";
+    if ((contact.companydenomination ?? "").trim()) {
+        return contact.companydenomination ?? "";
     }
 
     if ("company" in contact) {
@@ -595,9 +688,35 @@ function fillEditForm(contact: ContactDto): void {
     populateCompanySelect("edit-contact-company", getContactCompanyDenomination(contact));
     setElementValue("edit-contact-title-input", contact.title ?? "");
     setElementValue("edit-contact-work-role", contact.workRole ?? "");
+    const selectedTypeDescription = (
+        (contact as ContactDetailsDto).contactType?.description
+        ?? contact.typeDenomination
+        ?? ""
+    ).trim();
+    populateContactTypeSelect(selectedTypeDescription);
+    populateCategorySelect(editingCategoryIds[0] ?? null);
     setElementValue("edit-contact-gender", contact.gender ?? "");
     setElementValue("edit-contact-birthday", toDateInputValue(contact.birthday ?? ""));
     setElementValue("edit-contact-note", contact.note ?? "");
+}
+
+async function syncContactCategorySelection(contactId: number): Promise<void> {
+    const selectedCategoryId = getSelectedPositiveNumber("edit-contact-category");
+    const previousCategoryIds = [...editingCategoryIds];
+
+    const categoryIdsToRemove = selectedCategoryId == null
+        ? previousCategoryIds
+        : previousCategoryIds.filter((id) => id !== selectedCategoryId);
+
+    for (const categoryId of categoryIdsToRemove) {
+        await removeCategoryFromContact(contactId, categoryId);
+    }
+
+    if (selectedCategoryId != null && !previousCategoryIds.includes(selectedCategoryId)) {
+        await addCategoryToContact(contactId, selectedCategoryId);
+    }
+
+    editingCategoryIds = selectedCategoryId == null ? [] : [selectedCategoryId];
 }
 
 function ensureSubitemsPlaceholder(container: HTMLDivElement | null, message: string): void {
@@ -1050,13 +1169,21 @@ async function openEditPanel(contact: ContactDto): Promise<void> {
     }
 
     editingContactId = contact.contactId;
+    editingCategoryIds = [];
     clearError(editError);
     fillEditForm(contact);
     renderMailAddressRows([]);
     renderPhoneRows([]);
 
     try {
-        const details = await getContactWithDetails(contact.contactId);
+        const [details, groupCategories] = await Promise.all([
+            getContactWithDetails(contact.contactId),
+            getCategoriesByContact(contact.contactId)
+        ]);
+
+        editingCategoryIds = (groupCategories.categories ?? [])
+            .map((item) => item.categoryId)
+            .filter((id) => Number.isInteger(id) && id > 0);
         editingContactDetails = details;
         fillEditForm(details);
         renderMailAddressRows(details.mailAddresses ?? []);
@@ -1065,6 +1192,7 @@ async function openEditPanel(contact: ContactDto): Promise<void> {
     } catch (error) {
         editingContactDetails = null;
         editingContactId = null;
+        editingCategoryIds = [];
         await showMessagePopup("Errore", `Impossibile caricare i dettagli del contatto: ${(error as Error).message}`);
     }
 }
@@ -1131,7 +1259,7 @@ function renderTable(contacts: ContactDto[]): void {
         surnameCell.textContent = contact.surname;
 
         const companyCell = document.createElement("td");
-        companyCell.textContent = contact.companyDenomination || "-";
+        companyCell.textContent = contact.companydenomination || "-";
 
         const titleCell = document.createElement("td");
         titleCell.textContent = contact.title || "-";
@@ -1242,7 +1370,9 @@ function setupEditForm(): void {
             const selectedCompanyName = selectedCompanyId == null
                 ? ""
                 : (companyOptions.find((company) => company.companyId === selectedCompanyId)?.denomination ?? "").trim().toLowerCase();
-            const currentCompanyName = (editingContactDetails?.companyDenomination ?? "").trim().toLowerCase();
+            const currentCompanyName = editingContactDetails == null
+                ? ""
+                : getContactCompanyDenomination(editingContactDetails).trim().toLowerCase();
 
             if (selectedCompanyName !== currentCompanyName) {
                 showError(editError, "Cambio azienda su contatto esistente non supportato da questa API. Crea un nuovo contatto con l'azienda corretta.");
@@ -1250,9 +1380,11 @@ function setupEditForm(): void {
             }
 
             await updateContact(editingContactId, payload);
+            await syncContactCategorySelection(editingContactId);
             hidePanel(editPanel, addButton);
             editingContactId = null;
             editingContactDetails = null;
+            editingCategoryIds = [];
             await loadContacts();
         } catch (error) {
             showError(editError, getUpsertErrorMessage(error));
@@ -1318,6 +1450,7 @@ function setupButtons(): void {
             renderPhoneRows([]);
             editingContactId = null;
             editingContactDetails = null;
+            editingCategoryIds = [];
         }
     });
 }
@@ -1328,6 +1461,7 @@ async function init(): Promise<void> {
     await editAddressBinding?.initialize();
     setupPopup();
     await loadContactChannelTypeOptions();
+    await loadContactMetadataOptions();
     await loadCompanyOptions();
     setupButtons();
     setupAddForm();

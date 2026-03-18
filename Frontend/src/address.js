@@ -87,12 +87,6 @@ export function createAddressSelectBinding(ids) {
     if (isSelectElement(regionElement)) {
         populateSelect(regionElement, [], "Inserisci regione manualmente");
     }
-    regionElement.addEventListener("change", () => {
-        // Keeps the province aligned to the selected region only when province is still empty.
-        if (!normalize(provinceElement.value) && normalize(regionElement.value)) {
-            setManualFieldValue(provinceElement, regionElement.value);
-        }
-    });
     return {
         async initialize(initialValues) {
             var _a, _b, _c;

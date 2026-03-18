@@ -4,6 +4,7 @@ const FIELD_LABELS = {
     surname: "Cognome",
     title: "Titolo",
     workrole: "Ruolo",
+    typedenomination: "Tipo",
     gender: "Genere",
     birthday: "yyyy-mm-dd",
     email: "example@example.com",
@@ -69,6 +70,25 @@ export function getContact() {
 }
 export function getContactWithDetails(contactId) {
     return fetchJson(`${API_BASE_URL}/Contact/${contactId}/WithDetails`);
+}
+export function getContactTypes() {
+    return fetchJson(`${API_BASE_URL}/ContactType/all`);
+}
+export function getCategories() {
+    return fetchJson(`${API_BASE_URL}/Category/all`);
+}
+export function getCategoriesByContact(contactId) {
+    return fetchJson(`${API_BASE_URL}/Contact/CategoryByContact/${contactId}`);
+}
+export function addCategoryToContact(contactId, categoryId) {
+    return fetchJson(`${API_BASE_URL}/Contact/${contactId}/Category/${categoryId}`, {
+        method: "POST"
+    });
+}
+export function removeCategoryFromContact(contactId, categoryId) {
+    return fetchJson(`${API_BASE_URL}/Contact/${contactId}/Category/${categoryId}`, {
+        method: "DELETE"
+    });
 }
 async function handleContactUpsertResponse(response) {
     if (response.ok) {

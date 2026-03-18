@@ -84,6 +84,28 @@ function setElementValue(id: string, value: string): void {
     }
 }
 
+function keepOnlyDigits(value: string): string {
+    return value.replace(/\D/g, "");
+}
+
+function setupZipNumericInputs(): void {
+    const zipInputIds = ["company-address-zip", "edit-company-address-zip"];
+
+    for (const inputId of zipInputIds) {
+        const input = document.getElementById(inputId) as HTMLInputElement | null;
+        if (!input) {
+            continue;
+        }
+
+        input.addEventListener("input", () => {
+            const digitsOnlyValue = keepOnlyDigits(input.value);
+            if (input.value !== digitsOnlyValue) {
+                input.value = digitsOnlyValue;
+            }
+        });
+    }
+}
+
 function isValidPersonName(value: string): boolean {
     return PERSON_NAME_REGEX.test(value.trim());
 }
@@ -1070,6 +1092,7 @@ async function init(): Promise<void> {
     initializeMenuAndTheme();
     await addAddressBinding?.initialize();
     await editAddressBinding?.initialize();
+    setupZipNumericInputs();
     setupPopup();
     setupButtons();
     setupAddForm();

@@ -6,12 +6,28 @@ export interface ContactDto {
     surname: string,
     title?: string,
     workRole?: string,
+    typeDenomination?: string,
     gender?: string,
     birthday?: string,
     email?: string,
     phone?:string,
     note?: string,
-    companyDenomination?: string;
+    companydenomination?: string;
+}
+
+export interface CategoryDto {
+    categoryId: number;
+    description: string;
+}
+
+export interface ContactTypeDto {
+    contactTypeId: number;
+    description: string;
+}
+
+export interface GroupContactDto {
+    contactId: number;
+    categories: CategoryDto[];
 }
 
 export interface MailAddressDto {
@@ -47,6 +63,8 @@ export interface ContactDetailsDto extends ContactDto {
         companyId: number;
         denomination: string;
     };
+    contactType?: ContactTypeDto;
+    categoriesAsString?: string;
 }
 
 export interface ContactUpsertPayload {
@@ -55,6 +73,7 @@ export interface ContactUpsertPayload {
     surname: string;
     title?: string;
     workRole?: string;
+    typeDenomination?: string;
     gender?: string;
     birthday?: string;
     email?:string;
@@ -70,6 +89,7 @@ const FIELD_LABELS: Record<string, string> = {
     surname: "Cognome",
     title: "Titolo",
     workrole: "Ruolo",
+    typedenomination: "Tipo",
     gender: "Genere",
     birthday: "yyyy-mm-dd",
     email: "example@example.com",
@@ -157,6 +177,30 @@ export function getContact(): Promise<ContactDto[]> {
 
 export function getContactWithDetails(contactId: number): Promise<ContactDetailsDto> {
     return fetchJson<ContactDetailsDto>(`${API_BASE_URL}/Contact/${contactId}/WithDetails`);
+}
+
+export function getContactTypes(): Promise<ContactTypeDto[]> {
+    return fetchJson<ContactTypeDto[]>(`${API_BASE_URL}/ContactType/all`);
+}
+
+export function getCategories(): Promise<CategoryDto[]> {
+    return fetchJson<CategoryDto[]>(`${API_BASE_URL}/Category/all`);
+}
+
+export function getCategoriesByContact(contactId: number): Promise<GroupContactDto> {
+    return fetchJson<GroupContactDto>(`${API_BASE_URL}/Contact/CategoryByContact/${contactId}`);
+}
+
+export function addCategoryToContact(contactId: number, categoryId: number): Promise<GroupContactDto> {
+    return fetchJson<GroupContactDto>(`${API_BASE_URL}/Contact/${contactId}/Category/${categoryId}`, {
+        method: "POST"
+    });
+}
+
+export function removeCategoryFromContact(contactId: number, categoryId: number): Promise<GroupContactDto> {
+    return fetchJson<GroupContactDto>(`${API_BASE_URL}/Contact/${contactId}/Category/${categoryId}`, {
+        method: "DELETE"
+    });
 }
 
 async function handleContactUpsertResponse(response: Response): Promise<void> {

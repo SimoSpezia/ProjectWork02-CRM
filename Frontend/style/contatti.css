@@ -247,6 +247,11 @@
     width: 100%;
 }
 
+#edit-contact-form > .contact-channels-start,
+#edit-contact-form > .contact-channels-start-block {
+    margin-top: 0.35rem;
+}
+
 .contact-subitems-list {
     display: flex;
     flex-direction: column;
