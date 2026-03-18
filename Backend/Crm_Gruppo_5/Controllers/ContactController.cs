@@ -23,6 +23,7 @@ namespace Crm_Gruppo_5.Controllers
                 var result = _ctx.Contacts
                     .Where(c => !c.IsDeleted)
                     .Include(c => c.Company)
+                    .Include(c=>c.ContactType)
                     .ToList()
                     .ConvertAll(_mapper.MapBaseEntitytoDto);
                 return Ok(result);
@@ -117,6 +118,10 @@ namespace Crm_Gruppo_5.Controllers
         public IActionResult Create(ContactDto contact)
         {
             contact.ContactId = 0;
+            if(string.IsNullOrWhiteSpace(contact.Name) || string.IsNullOrWhiteSpace(contact.Surname))
+            {
+                return BadRequest("Name and Surname are required fields.");
+            }
 
             var result = _mapper.MapDtoToEntity(contact);
 
