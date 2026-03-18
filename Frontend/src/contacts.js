@@ -2,7 +2,7 @@ import { hidePanel, initializeMenuAndTheme, showPanel } from "./common.js";
 import { createAddressSelectBinding } from "./address.js";
 import { getMailAddressTypes } from "./apiMailAddressType.js";
 import { getPhoneNumberTypes } from "./apiPhoneNumberType.js";
-import { addCategoryToContact, createContact, createContactWithCompany, createMailAddress, createPhoneNumber, deleteContact, deleteMailAddress, deletePhoneNumber, getCategories, getCategoriesByContact, getContact, getContactTypes, getContactWithDetails, removeCategoryFromContact, updateContact, updateMailAddress, updatePhoneNumber } from "./apiContact.js";
+import { addCategoryToContact, createContact, createContactAndReturn, createContactWithCompany, createContactWithCompanyAndReturn, createMailAddress, createPhoneNumber, deleteContact, deleteMailAddress, deletePhoneNumber, getCategories, getCategoriesByContact, getContact, getContactTypes, getContactWithDetails, removeCategoryFromContact, updateContact, updateMailAddress, updatePhoneNumber } from "./apiContact.js";
 import { getCompanies } from "./apiAzienda.js";
 const tableBody = document.getElementById("table-contact-body");
 const addButton = document.getElementById("add-contact-btn");
@@ -408,7 +408,7 @@ function contactSortValue(contact, field) {
         case "surname":
             return normalizeText(contact.surname);
         case "company":
-            return normalizeText(contact.companydenomination || "");
+            return normalizeText(getContactCompanyDenomination(contact));
         case "birthday": {
             const timestamp = new Date(contact.birthday || "").getTime();
             return Number.isNaN(timestamp) ? Number.MIN_SAFE_INTEGER : timestamp;
@@ -517,14 +517,17 @@ function buildEditPayload() {
     };
 }
 function getContactCompanyDenomination(contact) {
-    var _a, _b, _c, _d;
-    if (((_a = contact.companydenomination) !== null && _a !== void 0 ? _a : "").trim()) {
-        return (_b = contact.companydenomination) !== null && _b !== void 0 ? _b : "";
+    var _a, _b, _c, _d, _e, _f;
+    if (((_a = contact.companyDenomination) !== null && _a !== void 0 ? _a : "").trim()) {
+        return (_b = contact.companyDenomination) !== null && _b !== void 0 ? _b : "";
+    }
+    if (((_c = contact.companydenomination) !== null && _c !== void 0 ? _c : "").trim()) {
+        return (_d = contact.companydenomination) !== null && _d !== void 0 ? _d : "";
     }
     if ("company" in contact) {
         const detailCompany = contact.company;
-        if (((_c = detailCompany === null || detailCompany === void 0 ? void 0 : detailCompany.denomination) !== null && _c !== void 0 ? _c : "").trim()) {
-            return (_d = detailCompany === null || detailCompany === void 0 ? void 0 : detailCompany.denomination) !== null && _d !== void 0 ? _d : "";
+        if (((_e = detailCompany === null || detailCompany === void 0 ? void 0 : detailCompany.denomination) !== null && _e !== void 0 ? _e : "").trim()) {
+            return (_f = detailCompany === null || detailCompany === void 0 ? void 0 : detailCompany.denomination) !== null && _f !== void 0 ? _f : "";
         }
     }
     return "";
@@ -557,6 +560,52 @@ async function syncContactCategorySelection(contactId) {
         await addCategoryToContact(contactId, selectedCategoryId);
     }
     editingCategoryIds = selectedCategoryId == null ? [] : [selectedCategoryId];
+}
+async function applySelectedCategoryToContact(contactId) {
+    const selectedCategoryId = getSelectedPositiveNumber("edit-contact-category");
+    if (selectedCategoryId == null) {
+        return;
+    }
+    await addCategoryToContact(contactId, selectedCategoryId);
+}
+async function copyChannelsToContact(contactId) {
+    var _a, _b, _c, _d, _e, _f, _g, _h;
+    const sourceMails = (_a = editingContactDetails === null || editingContactDetails === void 0 ? void 0 : editingContactDetails.mailAddresses) !== null && _a !== void 0 ? _a : [];
+    for (const item of sourceMails) {
+        const normalizedMail = ((_b = item.mail) !== null && _b !== void 0 ? _b : "").trim();
+        if (!normalizedMail) {
+            continue;
+        }
+        await createMailAddress({
+            mailAddressId: 0,
+            mail: normalizedMail,
+            mailAddressTypeId: (_c = item.mailAddressTypeId) !== null && _c !== void 0 ? _c : (_d = item.mailAddressType) === null || _d === void 0 ? void 0 : _d.mailAddressTypeId,
+            contactId
+        });
+    }
+    const sourcePhones = (_e = editingContactDetails === null || editingContactDetails === void 0 ? void 0 : editingContactDetails.phoneNumbers) !== null && _e !== void 0 ? _e : [];
+    for (const item of sourcePhones) {
+        const normalizedNumber = ((_f = item.number) !== null && _f !== void 0 ? _f : "").trim();
+        if (!normalizedNumber) {
+            continue;
+        }
+        await createPhoneNumber({
+            phoneNumberId: 0,
+            number: normalizedNumber,
+            prefix: item.prefix,
+            nationality: item.nationality,
+            phoneNumberTypeId: (_g = item.phoneNumberTypeId) !== null && _g !== void 0 ? _g : (_h = item.phoneNumberType) === null || _h === void 0 ? void 0 : _h.phoneNumberTypeId,
+            contactId
+        });
+    }
+}
+async function migrateContactToSelectedCompany(sourceContactId, selectedCompanyId, payload) {
+    const createdContact = selectedCompanyId == null
+        ? await createContactAndReturn(payload)
+        : await createContactWithCompanyAndReturn(selectedCompanyId, payload);
+    await copyChannelsToContact(createdContact.contactId);
+    await applySelectedCategoryToContact(createdContact.contactId);
+    await deleteContact(sourceContactId);
 }
 function ensureSubitemsPlaceholder(container, message) {
     if (!container) {
@@ -1005,7 +1054,7 @@ function renderTable(contacts) {
         const surnameCell = document.createElement("td");
         surnameCell.textContent = contact.surname;
         const companyCell = document.createElement("td");
-        companyCell.textContent = contact.companydenomination || "-";
+        companyCell.textContent = getContactCompanyDenomination(contact) || "-";
         const titleCell = document.createElement("td");
         titleCell.textContent = contact.title || "-";
         const roleCell = document.createElement("td");
@@ -1080,7 +1129,7 @@ function setupEditForm() {
         return;
     }
     editForm.addEventListener("submit", async (event) => {
-        var _a, _b, _c;
+        var _a, _b;
         event.preventDefault();
         clearError(editError);
         if (editingContactId == null) {
@@ -1102,11 +1151,12 @@ function setupEditForm() {
                 ? ""
                 : getContactCompanyDenomination(editingContactDetails).trim().toLowerCase();
             if (selectedCompanyName !== currentCompanyName) {
-                showError(editError, "Cambio azienda su contatto esistente non supportato da questa API. Crea un nuovo contatto con l'azienda corretta.");
-                return;
+                await migrateContactToSelectedCompany(editingContactId, selectedCompanyId, payload);
             }
-            await updateContact(editingContactId, payload);
-            await syncContactCategorySelection(editingContactId);
+            else {
+                await updateContact(editingContactId, payload);
+                await syncContactCategorySelection(editingContactId);
+            }
             hidePanel(editPanel, addButton);
             editingContactId = null;
             editingContactDetails = null;

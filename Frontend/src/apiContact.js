@@ -110,6 +110,12 @@ export function createContact(payload) {
         body: JSON.stringify(payload)
     }).then(handleContactUpsertResponse);
 }
+export function createContactAndReturn(payload) {
+    return fetchJson(`${API_BASE_URL}/Contact`, {
+        method: "POST",
+        body: JSON.stringify(payload)
+    });
+}
 export function createContactWithCompany(companyId, payload) {
     return fetch(`${API_BASE_URL}/Contact/withCompany/${companyId}`, {
         method: "POST",
@@ -118,6 +124,12 @@ export function createContactWithCompany(companyId, payload) {
         },
         body: JSON.stringify(payload)
     }).then(handleContactUpsertResponse);
+}
+export function createContactWithCompanyAndReturn(companyId, payload) {
+    return fetchJson(`${API_BASE_URL}/Contact/withCompany/${companyId}`, {
+        method: "POST",
+        body: JSON.stringify(payload)
+    });
 }
 export function updateContact(contactId, payload) {
     return fetch(`${API_BASE_URL}/Contact/${contactId}`, {

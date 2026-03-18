@@ -12,7 +12,9 @@ import {
     PhoneNumberDto,
     addCategoryToContact,
     createContact,
+    createContactAndReturn,
     createContactWithCompany,
+    createContactWithCompanyAndReturn,
     createMailAddress,
     createPhoneNumber,
     deleteContact,
@@ -539,7 +541,7 @@ function contactSortValue(contact: ContactDto, field: "name" | "surname" | "comp
     case "surname":
         return normalizeText(contact.surname);
     case "company":
-        return normalizeText(contact.companydenomination || "");
+        return normalizeText(getContactCompanyDenomination(contact));
     case "birthday": {
         const timestamp = new Date(contact.birthday || "").getTime();
         return Number.isNaN(timestamp) ? Number.MIN_SAFE_INTEGER : timestamp;
@@ -667,6 +669,10 @@ function buildEditPayload(): ContactUpsertPayload {
 }
 
 function getContactCompanyDenomination(contact: ContactDto): string {
+    if ((contact.companyDenomination ?? "").trim()) {
+        return contact.companyDenomination ?? "";
+    }
+
     if ((contact.companydenomination ?? "").trim()) {
         return contact.companydenomination ?? "";
     }
@@ -717,6 +723,63 @@ async function syncContactCategorySelection(contactId: number): Promise<void> {
     }
 
     editingCategoryIds = selectedCategoryId == null ? [] : [selectedCategoryId];
+}
+
+async function applySelectedCategoryToContact(contactId: number): Promise<void> {
+    const selectedCategoryId = getSelectedPositiveNumber("edit-contact-category");
+    if (selectedCategoryId == null) {
+        return;
+    }
+
+    await addCategoryToContact(contactId, selectedCategoryId);
+}
+
+async function copyChannelsToContact(contactId: number): Promise<void> {
+    const sourceMails = editingContactDetails?.mailAddresses ?? [];
+    for (const item of sourceMails) {
+        const normalizedMail = (item.mail ?? "").trim();
+        if (!normalizedMail) {
+            continue;
+        }
+
+        await createMailAddress({
+            mailAddressId: 0,
+            mail: normalizedMail,
+            mailAddressTypeId: item.mailAddressTypeId ?? item.mailAddressType?.mailAddressTypeId,
+            contactId
+        });
+    }
+
+    const sourcePhones = editingContactDetails?.phoneNumbers ?? [];
+    for (const item of sourcePhones) {
+        const normalizedNumber = (item.number ?? "").trim();
+        if (!normalizedNumber) {
+            continue;
+        }
+
+        await createPhoneNumber({
+            phoneNumberId: 0,
+            number: normalizedNumber,
+            prefix: item.prefix,
+            nationality: item.nationality,
+            phoneNumberTypeId: item.phoneNumberTypeId ?? item.phoneNumberType?.phoneNumberTypeId,
+            contactId
+        });
+    }
+}
+
+async function migrateContactToSelectedCompany(
+    sourceContactId: number,
+    selectedCompanyId: number | null,
+    payload: ContactUpsertPayload
+): Promise<void> {
+    const createdContact = selectedCompanyId == null
+        ? await createContactAndReturn(payload)
+        : await createContactWithCompanyAndReturn(selectedCompanyId, payload);
+
+    await copyChannelsToContact(createdContact.contactId);
+    await applySelectedCategoryToContact(createdContact.contactId);
+    await deleteContact(sourceContactId);
 }
 
 function ensureSubitemsPlaceholder(container: HTMLDivElement | null, message: string): void {
@@ -1259,7 +1322,7 @@ function renderTable(contacts: ContactDto[]): void {
         surnameCell.textContent = contact.surname;
 
         const companyCell = document.createElement("td");
-        companyCell.textContent = contact.companydenomination || "-";
+        companyCell.textContent = getContactCompanyDenomination(contact) || "-";
 
         const titleCell = document.createElement("td");
         titleCell.textContent = contact.title || "-";
@@ -1375,12 +1438,12 @@ function setupEditForm(): void {
                 : getContactCompanyDenomination(editingContactDetails).trim().toLowerCase();
 
             if (selectedCompanyName !== currentCompanyName) {
-                showError(editError, "Cambio azienda su contatto esistente non supportato da questa API. Crea un nuovo contatto con l'azienda corretta.");
-                return;
+                await migrateContactToSelectedCompany(editingContactId, selectedCompanyId, payload);
+            } else {
+                await updateContact(editingContactId, payload);
+                await syncContactCategorySelection(editingContactId);
             }
 
-            await updateContact(editingContactId, payload);
-            await syncContactCategorySelection(editingContactId);
             hidePanel(editPanel, addButton);
             editingContactId = null;
             editingContactDetails = null;

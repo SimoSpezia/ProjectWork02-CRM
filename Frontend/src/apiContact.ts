@@ -12,6 +12,7 @@ export interface ContactDto {
     email?: string,
     phone?:string,
     note?: string,
+    companyDenomination?: string;
     companydenomination?: string;
 }
 
@@ -227,6 +228,13 @@ export function createContact(payload: ContactUpsertPayload): Promise<void> {
     }).then(handleContactUpsertResponse);
 }
 
+export function createContactAndReturn(payload: ContactUpsertPayload): Promise<ContactDto> {
+    return fetchJson<ContactDto>(`${API_BASE_URL}/Contact`, {
+        method: "POST",
+        body: JSON.stringify(payload)
+    });
+}
+
 export function createContactWithCompany(companyId: number, payload: ContactUpsertPayload): Promise<void> {
     return fetch(`${API_BASE_URL}/Contact/withCompany/${companyId}`, {
         method: "POST",
@@ -235,6 +243,13 @@ export function createContactWithCompany(companyId: number, payload: ContactUpse
         },
         body: JSON.stringify(payload)
     }).then(handleContactUpsertResponse);
+}
+
+export function createContactWithCompanyAndReturn(companyId: number, payload: ContactUpsertPayload): Promise<ContactDto> {
+    return fetchJson<ContactDto>(`${API_BASE_URL}/Contact/withCompany/${companyId}`, {
+        method: "POST",
+        body: JSON.stringify(payload)
+    });
 }
 
 export function updateContact(contactId: number, payload: ContactUpsertPayload): Promise<void> {

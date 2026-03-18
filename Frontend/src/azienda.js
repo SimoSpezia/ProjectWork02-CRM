@@ -561,6 +561,69 @@ function hasCompanyChanges(current, original) {
         normalized(current.address.region) !== normalized(original.address.region) ||
         normalized(current.address.country) !== normalized(original.address.country));
 }
+function validateEditedCompanyPayload(current, original) {
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q;
+    if (!original) {
+        return validateCompanyPayload(current);
+    }
+    const denominationChanged = normalized(current.denomination) !== normalized(original.denomination);
+    const vatChanged = normalized(current.vatNumber) !== normalized(original.vatNumber);
+    const websiteChanged = normalized(current.website) !== normalized(original.website);
+    const sizeChanged = normalized(current.size) !== normalized(original.size);
+    const noteChanged = normalized(current.note) !== normalized(original.note);
+    const zipChanged = normalized(current.address.zip) !== normalized(original.address.zip);
+    const countryChanged = normalized(current.address.country) !== normalized(original.address.country);
+    const regionChanged = normalized(current.address.region) !== normalized(original.address.region);
+    const provinceChanged = normalized(current.address.province) !== normalized(original.address.province);
+    const cityChanged = normalized(current.address.city) !== normalized(original.address.city);
+    const streetChanged = normalized(current.address.street) !== normalized(original.address.street);
+    const denomination = (_b = (_a = current.denomination) === null || _a === void 0 ? void 0 : _a.trim()) !== null && _b !== void 0 ? _b : "";
+    const vatNumber = (_d = (_c = current.vatNumber) === null || _c === void 0 ? void 0 : _c.trim()) !== null && _d !== void 0 ? _d : "";
+    const website = (_f = (_e = current.website) === null || _e === void 0 ? void 0 : _e.trim()) !== null && _f !== void 0 ? _f : "";
+    const zip = (_h = (_g = current.address.zip) === null || _g === void 0 ? void 0 : _g.trim()) !== null && _h !== void 0 ? _h : "";
+    if (denominationChanged && (denomination.length < 2 || denomination.length > 120)) {
+        return "Nome azienda non valido (2-120 caratteri).";
+    }
+    if (vatChanged && !VAT_NUMBER_REGEX.test(vatNumber)) {
+        return "Partita IVA non valida: usa 11 cifre (opzionale prefisso IT).";
+    }
+    if (zipChanged && zip && !ZIP_REGEX.test(zip)) {
+        return "CAP non valido: inserisci 5 cifre.";
+    }
+    if (countryChanged && !((_j = current.address.country) === null || _j === void 0 ? void 0 : _j.trim())) {
+        return "Seleziona la nazione.";
+    }
+    if (regionChanged && !((_k = current.address.region) === null || _k === void 0 ? void 0 : _k.trim())) {
+        return "Inserisci la regione.";
+    }
+    if (provinceChanged && !((_l = current.address.province) === null || _l === void 0 ? void 0 : _l.trim())) {
+        return "Inserisci la provincia.";
+    }
+    if (cityChanged && !((_m = current.address.city) === null || _m === void 0 ? void 0 : _m.trim())) {
+        return "Inserisci la citta.";
+    }
+    if (streetChanged && !((_o = current.address.street) === null || _o === void 0 ? void 0 : _o.trim())) {
+        return "Inserisci via/piazza.";
+    }
+    if (websiteChanged && website) {
+        try {
+            const parsedUrl = new URL(website);
+            if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
+                return "Sito web non valido: usa un URL http o https.";
+            }
+        }
+        catch (_r) {
+            return "Sito web non valido: inserisci un URL completo (es. https://www.esempio.it).";
+        }
+    }
+    if (sizeChanged && ((_p = current.size) !== null && _p !== void 0 ? _p : "").length > 80) {
+        return "Dimensione troppo lunga (massimo 80 caratteri).";
+    }
+    if (noteChanged && ((_q = current.note) !== null && _q !== void 0 ? _q : "").length > 1000) {
+        return "Note troppo lunghe (massimo 1000 caratteri).";
+    }
+    return null;
+}
 function toContactUpsertPayload(contact) {
     return {
         contactId: contact.contactId > 0 ? contact.contactId : undefined,
@@ -834,7 +897,7 @@ function setupEditForm() {
         }
         try {
             const payload = buildEditCompanyPayload();
-            const validationError = validateCompanyPayload(payload);
+            const validationError = validateEditedCompanyPayload(payload, editingCompanySnapshot);
             if (validationError) {
                 showError(editError, validationError);
                 return;
