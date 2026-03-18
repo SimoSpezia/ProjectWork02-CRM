@@ -31,7 +31,7 @@ namespace Crm_Gruppo_5.Controllers
 
         [HttpGet]
         [Route("{id}")]
-        public IActionResult GetSingle(int id)
+        public IActionResult GetSingle([FromRoute] int id)
         {
             var mail = _ctx.MailAddresses.SingleOrDefault(m => m.MailAddressId == id);
 
@@ -42,10 +42,10 @@ namespace Crm_Gruppo_5.Controllers
             }
             return Ok(_mapper.MapBaseEntitytoDto(mail));
         }
-            
+
         [HttpGet]
         [Route("by-category/{categoryId}")]
-        public IActionResult GetByCategory(int categoryId, [FromQuery] int? Id)
+        public IActionResult GetByCategory([FromRoute] int categoryId, [FromQuery] int? Id)
         {
             var query = _ctx.MailAddresses
                 .Include(m => m.Contact)
@@ -72,7 +72,7 @@ namespace Crm_Gruppo_5.Controllers
 
         [HttpGet]
         [Route("by-company/{companyId}")]
-        public IActionResult GetByCompany(int companyId, [FromQuery] int? Id)
+        public IActionResult GetByCompany([FromRoute] int companyId, [FromQuery] int? Id)
         {
             var query = _ctx.MailAddresses
                         .Include(m => m.Contact)
@@ -99,7 +99,7 @@ namespace Crm_Gruppo_5.Controllers
 
         [HttpGet]
         [Route("by-type/{Id}")]
-        public IActionResult GetByMailAddressType(int Id)
+        public IActionResult GetByMailAddressType([FromRoute] int Id)
         {
             var result = _ctx.MailAddresses
                 .Include(m => m.MailAddressType)
@@ -114,11 +114,20 @@ namespace Crm_Gruppo_5.Controllers
         }
 
         [HttpPost]
-        public IActionResult Create(MailAddressDto mailAddress)
+        [Route("{Id}")]
+        public IActionResult Create([FromRoute] int Id, [FromBody] MailAddressDto mailAddress)
         {
+            var contact = _ctx.Contacts.SingleOrDefault(c => c.ContactId == Id);
+
+            if (contact == null)
+            {
+                return NotFound($"Contact with id {Id} not found");
+            }
+
             mailAddress.MailAddressId = 0;
 
             var entity = _mapper.MapDtoToEntity(mailAddress);
+            entity.Contact = contact;
 
             _ctx.MailAddresses.Add(entity);
 
@@ -149,8 +158,9 @@ namespace Crm_Gruppo_5.Controllers
             return Ok(result);
         }
 
-        [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        [HttpDelete]
+        [Route("{id}")]
+        public IActionResult Delete([FromRoute] int id)
         {
             var mail = _ctx.MailAddresses.SingleOrDefault(m => m.MailAddressId == id);
 

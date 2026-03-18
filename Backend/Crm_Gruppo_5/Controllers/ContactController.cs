@@ -36,7 +36,7 @@ namespace Crm_Gruppo_5.Controllers
 
         [HttpGet]
         [Route("{id}")]
-        public IActionResult GetSingle(int id)
+        public IActionResult GetSingle([FromRoute] int id)
         {
             var contact = _ctx.Contacts
                           .SingleOrDefault(c => c.ContactId == id && !c.IsDeleted);
@@ -51,7 +51,7 @@ namespace Crm_Gruppo_5.Controllers
 
         [HttpGet]
         [Route("{id}/WithDetails")]
-        public IActionResult GetSingleWithDetails(int id)
+        public IActionResult GetSingleWithDetails([FromRoute] int id)
         {
             var result = _ctx.Contacts
                          .Include(c => c.MailAddresses)
@@ -166,7 +166,7 @@ namespace Crm_Gruppo_5.Controllers
 
         [HttpPatch]
         [Route("SoftDelete/{id}")]
-        public IActionResult SoftDelete(int id)
+        public IActionResult SoftDelete([FromRoute] int id)
         {
             var contact = _ctx.Contacts
                 .Include(c => c.Categories)
@@ -186,7 +186,7 @@ namespace Crm_Gruppo_5.Controllers
         }
 
         [HttpDelete("HardDelete/{id}")]
-        public IActionResult HardDelete(int id)
+        public IActionResult HardDelete([FromRoute] int id)
         {
             var contact = _ctx.Contacts
                 .Include(c => c.Categories)
@@ -214,7 +214,7 @@ namespace Crm_Gruppo_5.Controllers
 
         [HttpGet]
         [Route("CategoryByContact/{id}")]
-        public IActionResult GetCategory(int id)
+        public IActionResult GetCategory([FromRoute] int id)
         {
             var contact = _ctx.Contacts
                          .Include(c => c.Categories)
@@ -272,7 +272,6 @@ namespace Crm_Gruppo_5.Controllers
                 ContactId = contact.ContactId,
                 Categories = contact.Categories.ConvertAll(_mapper.MapBaseEntitytoDto)
             };
-
             return Ok(result);
         }
 

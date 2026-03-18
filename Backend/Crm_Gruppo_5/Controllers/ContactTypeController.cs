@@ -31,7 +31,7 @@ namespace Crm_Gruppo_5.Controllers
 
         [HttpGet]
         [Route("{id}")]
-        public IActionResult GetSingle(int id)
+        public IActionResult GetSingle([FromRoute] int id)
         {
             var contactType = _ctx.ContactTypes
                           .SingleOrDefault(c => c.ContactTypeId == id);
@@ -80,7 +80,7 @@ namespace Crm_Gruppo_5.Controllers
         }
 
         [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        public IActionResult Delete([FromRoute] int id)
         {
             var contactType = _ctx.ContactTypes.SingleOrDefault(c => c.ContactTypeId == id);
 
