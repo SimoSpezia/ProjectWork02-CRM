@@ -23,6 +23,7 @@ namespace Crm_Gruppo_5.Controllers
                 var result = _ctx.Contacts
                     .Where(c => !c.IsDeleted)
                     .Include(c => c.Company)
+                    .Include(c=>c.ContactType)
                     .ToList()
                     .ConvertAll(_mapper.MapBaseEntitytoDto);
                 return Ok(result);

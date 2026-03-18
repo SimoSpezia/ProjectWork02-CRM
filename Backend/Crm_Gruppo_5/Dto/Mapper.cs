@@ -140,7 +140,8 @@ namespace Crm_Gruppo_5.Dto
                 Gender = entity.Gender,
                 Birthday = entity.Birthday,
                 Note = entity.Note,
-                CompanyDenomination = entity.Company != null ? entity.Company.Denomination : null
+                CompanyDenomination = entity.Company != null ? entity.Company.Denomination : null,
+                TypeDenomination = entity.ContactType != null ? entity.ContactType.Description : null
             };
             return dto;
         }
