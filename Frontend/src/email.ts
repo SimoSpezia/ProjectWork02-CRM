@@ -49,6 +49,14 @@ const popupConfirmButton = document.getElementById("email-popup-confirm");
 let editingTypeId: number | null = null;
 let popupResolver: ((value: boolean) => void) | null = null;
 let popupMode: "message" | "confirm" | null = null;
+let allMailAddressTypes: MailAddressType[] = [];
+let typeDescriptionFilter = "";
+let typeSortField: "priority" | "description" | "id" = "priority";
+let typeSortDirection: "asc" | "desc" = "asc";
+
+let typeDescriptionFilterInput: HTMLInputElement | null = null;
+let typeSortFieldSelect: HTMLSelectElement | null = null;
+let typeSortDirectionButton: HTMLButtonElement | null = null;
 
 function elementValue(id: string): string {
     const element = document.getElementById(id) as HTMLInputElement;
@@ -133,6 +141,115 @@ function buildActionButton(label: string, className: string, onClick: () => void
     button.textContent = label;
     button.addEventListener("click", onClick);
     return button;
+}
+
+function normalizeText(value?: string): string {
+    return (value || "").trim().toLowerCase();
+}
+
+function compareText(a: string, b: string): number {
+    return a.localeCompare(b, "it", { sensitivity: "base" });
+}
+
+function typeSortValue(type: MailAddressType, field: "priority" | "description" | "id"): number | string {
+    switch (field) {
+    case "id":
+        return Number(type.mailAddressTypeId ?? 0);
+    case "description":
+        return normalizeText(type.description ?? "");
+    case "priority":
+    default:
+        return Number(type.priority ?? Number.MAX_SAFE_INTEGER);
+    }
+}
+
+function updateTypeSortDirectionButton(): void {
+    if (!typeSortDirectionButton) {
+        return;
+    }
+
+    typeSortDirectionButton.textContent = typeSortDirection === "asc" ? "Ordinamento \u2191" : "Ordinamento \u2193";
+}
+
+function setupEmailTypeListControls(): void {
+    const contentSection = document.querySelector(".content-section");
+    const tableWrapper = document.querySelector(".table-wrapper");
+    if (!contentSection || !tableWrapper) {
+        return;
+    }
+
+    const controls = document.createElement("div");
+    controls.id = "email-type-list-controls";
+    controls.className = "list-controls";
+
+    const descriptionFilter = document.createElement("input");
+    descriptionFilter.type = "search";
+    descriptionFilter.className = "list-control-input";
+    descriptionFilter.id = "email-type-description-filter";
+    descriptionFilter.placeholder = "Filtra per descrizione...";
+    descriptionFilter.setAttribute("aria-label", "Filtra tipi email per descrizione");
+
+    const sortField = document.createElement("select");
+    sortField.className = "list-control-select";
+    sortField.id = "email-type-sort-field";
+    sortField.setAttribute("aria-label", "Ordina tipi email per");
+    sortField.innerHTML = `
+        <option value="priority">Priorita \u2191\u2193</option>
+        <option value="description">Descrizione \u2191\u2193</option>
+        <option value="id">Id \u2191\u2193</option>
+    `;
+
+    const sortDirection = document.createElement("button");
+    sortDirection.type = "button";
+    sortDirection.className = "list-control-button";
+    sortDirection.id = "email-type-sort-direction";
+
+    controls.appendChild(descriptionFilter);
+    controls.appendChild(sortField);
+    controls.appendChild(sortDirection);
+    contentSection.insertBefore(controls, tableWrapper);
+
+    typeDescriptionFilterInput = descriptionFilter;
+    typeSortFieldSelect = sortField;
+    typeSortDirectionButton = sortDirection;
+
+    descriptionFilter.addEventListener("input", () => {
+        typeDescriptionFilter = normalizeText(descriptionFilter.value);
+        applyEmailTypeFilterAndSort();
+    });
+
+    sortField.addEventListener("change", () => {
+        typeSortField = sortField.value as "priority" | "description" | "id";
+        applyEmailTypeFilterAndSort();
+    });
+
+    sortDirection.addEventListener("click", () => {
+        typeSortDirection = typeSortDirection === "asc" ? "desc" : "asc";
+        updateTypeSortDirectionButton();
+        applyEmailTypeFilterAndSort();
+    });
+
+    sortField.value = typeSortField;
+    updateTypeSortDirectionButton();
+}
+
+function applyEmailTypeFilterAndSort(): void {
+    const filtered = allMailAddressTypes.filter((type) => normalizeText(type.description ?? "").includes(typeDescriptionFilter));
+    const sorted = [...filtered].sort((a, b) => {
+        const valueA = typeSortValue(a, typeSortField);
+        const valueB = typeSortValue(b, typeSortField);
+        let result = 0;
+
+        if (typeof valueA === "number" && typeof valueB === "number") {
+            result = valueA - valueB;
+        } else {
+            result = compareText(String(valueA), String(valueB));
+        }
+
+        return typeSortDirection === "asc" ? result : -result;
+    });
+
+    renderTable(sorted);
 }
 
 function closePopup(result: boolean): void {
@@ -283,13 +400,8 @@ function renderTable(types: MailAddressType[]): void {
 
 async function loadMailAddressTypes(): Promise<void> {
     const types = await getMailAddressTypes();
-    const ordered = [...types].sort((a, b) => {
-        const priorityA = Number(a.priority ?? Number.MAX_SAFE_INTEGER);
-        const priorityB = Number(b.priority ?? Number.MAX_SAFE_INTEGER);
-        return priorityA - priorityB;
-    });
-
-    renderTable(ordered);
+    allMailAddressTypes = types;
+    applyEmailTypeFilterAndSort();
 }
 
 function openAddPanel(): void {
@@ -391,6 +503,7 @@ async function init(): Promise<void> {
     setupButtons();
     setupAddForm();
     setupEditForm();
+    setupEmailTypeListControls();
     await loadMailAddressTypes();
 }
 

@@ -50,6 +50,14 @@ let editingContactDetails: ContactDetailsDto | null = null;
 let popupResolver: ((result: boolean) => void) | null = null;
 let popupMode: "confirm" | "message" | null = null;
 let companyOptions: CompanySimpleDto[] = [];
+let allContacts: ContactDto[] = [];
+let contactNameFilter = "";
+let contactSortField: "name" | "surname" | "company" | "birthday" = "name";
+let contactSortDirection: "asc" | "desc" = "asc";
+
+let contactNameFilterInput: HTMLInputElement | null = null;
+let contactSortFieldSelect: HTMLSelectElement | null = null;
+let contactSortDirectionButton: HTMLButtonElement | null = null;
 
 const addAddressBinding = createAddressSelectBinding({
     countryId: "contact-address-country",
@@ -294,6 +302,120 @@ function toDisplayDate(value: string): string {
     }
 
     return date.toLocaleDateString("it-IT");
+}
+
+function normalizeText(value?: string): string {
+    return (value || "").trim().toLowerCase();
+}
+
+function compareText(a: string, b: string): number {
+    return a.localeCompare(b, "it", { sensitivity: "base" });
+}
+
+function contactSortValue(contact: ContactDto, field: "name" | "surname" | "company" | "birthday"): string | number {
+    switch (field) {
+    case "surname":
+        return normalizeText(contact.surname);
+    case "company":
+        return normalizeText(contact.companyDenomination || "");
+    case "birthday": {
+        const timestamp = new Date(contact.birthday || "").getTime();
+        return Number.isNaN(timestamp) ? Number.MIN_SAFE_INTEGER : timestamp;
+    }
+    case "name":
+    default:
+        return normalizeText(contact.name);
+    }
+}
+
+function updateContactSortDirectionButton(): void {
+    if (!contactSortDirectionButton) {
+        return;
+    }
+
+    contactSortDirectionButton.textContent = contactSortDirection === "asc" ? "Ordinamento \u2191" : "Ordinamento \u2193";
+}
+
+function setupContactsListControls(): void {
+    const contentSection = document.querySelector(".content-section");
+    const tableWrapper = document.querySelector(".table-wrapper");
+    if (!contentSection || !tableWrapper) {
+        return;
+    }
+
+    const controls = document.createElement("div");
+    controls.id = "contact-list-controls";
+    controls.className = "list-controls";
+
+    const nameFilter = document.createElement("input");
+    nameFilter.type = "search";
+    nameFilter.className = "list-control-input";
+    nameFilter.id = "contact-name-filter";
+    nameFilter.placeholder = "Filtra per nome...";
+    nameFilter.setAttribute("aria-label", "Filtra contatti per nome");
+
+    const sortField = document.createElement("select");
+    sortField.className = "list-control-select";
+    sortField.id = "contact-sort-field";
+    sortField.setAttribute("aria-label", "Ordina contatti per");
+    sortField.innerHTML = `
+        <option value="name">Nome \u2191\u2193</option>
+        <option value="surname">Cognome \u2191\u2193</option>
+        <option value="company">Azienda \u2191\u2193</option>
+        <option value="birthday">Data di nascita \u2191\u2193</option>
+    `;
+
+    const sortDirection = document.createElement("button");
+    sortDirection.type = "button";
+    sortDirection.className = "list-control-button";
+    sortDirection.id = "contact-sort-direction";
+
+    controls.appendChild(nameFilter);
+    controls.appendChild(sortField);
+    controls.appendChild(sortDirection);
+    contentSection.insertBefore(controls, tableWrapper);
+
+    contactNameFilterInput = nameFilter;
+    contactSortFieldSelect = sortField;
+    contactSortDirectionButton = sortDirection;
+
+    nameFilter.addEventListener("input", () => {
+        contactNameFilter = normalizeText(nameFilter.value);
+        applyContactsFilterAndSort();
+    });
+
+    sortField.addEventListener("change", () => {
+        contactSortField = sortField.value as "name" | "surname" | "company" | "birthday";
+        applyContactsFilterAndSort();
+    });
+
+    sortDirection.addEventListener("click", () => {
+        contactSortDirection = contactSortDirection === "asc" ? "desc" : "asc";
+        updateContactSortDirectionButton();
+        applyContactsFilterAndSort();
+    });
+
+    sortField.value = contactSortField;
+    updateContactSortDirectionButton();
+}
+
+function applyContactsFilterAndSort(): void {
+    const filtered = allContacts.filter((contact) => normalizeText(contact.name).includes(contactNameFilter));
+    const sorted = [...filtered].sort((a, b) => {
+        const valueA = contactSortValue(a, contactSortField);
+        const valueB = contactSortValue(b, contactSortField);
+        let result = 0;
+
+        if (typeof valueA === "number" && typeof valueB === "number") {
+            result = valueA - valueB;
+        } else {
+            result = compareText(String(valueA), String(valueB));
+        }
+
+        return contactSortDirection === "asc" ? result : -result;
+    });
+
+    renderTable(sorted);
 }
 
 function buildAddPayload(): ContactUpsertPayload {
@@ -688,7 +810,8 @@ function renderTable(contacts: ContactDto[]): void {
 
 async function loadContacts(): Promise<void> {
     const contacts = await getContact();
-    renderTable(contacts);
+    allContacts = contacts;
+    applyContactsFilterAndSort();
 }
 
 function openAddPanel(): void {
@@ -837,6 +960,7 @@ async function init(): Promise<void> {
     setupAddForm();
     setupEditForm();
     setupEditSubitemButtons();
+    setupContactsListControls();
     await loadContacts();
 }
 

@@ -25,6 +25,14 @@ let editingCompanyId = null;
 let editingCompanySnapshot = null;
 let popupResolver = null;
 let popupMode = null;
+let allCompanies = [];
+let companyNameFilter = "";
+let companySortField = "denomination";
+let companySortDirection = "asc";
+
+let companyNameFilterInput = null;
+let companySortFieldSelect = null;
+let companySortDirectionButton = null;
 const addAddressBinding = createAddressSelectBinding({
     countryId: "company-address-country",
     regionId: "company-address-region",
@@ -342,6 +350,113 @@ function mapCompanyToPayload(company) {
 function normalized(value) {
     return (value !== null && value !== void 0 ? value : "").trim();
 }
+
+function normalizedLower(value) {
+    return normalized(value).toLowerCase();
+}
+
+function compareText(a, b) {
+    return a.localeCompare(b, "it", { sensitivity: "base" });
+}
+
+function companySortValue(company, field) {
+    switch (field) {
+    case "vatNumber":
+        return normalizedLower(company.vatNumber);
+    case "size":
+        return normalizedLower(company.size || "");
+    case "city": {
+        const address = resolveCompanyAddress(company);
+        return normalizedLower(address.city);
+    }
+    case "denomination":
+    default:
+        return normalizedLower(company.denomination);
+    }
+}
+
+function updateCompanySortDirectionButton() {
+    if (!companySortDirectionButton) {
+        return;
+    }
+
+    companySortDirectionButton.textContent = companySortDirection === "asc" ? "Ordine: crescente" : "Ordine: decrescente";
+}
+
+function setupCompanyListControls() {
+    const contentSection = document.querySelector(".content-section");
+    const tableWrapper = document.querySelector(".table-wrapper");
+    if (!contentSection || !tableWrapper) {
+        return;
+    }
+
+    const controls = document.createElement("div");
+    controls.id = "company-list-controls";
+    controls.className = "list-controls";
+
+    const nameFilter = document.createElement("input");
+    nameFilter.type = "search";
+    nameFilter.className = "list-control-input";
+    nameFilter.id = "company-name-filter";
+    nameFilter.placeholder = "Filtra per nome azienda...";
+    nameFilter.setAttribute("aria-label", "Filtra aziende per nome");
+
+    const sortField = document.createElement("select");
+    sortField.className = "list-control-select";
+    sortField.id = "company-sort-field";
+    sortField.setAttribute("aria-label", "Ordina aziende per");
+    sortField.innerHTML = `
+        <option value="denomination">Ordina per nome azienda</option>
+        <option value="vatNumber">Ordina per partita IVA</option>
+        <option value="size">Ordina per dimensione</option>
+        <option value="city">Ordina per città</option>
+    `;
+
+    const sortDirection = document.createElement("button");
+    sortDirection.type = "button";
+    sortDirection.className = "list-control-button";
+    sortDirection.id = "company-sort-direction";
+
+    controls.appendChild(nameFilter);
+    controls.appendChild(sortField);
+    controls.appendChild(sortDirection);
+    contentSection.insertBefore(controls, tableWrapper);
+
+    companyNameFilterInput = nameFilter;
+    companySortFieldSelect = sortField;
+    companySortDirectionButton = sortDirection;
+
+    nameFilter.addEventListener("input", () => {
+        companyNameFilter = normalizedLower(nameFilter.value);
+        applyCompanyFilterAndSort();
+    });
+
+    sortField.addEventListener("change", () => {
+        companySortField = sortField.value;
+        applyCompanyFilterAndSort();
+    });
+
+    sortDirection.addEventListener("click", () => {
+        companySortDirection = companySortDirection === "asc" ? "desc" : "asc";
+        updateCompanySortDirectionButton();
+        applyCompanyFilterAndSort();
+    });
+
+    sortField.value = companySortField;
+    updateCompanySortDirectionButton();
+}
+
+function applyCompanyFilterAndSort() {
+    const filtered = allCompanies.filter((company) => normalizedLower(company.denomination).includes(companyNameFilter));
+    const sorted = [...filtered].sort((a, b) => {
+        const valueA = companySortValue(a, companySortField);
+        const valueB = companySortValue(b, companySortField);
+        const result = compareText(String(valueA), String(valueB));
+        return companySortDirection === "asc" ? result : -result;
+    });
+
+    renderTable(sorted);
+}
 function hasCompanyChanges(current, original) {
     if (!original) {
         return true;
@@ -533,7 +648,8 @@ function renderTable(companies) {
 }
 async function loadCompanies() {
     const companies = await getCompanies();
-    renderTable(companies);
+    allCompanies = companies;
+    applyCompanyFilterAndSort();
 }
 function clearAddContactRows() {
     if (addContactsList) {
@@ -701,6 +817,7 @@ async function init() {
     setupButtons();
     setupAddForm();
     setupEditForm();
+    setupCompanyListControls();
     await loadCompanies();
 }
 init().catch(async (error) => {
