@@ -246,6 +246,10 @@ body {
     border-color: var(--border) !important;
 }
 
+:root[data-theme="dark"] .list-controls {
+    background: linear-gradient(180deg, #2a313a 0%, #242b34 100%);
+}
+
 :root[data-theme="dark"] .company-contacts-list .contact-editor-row:nth-child(odd) {
     background-color: #2b333d !important;
 }
@@ -434,10 +438,16 @@ body {
     gap: 0.45rem;
     padding: 0.45rem 0.75rem;
     border-radius: 999px;
-    background-color: rgba(255, 255, 255, 0.14);
-    border: 1px solid rgba(255, 255, 255, 0.24);
+    background-color: transparent;
+    border: 1px solid transparent;
     -webkit-user-select: none;
     user-select: none;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.theme-switch:hover{
+    background-color: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.24);
 }
 
 .theme-icon {
@@ -505,6 +515,75 @@ body {
 .menu-overlay.active {
     display: block;
     opacity: 1;
+}
+
+/* LIST FILTER/SORT CONTROLS */
+.list-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin: 1rem 1.25rem 0;
+    align-items: center;
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(246, 249, 253, 0.98) 100%);
+}
+
+.list-control-input,
+.list-control-select,
+.list-control-button {
+    min-height: 2.5rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background-color: var(--surface);
+    color: var(--text-dark);
+    font-size: 0.95rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.list-control-input,
+.list-control-select {
+    padding: 0.5rem 0.75rem;
+}
+
+.list-control-input {
+    flex: 1 1 260px;
+    max-width: 420px;
+}
+
+.list-control-select {
+    flex: 0 1 260px;
+}
+
+.list-control-button {
+    padding: 0.5rem 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.list-control-input:focus,
+.list-control-select:focus,
+.list-control-button:focus-visible {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.2);
+}
+
+@media (max-width: 768px) {
+    .list-controls {
+        margin: 0.75rem 0.75rem 0;
+        padding: 0.6rem;
+    }
+
+    .list-control-input,
+    .list-control-select,
+    .list-control-button {
+        width: 100%;
+        max-width: none;
+        flex: 1 1 100%;
+    }
 }
 
 /*  RESPONSIVE - MOBILE */

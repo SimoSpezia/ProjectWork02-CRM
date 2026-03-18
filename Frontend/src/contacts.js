@@ -1,6 +1,8 @@
 import { hidePanel, initializeMenuAndTheme, showPanel } from "./common.js";
 import { createAddressSelectBinding } from "./address.js";
-import { getContact, createContact, deleteContact, updateContact } from "./apiContact.js";
+import { getMailAddressTypes } from "./apiMailAddressType.js";
+import { getPhoneNumberTypes } from "./apiPhoneNumberType.js";
+import { createContact, createContactWithCompany, createMailAddress, createPhoneNumber, deleteContact, deleteMailAddress, deletePhoneNumber, getContact, getContactWithDetails, updateContact, updateMailAddress, updatePhoneNumber } from "./apiContact.js";
 import { getCompanies } from "./apiAzienda.js";
 const tableBody = document.getElementById("table-contact-body");
 const addButton = document.getElementById("add-contact-btn");
@@ -12,15 +14,34 @@ const editPanel = document.getElementById("edit-contact-panel");
 const editForm = document.getElementById("edit-contact-form");
 const editCancelButton = document.getElementById("cancel-edit-contact");
 const editError = document.getElementById("edit-contact-error");
+const emailListContainer = document.getElementById("edit-contact-emails-list");
+const addEmailButton = document.getElementById("edit-contact-email-add-btn");
+const phoneListContainer = document.getElementById("edit-contact-phones-list");
+const addPhoneButton = document.getElementById("edit-contact-phone-add-btn");
 const popupOverlay = document.getElementById("company-popup-overlay");
 const popupTitle = document.getElementById("company-popup-title");
 const popupMessage = document.getElementById("company-popup-message");
 const popupCancelButton = document.getElementById("company-popup-cancel");
 const popupConfirmButton = document.getElementById("company-popup-confirm");
 let editingContactId = null;
+let editingContactDetails = null;
 let popupResolver = null;
 let popupMode = null;
 let companyOptions = [];
+let mailAddressTypeOptions = [];
+let phoneNumberTypeOptions = [];
+let allContacts = [];
+let contactNameFilter = "";
+let contactSortField = "name";
+let contactSortDirection = "asc";
+let contactNameFilterInput = null;
+let contactSortFieldSelect = null;
+let contactSortDirectionButton = null;
+const PERSON_NAME_REGEX = /^[A-Za-zÀ-ÖØ-öø-ÿ' -]{2,60}$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
+const PHONE_PREFIX_REGEX = /^\+[0-9]{1,4}$/;
+const PHONE_NUMBER_REGEX = /^[0-9]{5,15}$/;
+const NATIONALITY_REGEX = /^[A-Za-z]{2}$/;
 const addAddressBinding = createAddressSelectBinding({
     countryId: "contact-address-country",
     regionId: "contact-address-region",
@@ -44,23 +65,73 @@ function setElementValue(id, value) {
         element.value = value;
     }
 }
-function ensureSelectOption(selectId, value) {
-    if (!value) {
-        return;
-    }
-    const select = document.getElementById(selectId);
-    if (!select) {
-        return;
-    }
-    const exists = Array.from(select.options).some((option) => option.value === value);
-    if (!exists) {
-        const option = document.createElement("option");
-        option.value = value;
-        option.textContent = value;
-        select.appendChild(option);
-    }
+function isValidPersonName(value) {
+    return PERSON_NAME_REGEX.test(value.trim());
 }
-function populateCompanySelect(selectId, selectedValue = "") {
+function isValidEmail(value) {
+    return EMAIL_REGEX.test(value.trim());
+}
+function validateBirthday(value) {
+    const birthday = (value !== null && value !== void 0 ? value : "").trim();
+    if (!birthday) {
+        return "Inserisci la data di nascita.";
+    }
+    const birthDate = new Date(birthday);
+    if (Number.isNaN(birthDate.getTime())) {
+        return "Data di nascita non valida.";
+    }
+    const today = new Date();
+    const todayAtMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    if (birthDate > todayAtMidnight) {
+        return "La data di nascita non puo essere nel futuro.";
+    }
+    if (birthDate.getFullYear() < 1900) {
+        return "Inserisci una data di nascita realistica (dal 1900 in poi).";
+    }
+    return null;
+}
+function validateContactPayload(payload) {
+    var _a, _b, _c, _d, _e, _f;
+    if (!isValidPersonName((_a = payload.name) !== null && _a !== void 0 ? _a : "")) {
+        return "Nome non valido: usa almeno 2 caratteri alfabetici.";
+    }
+    if (!isValidPersonName((_b = payload.surname) !== null && _b !== void 0 ? _b : "")) {
+        return "Cognome non valido: usa almeno 2 caratteri alfabetici.";
+    }
+    const birthdayError = validateBirthday(payload.birthday);
+    if (birthdayError) {
+        return birthdayError;
+    }
+    if (((_c = payload.title) !== null && _c !== void 0 ? _c : "").length > 80) {
+        return "Titolo troppo lungo (massimo 80 caratteri).";
+    }
+    if (((_d = payload.workRole) !== null && _d !== void 0 ? _d : "").length > 120) {
+        return "Ruolo troppo lungo (massimo 120 caratteri).";
+    }
+    if (((_e = payload.gender) !== null && _e !== void 0 ? _e : "").length > 20) {
+        return "Genere troppo lungo (massimo 20 caratteri).";
+    }
+    if (((_f = payload.note) !== null && _f !== void 0 ? _f : "").length > 1000) {
+        return "Note troppo lunghe (massimo 1000 caratteri).";
+    }
+    return null;
+}
+function validatePhoneFields(prefix, number, nationality) {
+    const normalizedNumber = number.trim();
+    const normalizedPrefix = prefix.trim();
+    const normalizedNationality = nationality.trim();
+    if (!PHONE_NUMBER_REGEX.test(normalizedNumber)) {
+        return "Numero non valido: inserisci solo cifre (5-15).";
+    }
+    if (normalizedPrefix && !PHONE_PREFIX_REGEX.test(normalizedPrefix)) {
+        return "Prefisso non valido: usa il formato +39.";
+    }
+    if (!NATIONALITY_REGEX.test(normalizedNationality)) {
+        return "Nazionalita non valida: inserisci un codice a 2 lettere (es. IT).";
+    }
+    return null;
+}
+function populateCompanySelect(selectId, selectedDenomination = "") {
     const select = document.getElementById(selectId);
     if (!select) {
         return;
@@ -70,27 +141,66 @@ function populateCompanySelect(selectId, selectedValue = "") {
     placeholderOption.value = "";
     placeholderOption.textContent = "Seleziona azienda";
     select.appendChild(placeholderOption);
-    for (const companyName of companyOptions) {
+    for (const company of companyOptions) {
         const option = document.createElement("option");
-        option.value = companyName;
-        option.textContent = companyName;
+        option.value = String(company.companyId);
+        option.textContent = company.denomination;
         select.appendChild(option);
     }
-    if (selectedValue) {
-        ensureSelectOption(selectId, selectedValue);
-        select.value = selectedValue;
+    const normalizedSelected = selectedDenomination.trim().toLowerCase();
+    if (normalizedSelected) {
+        const selectedCompany = companyOptions.find((company) => company.denomination.trim().toLowerCase() === normalizedSelected);
+        if (selectedCompany) {
+            select.value = String(selectedCompany.companyId);
+            return;
+        }
+        select.value = "";
         return;
     }
     select.value = "";
 }
+function getSelectedCompanyId(selectId) {
+    const rawValue = elementValue(selectId);
+    const parsed = Number(rawValue);
+    if (!Number.isInteger(parsed) || parsed <= 0) {
+        return null;
+    }
+    return parsed;
+}
 async function loadCompanyOptions() {
     const companies = await getCompanies();
-    const uniqueNames = new Set(companies
-        .map((company) => { var _a, _b; return (_b = (_a = company.denomination) === null || _a === void 0 ? void 0 : _a.trim()) !== null && _b !== void 0 ? _b : ""; })
-        .filter((name) => name.length > 0));
-    companyOptions = Array.from(uniqueNames).sort((a, b) => a.localeCompare(b, "it", { sensitivity: "base" }));
+    companyOptions = companies
+        .filter((company) => { var _a; return ((_a = company.denomination) === null || _a === void 0 ? void 0 : _a.trim().length) > 0; })
+        .sort((a, b) => a.denomination.localeCompare(b.denomination, "it", { sensitivity: "base" }));
     populateCompanySelect("contact-company");
     populateCompanySelect("edit-contact-company");
+}
+async function loadContactChannelTypeOptions() {
+    try {
+        const [mailTypes, phoneTypes] = await Promise.all([
+            getMailAddressTypes(),
+            getPhoneNumberTypes()
+        ]);
+        mailAddressTypeOptions = [...mailTypes]
+            .sort((a, b) => a.priority - b.priority || a.description.localeCompare(b.description, "it", { sensitivity: "base" }))
+            .map((item) => ({
+            id: item.mailAddressTypeId,
+            description: item.description,
+            priority: item.priority
+        }));
+        phoneNumberTypeOptions = [...phoneTypes]
+            .sort((a, b) => a.priority - b.priority || a.description.localeCompare(b.description, "it", { sensitivity: "base" }))
+            .map((item) => ({
+            id: item.phoneNumberTypeId,
+            description: item.description,
+            priority: item.priority
+        }));
+    }
+    catch (error) {
+        console.error("Errore caricamento tipi email/telefono", error);
+        mailAddressTypeOptions = [];
+        phoneNumberTypeOptions = [];
+    }
 }
 function showError(errorElement, message) {
     if (!errorElement) {
@@ -195,9 +305,9 @@ function getUpsertErrorMessage(error) {
 }
 function toIsoDate(value) {
     if (!value) {
-        return new Date().toISOString();
+        return new Date().toISOString().slice(0, 10);
     }
-    return new Date(`${value}T00:00:00`).toISOString();
+    return value;
 }
 function toDateInputValue(value) {
     if (!value) {
@@ -219,17 +329,110 @@ function toDisplayDate(value) {
     }
     return date.toLocaleDateString("it-IT");
 }
+function normalizeText(value) {
+    return (value || "").trim().toLowerCase();
+}
+function compareText(a, b) {
+    return a.localeCompare(b, "it", { sensitivity: "base" });
+}
+function contactSortValue(contact, field) {
+    switch (field) {
+        case "surname":
+            return normalizeText(contact.surname);
+        case "company":
+            return normalizeText(contact.companyDenomination || "");
+        case "birthday": {
+            const timestamp = new Date(contact.birthday || "").getTime();
+            return Number.isNaN(timestamp) ? Number.MIN_SAFE_INTEGER : timestamp;
+        }
+        case "name":
+        default:
+            return normalizeText(contact.name);
+    }
+}
+function updateContactSortDirectionButton() {
+    if (!contactSortDirectionButton) {
+        return;
+    }
+    contactSortDirectionButton.textContent = contactSortDirection === "asc" ? "Ordinamento \u2191" : "Ordinamento \u2193";
+}
+function setupContactsListControls() {
+    const contentSection = document.querySelector(".content-section");
+    const tableWrapper = document.querySelector(".table-wrapper");
+    if (!contentSection || !tableWrapper) {
+        return;
+    }
+    const controls = document.createElement("div");
+    controls.id = "contact-list-controls";
+    controls.className = "list-controls";
+    const nameFilter = document.createElement("input");
+    nameFilter.type = "search";
+    nameFilter.className = "list-control-input";
+    nameFilter.id = "contact-name-filter";
+    nameFilter.placeholder = "Filtra per nome...";
+    nameFilter.setAttribute("aria-label", "Filtra contatti per nome");
+    const sortField = document.createElement("select");
+    sortField.className = "list-control-select";
+    sortField.id = "contact-sort-field";
+    sortField.setAttribute("aria-label", "Ordina contatti per");
+    sortField.innerHTML = `
+        <option value="name">Nome \u2191\u2193</option>
+        <option value="surname">Cognome \u2191\u2193</option>
+        <option value="company">Azienda \u2191\u2193</option>
+        <option value="birthday">Data di nascita \u2191\u2193</option>
+    `;
+    const sortDirection = document.createElement("button");
+    sortDirection.type = "button";
+    sortDirection.className = "list-control-button";
+    sortDirection.id = "contact-sort-direction";
+    controls.appendChild(nameFilter);
+    controls.appendChild(sortField);
+    controls.appendChild(sortDirection);
+    contentSection.insertBefore(controls, tableWrapper);
+    contactNameFilterInput = nameFilter;
+    contactSortFieldSelect = sortField;
+    contactSortDirectionButton = sortDirection;
+    nameFilter.addEventListener("input", () => {
+        contactNameFilter = normalizeText(nameFilter.value);
+        applyContactsFilterAndSort();
+    });
+    sortField.addEventListener("change", () => {
+        contactSortField = sortField.value;
+        applyContactsFilterAndSort();
+    });
+    sortDirection.addEventListener("click", () => {
+        contactSortDirection = contactSortDirection === "asc" ? "desc" : "asc";
+        updateContactSortDirectionButton();
+        applyContactsFilterAndSort();
+    });
+    sortField.value = contactSortField;
+    updateContactSortDirectionButton();
+}
+function applyContactsFilterAndSort() {
+    const filtered = allContacts.filter((contact) => normalizeText(contact.name).includes(contactNameFilter));
+    const sorted = [...filtered].sort((a, b) => {
+        const valueA = contactSortValue(a, contactSortField);
+        const valueB = contactSortValue(b, contactSortField);
+        let result = 0;
+        if (typeof valueA === "number" && typeof valueB === "number") {
+            result = valueA - valueB;
+        }
+        else {
+            result = compareText(String(valueA), String(valueB));
+        }
+        return contactSortDirection === "asc" ? result : -result;
+    });
+    renderTable(sorted);
+}
 function buildAddPayload() {
     return {
         name: elementValue("contact-name"),
         surname: elementValue("contact-surname"),
-        companyDenomination: elementValue("contact-company") || undefined,
         title: elementValue("contact-title") || undefined,
         workRole: elementValue("contact-work-role") || undefined,
         gender: elementValue("contact-gender") || undefined,
         birthday: toIsoDate(elementValue("contact-birthday")),
         note: elementValue("contact-note") || undefined,
-        dateAdded: new Date().toISOString()
     };
 }
 function buildEditPayload() {
@@ -237,27 +440,423 @@ function buildEditPayload() {
         contactId: editingContactId !== null && editingContactId !== void 0 ? editingContactId : undefined,
         name: elementValue("edit-contact-name"),
         surname: elementValue("edit-contact-surname"),
-        companyDenomination: elementValue("edit-contact-company") || undefined,
         title: elementValue("edit-contact-title-input") || undefined,
         workRole: elementValue("edit-contact-work-role") || undefined,
         gender: elementValue("edit-contact-gender") || undefined,
         birthday: toIsoDate(elementValue("edit-contact-birthday")),
         note: elementValue("edit-contact-note") || undefined,
-        dateAdded: elementValue("edit-contact-date-added") || new Date().toISOString()
     };
+}
+function getContactCompanyDenomination(contact) {
+    var _a, _b, _c, _d;
+    if (((_a = contact.companyDenomination) !== null && _a !== void 0 ? _a : "").trim()) {
+        return (_b = contact.companyDenomination) !== null && _b !== void 0 ? _b : "";
+    }
+    if ("company" in contact) {
+        const detailCompany = contact.company;
+        if (((_c = detailCompany === null || detailCompany === void 0 ? void 0 : detailCompany.denomination) !== null && _c !== void 0 ? _c : "").trim()) {
+            return (_d = detailCompany === null || detailCompany === void 0 ? void 0 : detailCompany.denomination) !== null && _d !== void 0 ? _d : "";
+        }
+    }
+    return "";
 }
 function fillEditForm(contact) {
     var _a, _b, _c, _d, _e;
     setElementValue("edit-contact-id", String(contact.contactId));
-    setElementValue("edit-contact-date-added", contact.dateAdded);
     setElementValue("edit-contact-name", contact.name);
     setElementValue("edit-contact-surname", contact.surname);
-    populateCompanySelect("edit-contact-company", (_a = contact.companyDenomination) !== null && _a !== void 0 ? _a : "");
-    setElementValue("edit-contact-title-input", (_b = contact.title) !== null && _b !== void 0 ? _b : "");
-    setElementValue("edit-contact-work-role", (_c = contact.workRole) !== null && _c !== void 0 ? _c : "");
-    setElementValue("edit-contact-gender", (_d = contact.gender) !== null && _d !== void 0 ? _d : "");
-    setElementValue("edit-contact-birthday", toDateInputValue(contact.birthday));
+    populateCompanySelect("edit-contact-company", getContactCompanyDenomination(contact));
+    setElementValue("edit-contact-title-input", (_a = contact.title) !== null && _a !== void 0 ? _a : "");
+    setElementValue("edit-contact-work-role", (_b = contact.workRole) !== null && _b !== void 0 ? _b : "");
+    setElementValue("edit-contact-gender", (_c = contact.gender) !== null && _c !== void 0 ? _c : "");
+    setElementValue("edit-contact-birthday", toDateInputValue((_d = contact.birthday) !== null && _d !== void 0 ? _d : ""));
     setElementValue("edit-contact-note", (_e = contact.note) !== null && _e !== void 0 ? _e : "");
+}
+function ensureSubitemsPlaceholder(container, message) {
+    if (!container) {
+        return;
+    }
+    const hasRows = container.querySelector(".contact-subitem-row") != null;
+    const emptyElement = container.querySelector(".contact-subitems-empty");
+    if (hasRows) {
+        emptyElement === null || emptyElement === void 0 ? void 0 : emptyElement.remove();
+        return;
+    }
+    if (emptyElement) {
+        return;
+    }
+    const empty = document.createElement("p");
+    empty.className = "contact-subitems-empty";
+    empty.textContent = message;
+    container.appendChild(empty);
+}
+function createTypeSelect(options, placeholder, selectedId) {
+    const select = document.createElement("select");
+    select.className = "contact-subitem-input contact-subitem-select";
+    const placeholderOption = document.createElement("option");
+    placeholderOption.value = "";
+    placeholderOption.textContent = placeholder;
+    select.appendChild(placeholderOption);
+    for (const option of options) {
+        const item = document.createElement("option");
+        item.value = String(option.id);
+        item.textContent = option.description;
+        select.appendChild(item);
+    }
+    if (selectedId != null && selectedId > 0) {
+        select.value = String(selectedId);
+    }
+    else {
+        select.value = "";
+    }
+    return select;
+}
+function parseOptionalTypeId(select) {
+    const parsed = Number(select.value);
+    if (!Number.isInteger(parsed) || parsed <= 0) {
+        return undefined;
+    }
+    return parsed;
+}
+function setEmailRowEditMode(row, isEditing) {
+    const inputs = row.querySelectorAll(".contact-subitem-input");
+    const editButton = row.querySelector(".contact-email-edit");
+    const saveButton = row.querySelector(".contact-email-save");
+    for (const input of inputs) {
+        input.disabled = !isEditing;
+    }
+    if (editButton) {
+        editButton.disabled = isEditing;
+    }
+    if (saveButton) {
+        saveButton.disabled = !isEditing;
+    }
+}
+function setPhoneRowEditMode(row, isEditing) {
+    const inputs = row.querySelectorAll(".contact-subitem-input");
+    const editButton = row.querySelector(".contact-phone-edit");
+    const saveButton = row.querySelector(".contact-phone-save");
+    for (const input of inputs) {
+        input.disabled = !isEditing;
+    }
+    if (editButton) {
+        editButton.disabled = isEditing;
+    }
+    if (saveButton) {
+        saveButton.disabled = !isEditing;
+    }
+}
+async function refreshEditContactChannels() {
+    var _a, _b, _c, _d;
+    if (editingContactId == null) {
+        return;
+    }
+    const details = await getContactWithDetails(editingContactId);
+    editingContactDetails = Object.assign(Object.assign({}, (editingContactDetails !== null && editingContactDetails !== void 0 ? editingContactDetails : details)), { mailAddresses: (_a = details.mailAddresses) !== null && _a !== void 0 ? _a : [], phoneNumbers: (_b = details.phoneNumbers) !== null && _b !== void 0 ? _b : [] });
+    renderMailAddressRows((_c = editingContactDetails.mailAddresses) !== null && _c !== void 0 ? _c : []);
+    renderPhoneRows((_d = editingContactDetails.phoneNumbers) !== null && _d !== void 0 ? _d : []);
+}
+function createEmailRow(item) {
+    var _a, _b, _c, _d, _e, _f;
+    const row = document.createElement("div");
+    row.className = "contact-subitem-row";
+    row.dataset.id = String((_a = item.mailAddressId) !== null && _a !== void 0 ? _a : 0);
+    const input = document.createElement("input");
+    input.type = "email";
+    input.className = "contact-subitem-input";
+    input.placeholder = "email@esempio.it";
+    input.maxLength = 120;
+    input.value = (_b = item.mail) !== null && _b !== void 0 ? _b : "";
+    const typeSelect = createTypeSelect(mailAddressTypeOptions, "Tipo email", (_e = (_c = item.mailAddressTypeId) !== null && _c !== void 0 ? _c : (_d = item.mailAddressType) === null || _d === void 0 ? void 0 : _d.mailAddressTypeId) !== null && _e !== void 0 ? _e : null);
+    const actions = document.createElement("div");
+    actions.className = "contact-subitem-actions";
+    const editButton = document.createElement("button");
+    editButton.type = "button";
+    editButton.className = "edit-action-btn mini-action contact-email-edit";
+    editButton.textContent = "Modifica";
+    const saveButton = document.createElement("button");
+    saveButton.type = "button";
+    saveButton.className = "save-action-btn mini-action contact-email-save";
+    saveButton.textContent = "Salva";
+    const removeButton = document.createElement("button");
+    removeButton.type = "button";
+    removeButton.className = "delete-action-btn mini-action mini-delete";
+    removeButton.textContent = "Elimina";
+    editButton.addEventListener("click", () => {
+        clearError(editError);
+        setEmailRowEditMode(row, true);
+    });
+    saveButton.addEventListener("click", async () => {
+        var _a, _b;
+        clearError(editError);
+        if (editingContactId == null) {
+            showError(editError, "Contatto non selezionato.");
+            return;
+        }
+        const mail = input.value.trim();
+        if (!isValidEmail(mail)) {
+            showError(editError, "Inserisci una email valida (es. nome@dominio.it). ");
+            return;
+        }
+        try {
+            const mailAddressId = Number((_a = row.dataset.id) !== null && _a !== void 0 ? _a : "0");
+            const mailAddressTypeId = parseOptionalTypeId(typeSelect);
+            if (mailAddressId > 0) {
+                await updateMailAddress(mailAddressId, {
+                    mailAddressId,
+                    mail,
+                    mailAddressTypeId,
+                    contactId: editingContactId
+                });
+                const list = (_b = editingContactDetails === null || editingContactDetails === void 0 ? void 0 : editingContactDetails.mailAddresses) !== null && _b !== void 0 ? _b : [];
+                const current = list.find((entry) => entry.mailAddressId === mailAddressId);
+                if (current) {
+                    current.mail = mail;
+                    current.mailAddressTypeId = mailAddressTypeId;
+                }
+                setEmailRowEditMode(row, false);
+                return;
+            }
+            await createMailAddress({
+                mailAddressId: 0,
+                mail,
+                mailAddressTypeId,
+                contactId: editingContactId
+            });
+            await refreshEditContactChannels();
+        }
+        catch (error) {
+            showError(editError, getUpsertErrorMessage(error));
+        }
+    });
+    removeButton.addEventListener("click", async () => {
+        var _a;
+        clearError(editError);
+        const mailAddressId = Number((_a = row.dataset.id) !== null && _a !== void 0 ? _a : "0");
+        if (mailAddressId <= 0) {
+            row.remove();
+            ensureSubitemsPlaceholder(emailListContainer, "Nessuna email presente.");
+            return;
+        }
+        const confirmed = await openPopup({
+            mode: "confirm",
+            title: "Conferma eliminazione",
+            message: "Vuoi eliminare questa email?",
+            confirmText: "Elimina",
+            cancelText: "Annulla",
+            destructive: true
+        });
+        if (!confirmed) {
+            return;
+        }
+        try {
+            await deleteMailAddress(mailAddressId);
+            await refreshEditContactChannels();
+        }
+        catch (error) {
+            showError(editError, getUpsertErrorMessage(error));
+        }
+    });
+    row.appendChild(input);
+    row.appendChild(typeSelect);
+    actions.appendChild(editButton);
+    actions.appendChild(saveButton);
+    actions.appendChild(removeButton);
+    row.appendChild(actions);
+    setEmailRowEditMode(row, ((_f = item.mailAddressId) !== null && _f !== void 0 ? _f : 0) <= 0);
+    return row;
+}
+function createPhoneRow(item) {
+    var _a, _b, _c, _d, _e, _f, _g, _h;
+    const row = document.createElement("div");
+    row.className = "contact-subitem-row contact-phone-row";
+    row.dataset.id = String((_a = item.phoneNumberId) !== null && _a !== void 0 ? _a : 0);
+    const prefixInput = document.createElement("input");
+    prefixInput.type = "text";
+    prefixInput.className = "contact-subitem-input contact-phone-prefix";
+    prefixInput.placeholder = "+39";
+    prefixInput.maxLength = 5;
+    prefixInput.value = (_b = item.prefix) !== null && _b !== void 0 ? _b : "";
+    const numberInput = document.createElement("input");
+    numberInput.type = "text";
+    numberInput.className = "contact-subitem-input contact-phone-number";
+    numberInput.placeholder = "3331234567";
+    numberInput.maxLength = 15;
+    numberInput.value = (_c = item.number) !== null && _c !== void 0 ? _c : "";
+    const nationalityInput = document.createElement("input");
+    nationalityInput.type = "text";
+    nationalityInput.className = "contact-subitem-input contact-phone-nationality";
+    nationalityInput.placeholder = "IT";
+    nationalityInput.maxLength = 2;
+    nationalityInput.value = (_d = item.nationality) !== null && _d !== void 0 ? _d : "IT";
+    const typeSelect = createTypeSelect(phoneNumberTypeOptions, "Tipo numero", (_g = (_e = item.phoneNumberTypeId) !== null && _e !== void 0 ? _e : (_f = item.phoneNumberType) === null || _f === void 0 ? void 0 : _f.phoneNumberTypeId) !== null && _g !== void 0 ? _g : null);
+    const actions = document.createElement("div");
+    actions.className = "contact-subitem-actions";
+    const editButton = document.createElement("button");
+    editButton.type = "button";
+    editButton.className = "edit-action-btn mini-action contact-phone-edit";
+    editButton.textContent = "Modifica";
+    const saveButton = document.createElement("button");
+    saveButton.type = "button";
+    saveButton.className = "save-action-btn mini-action contact-phone-save";
+    saveButton.textContent = "Salva";
+    const removeButton = document.createElement("button");
+    removeButton.type = "button";
+    removeButton.className = "delete-action-btn mini-action mini-delete";
+    removeButton.textContent = "Elimina";
+    editButton.addEventListener("click", () => {
+        clearError(editError);
+        setPhoneRowEditMode(row, true);
+    });
+    saveButton.addEventListener("click", async () => {
+        var _a, _b;
+        clearError(editError);
+        if (editingContactId == null) {
+            showError(editError, "Contatto non selezionato.");
+            return;
+        }
+        const number = numberInput.value.trim();
+        const nationality = (nationalityInput.value.trim() || "IT").toUpperCase();
+        const prefix = prefixInput.value.trim() || undefined;
+        const phoneError = validatePhoneFields(prefix !== null && prefix !== void 0 ? prefix : "", number, nationality);
+        if (phoneError) {
+            showError(editError, phoneError);
+            return;
+        }
+        nationalityInput.value = nationality;
+        try {
+            const phoneNumberId = Number((_a = row.dataset.id) !== null && _a !== void 0 ? _a : "0");
+            const phoneNumberTypeId = parseOptionalTypeId(typeSelect);
+            if (phoneNumberId > 0) {
+                await updatePhoneNumber(phoneNumberId, {
+                    phoneNumberId,
+                    number,
+                    prefix,
+                    nationality,
+                    phoneNumberTypeId,
+                    contactId: editingContactId
+                });
+                const list = (_b = editingContactDetails === null || editingContactDetails === void 0 ? void 0 : editingContactDetails.phoneNumbers) !== null && _b !== void 0 ? _b : [];
+                const current = list.find((entry) => entry.phoneNumberId === phoneNumberId);
+                if (current) {
+                    current.number = number;
+                    current.prefix = prefix;
+                    current.nationality = nationality;
+                    current.phoneNumberTypeId = phoneNumberTypeId;
+                }
+                setPhoneRowEditMode(row, false);
+                return;
+            }
+            await createPhoneNumber({
+                phoneNumberId: 0,
+                number,
+                prefix,
+                nationality,
+                phoneNumberTypeId,
+                contactId: editingContactId
+            });
+            await refreshEditContactChannels();
+        }
+        catch (error) {
+            showError(editError, getUpsertErrorMessage(error));
+        }
+    });
+    removeButton.addEventListener("click", async () => {
+        var _a;
+        clearError(editError);
+        const phoneNumberId = Number((_a = row.dataset.id) !== null && _a !== void 0 ? _a : "0");
+        if (phoneNumberId <= 0) {
+            row.remove();
+            ensureSubitemsPlaceholder(phoneListContainer, "Nessun numero presente.");
+            return;
+        }
+        const confirmed = await openPopup({
+            mode: "confirm",
+            title: "Conferma eliminazione",
+            message: "Vuoi eliminare questo numero di telefono?",
+            confirmText: "Elimina",
+            cancelText: "Annulla",
+            destructive: true
+        });
+        if (!confirmed) {
+            return;
+        }
+        try {
+            await deletePhoneNumber(phoneNumberId);
+            await refreshEditContactChannels();
+        }
+        catch (error) {
+            showError(editError, getUpsertErrorMessage(error));
+        }
+    });
+    row.appendChild(typeSelect);
+    row.appendChild(prefixInput);
+    row.appendChild(numberInput);
+    row.appendChild(nationalityInput);
+    actions.appendChild(editButton);
+    actions.appendChild(saveButton);
+    actions.appendChild(removeButton);
+    row.appendChild(actions);
+    setPhoneRowEditMode(row, ((_h = item.phoneNumberId) !== null && _h !== void 0 ? _h : 0) <= 0);
+    return row;
+}
+function renderMailAddressRows(items) {
+    if (!emailListContainer) {
+        return;
+    }
+    emailListContainer.innerHTML = "";
+    if (items.length === 0) {
+        const empty = document.createElement("p");
+        empty.className = "contact-subitems-empty";
+        empty.textContent = "Nessuna email presente.";
+        emailListContainer.appendChild(empty);
+        return;
+    }
+    for (const item of items) {
+        emailListContainer.appendChild(createEmailRow(item));
+    }
+    ensureSubitemsPlaceholder(emailListContainer, "Nessuna email presente.");
+}
+function renderPhoneRows(items) {
+    if (!phoneListContainer) {
+        return;
+    }
+    phoneListContainer.innerHTML = "";
+    if (items.length === 0) {
+        const empty = document.createElement("p");
+        empty.className = "contact-subitems-empty";
+        empty.textContent = "Nessun numero presente.";
+        phoneListContainer.appendChild(empty);
+        return;
+    }
+    for (const item of items) {
+        phoneListContainer.appendChild(createPhoneRow(item));
+    }
+    ensureSubitemsPlaceholder(phoneListContainer, "Nessun numero presente.");
+}
+async function openEditPanel(contact) {
+    var _a, _b;
+    if (!editPanel || !addButton) {
+        return;
+    }
+    editingContactId = contact.contactId;
+    clearError(editError);
+    fillEditForm(contact);
+    renderMailAddressRows([]);
+    renderPhoneRows([]);
+    try {
+        const details = await getContactWithDetails(contact.contactId);
+        editingContactDetails = details;
+        fillEditForm(details);
+        renderMailAddressRows((_a = details.mailAddresses) !== null && _a !== void 0 ? _a : []);
+        renderPhoneRows((_b = details.phoneNumbers) !== null && _b !== void 0 ? _b : []);
+        showPanel(editPanel, addButton);
+    }
+    catch (error) {
+        editingContactDetails = null;
+        editingContactId = null;
+        await showMessagePopup("Errore", `Impossibile caricare i dettagli del contatto: ${error.message}`);
+    }
 }
 function buildActionsCell(contact) {
     const cell = document.createElement("td");
@@ -267,14 +866,8 @@ function buildActionsCell(contact) {
     editButton.type = "button";
     editButton.className = "edit-action-btn";
     editButton.textContent = "Modifica";
-    editButton.addEventListener("click", () => {
-        if (!editPanel || !addButton) {
-            return;
-        }
-        editingContactId = contact.contactId;
-        clearError(editError);
-        fillEditForm(contact);
-        showPanel(editPanel, addButton);
+    editButton.addEventListener("click", async () => {
+        await openEditPanel(contact);
     });
     const deleteButton = document.createElement("button");
     deleteButton.type = "button";
@@ -306,6 +899,7 @@ function buildActionsCell(contact) {
     return cell;
 }
 function renderTable(contacts) {
+    var _a;
     if (!tableBody) {
         return;
     }
@@ -325,14 +919,12 @@ function renderTable(contacts) {
         const genderCell = document.createElement("td");
         genderCell.textContent = contact.gender || "-";
         const birthdayCell = document.createElement("td");
-        birthdayCell.textContent = toDisplayDate(contact.birthday);
+        birthdayCell.textContent = toDisplayDate((_a = contact.birthday) !== null && _a !== void 0 ? _a : "");
         const noteCell = document.createElement("td");
         const noteWrapper = document.createElement("div");
         noteWrapper.className = "note-cell";
         noteWrapper.textContent = contact.note || "-";
         noteCell.appendChild(noteWrapper);
-        const addedCell = document.createElement("td");
-        addedCell.textContent = toDisplayDate(contact.dateAdded);
         row.appendChild(nameCell);
         row.appendChild(surnameCell);
         row.appendChild(companyCell);
@@ -341,14 +933,14 @@ function renderTable(contacts) {
         row.appendChild(genderCell);
         row.appendChild(birthdayCell);
         row.appendChild(noteCell);
-        row.appendChild(addedCell);
         row.appendChild(buildActionsCell(contact));
         tableBody.appendChild(row);
     }
 }
 async function loadContacts() {
     const contacts = await getContact();
-    renderTable(contacts);
+    allContacts = contacts;
+    applyContactsFilterAndSort();
 }
 function openAddPanel() {
     if (!addPanel || !addButton) {
@@ -368,7 +960,18 @@ function setupAddForm() {
         clearError(addError);
         try {
             const payload = buildAddPayload();
-            await createContact(payload);
+            const validationError = validateContactPayload(payload);
+            if (validationError) {
+                showError(addError, validationError);
+                return;
+            }
+            const selectedCompanyId = getSelectedCompanyId("contact-company");
+            if (selectedCompanyId != null) {
+                await createContactWithCompany(selectedCompanyId, payload);
+            }
+            else {
+                await createContact(payload);
+            }
             addForm.reset();
             hidePanel(addPanel, addButton);
             await loadContacts();
@@ -383,6 +986,7 @@ function setupEditForm() {
         return;
     }
     editForm.addEventListener("submit", async (event) => {
+        var _a, _b, _c;
         event.preventDefault();
         clearError(editError);
         if (editingContactId == null) {
@@ -391,14 +995,63 @@ function setupEditForm() {
         }
         try {
             const payload = buildEditPayload();
+            const validationError = validateContactPayload(payload);
+            if (validationError) {
+                showError(editError, validationError);
+                return;
+            }
+            const selectedCompanyId = getSelectedCompanyId("edit-contact-company");
+            const selectedCompanyName = selectedCompanyId == null
+                ? ""
+                : ((_b = (_a = companyOptions.find((company) => company.companyId === selectedCompanyId)) === null || _a === void 0 ? void 0 : _a.denomination) !== null && _b !== void 0 ? _b : "").trim().toLowerCase();
+            const currentCompanyName = ((_c = editingContactDetails === null || editingContactDetails === void 0 ? void 0 : editingContactDetails.companyDenomination) !== null && _c !== void 0 ? _c : "").trim().toLowerCase();
+            if (selectedCompanyName !== currentCompanyName) {
+                showError(editError, "Cambio azienda su contatto esistente non supportato da questa API. Crea un nuovo contatto con l'azienda corretta.");
+                return;
+            }
             await updateContact(editingContactId, payload);
             hidePanel(editPanel, addButton);
             editingContactId = null;
+            editingContactDetails = null;
             await loadContacts();
         }
         catch (error) {
             showError(editError, getUpsertErrorMessage(error));
         }
+    });
+}
+function setupEditSubitemButtons() {
+    addEmailButton === null || addEmailButton === void 0 ? void 0 : addEmailButton.addEventListener("click", () => {
+        if (!emailListContainer) {
+            return;
+        }
+        const emptyElement = emailListContainer.querySelector(".contact-subitems-empty");
+        if (emptyElement) {
+            emptyElement.remove();
+        }
+        const row = createEmailRow({
+            mailAddressId: 0,
+            mail: ""
+        });
+        emailListContainer.appendChild(row);
+        ensureSubitemsPlaceholder(emailListContainer, "Nessuna email presente.");
+    });
+    addPhoneButton === null || addPhoneButton === void 0 ? void 0 : addPhoneButton.addEventListener("click", () => {
+        if (!phoneListContainer) {
+            return;
+        }
+        const emptyElement = phoneListContainer.querySelector(".contact-subitems-empty");
+        if (emptyElement) {
+            emptyElement.remove();
+        }
+        const row = createPhoneRow({
+            phoneNumberId: 0,
+            number: "",
+            prefix: "+39",
+            nationality: "IT"
+        });
+        phoneListContainer.appendChild(row);
+        ensureSubitemsPlaceholder(phoneListContainer, "Nessun numero presente.");
     });
 }
 function setupButtons() {
@@ -413,7 +1066,10 @@ function setupButtons() {
         if (editPanel && addButton) {
             hidePanel(editPanel, addButton);
             editForm === null || editForm === void 0 ? void 0 : editForm.reset();
+            renderMailAddressRows([]);
+            renderPhoneRows([]);
             editingContactId = null;
+            editingContactDetails = null;
         }
     });
 }
@@ -422,10 +1078,13 @@ async function init() {
     await (addAddressBinding === null || addAddressBinding === void 0 ? void 0 : addAddressBinding.initialize());
     await (editAddressBinding === null || editAddressBinding === void 0 ? void 0 : editAddressBinding.initialize());
     setupPopup();
+    await loadContactChannelTypeOptions();
     await loadCompanyOptions();
     setupButtons();
     setupAddForm();
     setupEditForm();
+    setupEditSubitemButtons();
+    setupContactsListControls();
     await loadContacts();
 }
 init().catch(async (error) => {

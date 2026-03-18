@@ -7,10 +7,46 @@ export interface ContactDto {
     title?: string,
     workRole?: string,
     gender?: string,
-    birthday: string,
+    birthday?: string,
+    email?: string,
+    phone?:string,
     note?: string,
-    dateAdded: string
     companyDenomination?: string;
+}
+
+export interface MailAddressDto {
+    mailAddressId: number;
+    mail: string;
+    mailAddressTypeId?: number;
+    mailAddressType?: {
+        mailAddressTypeId: number;
+        description: string;
+        priority: number;
+    };
+    contactId?: number;
+}
+
+export interface PhoneNumberDto {
+    phoneNumberId: number;
+    number: string;
+    prefix?: string;
+    nationality: string;
+    phoneNumberTypeId?: number;
+    phoneNumberType?: {
+        phoneNumberTypeId: number;
+        description: string;
+        priority: number;
+    };
+    contactId?: number;
+}
+
+export interface ContactDetailsDto extends ContactDto {
+    mailAddresses?: MailAddressDto[];
+    phoneNumbers?: PhoneNumberDto[];
+    company?: {
+        companyId: number;
+        denomination: string;
+    };
 }
 
 export interface ContactUpsertPayload {
@@ -20,9 +56,10 @@ export interface ContactUpsertPayload {
     title?: string;
     workRole?: string;
     gender?: string;
-    birthday: string;
+    birthday?: string;
+    email?:string;
+    phone?:string;
     note?: string;
-    dateAdded: string;
     companyDenomination?: string;
 }
 
@@ -34,9 +71,10 @@ const FIELD_LABELS: Record<string, string> = {
     title: "Titolo",
     workrole: "Ruolo",
     gender: "Genere",
-    birthday: "Data di nascita",
+    birthday: "yyyy-mm-dd",
+    email: "example@example.com",
+    phone:"123456789",
     note: "Note",
-    dateadded: "Data inserimento",
     companydenomination: "Denominazione azienda"
 };
 
@@ -117,6 +155,10 @@ export function getContact(): Promise<ContactDto[]> {
     return fetchJson<ContactDto[]>(`${API_BASE_URL}/Contact/all`);
 }
 
+export function getContactWithDetails(contactId: number): Promise<ContactDetailsDto> {
+    return fetchJson<ContactDetailsDto>(`${API_BASE_URL}/Contact/${contactId}/WithDetails`);
+}
+
 async function handleContactUpsertResponse(response: Response): Promise<void> {
     if (response.ok) {
         return;
@@ -141,6 +183,16 @@ export function createContact(payload: ContactUpsertPayload): Promise<void> {
     }).then(handleContactUpsertResponse);
 }
 
+export function createContactWithCompany(companyId: number, payload: ContactUpsertPayload): Promise<void> {
+    return fetch(`${API_BASE_URL}/Contact/withCompany/${companyId}`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+    }).then(handleContactUpsertResponse);
+}
+
 export function updateContact(contactId: number, payload: ContactUpsertPayload): Promise<void> {
     return fetch(`${API_BASE_URL}/Contact/${contactId}`, {
         method: "PUT",
@@ -152,7 +204,81 @@ export function updateContact(contactId: number, payload: ContactUpsertPayload):
 }
 
 export async function deleteContact(contactId: number): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/Contact/${contactId}`, {
+    const response = await fetch(`${API_BASE_URL}/Contact/SoftDelete/${contactId}`, {
+        method: "PATCH"
+    });
+
+    if (response.status === 204) {
+        return;
+    }
+
+    const message = await response.text();
+    throw new Error(message || `HTTP ${response.status}`);
+}
+
+export function createMailAddress(payload: MailAddressDto): Promise<void> {
+    if (!payload.contactId) {
+        return Promise.reject(new Error("contactId is required to create a mail address"));
+    }
+
+    return fetch(`${API_BASE_URL}/MailAddress/${payload.contactId}`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+    }).then(handleContactUpsertResponse);
+}
+
+export function updateMailAddress(mailAddressId: number, payload: MailAddressDto): Promise<void> {
+    return fetch(`${API_BASE_URL}/MailAddress/${mailAddressId}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+    }).then(handleContactUpsertResponse);
+}
+
+export async function deleteMailAddress(mailAddressId: number): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/MailAddress/${mailAddressId}`, {
+        method: "DELETE"
+    });
+
+    if (response.status === 204) {
+        return;
+    }
+
+    const message = await response.text();
+    throw new Error(message || `HTTP ${response.status}`);
+}
+
+export function createPhoneNumber(payload: PhoneNumberDto): Promise<void> {
+    if (!payload.contactId) {
+        return Promise.reject(new Error("contactId is required to create a phone number"));
+    }
+
+    return fetch(`${API_BASE_URL}/PhoneNumber/${payload.contactId}`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+    }).then(handleContactUpsertResponse);
+}
+
+export function updatePhoneNumber(phoneNumberId: number, payload: PhoneNumberDto): Promise<void> {
+    return fetch(`${API_BASE_URL}/PhoneNumber/${phoneNumberId}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+    }).then(handleContactUpsertResponse);
+}
+
+export async function deletePhoneNumber(phoneNumberId: number): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/PhoneNumber/${phoneNumberId}`, {
         method: "DELETE"
     });
 

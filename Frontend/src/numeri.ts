@@ -49,6 +49,14 @@ const popupConfirmButton = document.getElementById("phone-popup-confirm");
 let editingTypeId: number | null = null;
 let popupResolver: ((value: boolean) => void) | null = null;
 let popupMode: "message" | "confirm" | null = null;
+let allPhoneNumberTypes: PhoneNumberType[] = [];
+let typeDescriptionFilter = "";
+let typeSortField: "priority" | "description" | "id" = "priority";
+let typeSortDirection: "asc" | "desc" = "asc";
+
+let typeDescriptionFilterInput: HTMLInputElement | null = null;
+let typeSortFieldSelect: HTMLSelectElement | null = null;
+let typeSortDirectionButton: HTMLButtonElement | null = null;
 
 function elementValue(id: string): string {
     const element = document.getElementById(id) as HTMLInputElement;
@@ -78,10 +86,23 @@ function showError(errorElement: HTMLElement | null, message: string): void {
 
 function parsePriority(value: string): number {
     const parsed = Number.parseInt(value, 10);
-    if (Number.isNaN(parsed) || parsed < 0) {
-        throw new Error("Inserisci una priorita valida (numero intero maggiore o uguale a 0).");
+    if (Number.isNaN(parsed) || parsed < 0 || parsed > 999) {
+        throw new Error("Inserisci una priorita valida (numero intero tra 0 e 999).");
     }
     return parsed;
+}
+
+function parseDescription(value: string): string {
+    const description = value.trim();
+    if (description.length < 2 || description.length > 80) {
+        throw new Error("Descrizione non valida: usa da 2 a 80 caratteri.");
+    }
+
+    if (!/[A-Za-z0-9À-ÖØ-öø-ÿ]/.test(description)) {
+        throw new Error("Descrizione non valida: inserisci almeno una lettera o un numero.");
+    }
+
+    return description;
 }
 
 function getApiErrorMessage(error: unknown): string {
@@ -113,7 +134,7 @@ function getApiErrorMessage(error: unknown): string {
 function buildAddPayload(): PhoneNumberTypePayload {
     return {
         phoneNumberTypeId: 0,
-        description: elementValue("phone-type-description"),
+        description: parseDescription(elementValue("phone-type-description")),
         priority: parsePriority(elementValue("phone-type-priority"))
     };
 }
@@ -121,7 +142,7 @@ function buildAddPayload(): PhoneNumberTypePayload {
 function buildEditPayload(): PhoneNumberTypePayload {
     return {
         phoneNumberTypeId: Number(elementValue("edit-phone-type-id")) || 0,
-        description: elementValue("edit-phone-type-description"),
+        description: parseDescription(elementValue("edit-phone-type-description")),
         priority: parsePriority(elementValue("edit-phone-type-priority"))
     };
 }
@@ -133,6 +154,115 @@ function buildActionButton(label: string, className: string, onClick: () => void
     button.textContent = label;
     button.addEventListener("click", onClick);
     return button;
+}
+
+function normalizeText(value?: string): string {
+    return (value || "").trim().toLowerCase();
+}
+
+function compareText(a: string, b: string): number {
+    return a.localeCompare(b, "it", { sensitivity: "base" });
+}
+
+function typeSortValue(type: PhoneNumberType, field: "priority" | "description" | "id"): number | string {
+    switch (field) {
+    case "id":
+        return Number(type.phoneNumberTypeId ?? 0);
+    case "description":
+        return normalizeText(type.description ?? "");
+    case "priority":
+    default:
+        return Number(type.priority ?? Number.MAX_SAFE_INTEGER);
+    }
+}
+
+function updateTypeSortDirectionButton(): void {
+    if (!typeSortDirectionButton) {
+        return;
+    }
+
+    typeSortDirectionButton.textContent = typeSortDirection === "asc" ? "Ordinamento \u2191" : "Ordinamento \u2193";
+}
+
+function setupPhoneTypeListControls(): void {
+    const contentSection = document.querySelector(".content-section");
+    const tableWrapper = document.querySelector(".table-wrapper");
+    if (!contentSection || !tableWrapper) {
+        return;
+    }
+
+    const controls = document.createElement("div");
+    controls.id = "phone-type-list-controls";
+    controls.className = "list-controls";
+
+    const descriptionFilter = document.createElement("input");
+    descriptionFilter.type = "search";
+    descriptionFilter.className = "list-control-input";
+    descriptionFilter.id = "phone-type-description-filter";
+    descriptionFilter.placeholder = "Filtra per descrizione...";
+    descriptionFilter.setAttribute("aria-label", "Filtra tipi numero per descrizione");
+
+    const sortField = document.createElement("select");
+    sortField.className = "list-control-select";
+    sortField.id = "phone-type-sort-field";
+    sortField.setAttribute("aria-label", "Ordina tipi numero per");
+    sortField.innerHTML = `
+        <option value="priority">Priorita \u2191\u2193</option>
+        <option value="description">Descrizione \u2191\u2193</option>
+        <option value="id">Id \u2191\u2193</option>
+    `;
+
+    const sortDirection = document.createElement("button");
+    sortDirection.type = "button";
+    sortDirection.className = "list-control-button";
+    sortDirection.id = "phone-type-sort-direction";
+
+    controls.appendChild(descriptionFilter);
+    controls.appendChild(sortField);
+    controls.appendChild(sortDirection);
+    contentSection.insertBefore(controls, tableWrapper);
+
+    typeDescriptionFilterInput = descriptionFilter;
+    typeSortFieldSelect = sortField;
+    typeSortDirectionButton = sortDirection;
+
+    descriptionFilter.addEventListener("input", () => {
+        typeDescriptionFilter = normalizeText(descriptionFilter.value);
+        applyPhoneTypeFilterAndSort();
+    });
+
+    sortField.addEventListener("change", () => {
+        typeSortField = sortField.value as "priority" | "description" | "id";
+        applyPhoneTypeFilterAndSort();
+    });
+
+    sortDirection.addEventListener("click", () => {
+        typeSortDirection = typeSortDirection === "asc" ? "desc" : "asc";
+        updateTypeSortDirectionButton();
+        applyPhoneTypeFilterAndSort();
+    });
+
+    sortField.value = typeSortField;
+    updateTypeSortDirectionButton();
+}
+
+function applyPhoneTypeFilterAndSort(): void {
+    const filtered = allPhoneNumberTypes.filter((type) => normalizeText(type.description ?? "").includes(typeDescriptionFilter));
+    const sorted = [...filtered].sort((a, b) => {
+        const valueA = typeSortValue(a, typeSortField);
+        const valueB = typeSortValue(b, typeSortField);
+        let result = 0;
+
+        if (typeof valueA === "number" && typeof valueB === "number") {
+            result = valueA - valueB;
+        } else {
+            result = compareText(String(valueA), String(valueB));
+        }
+
+        return typeSortDirection === "asc" ? result : -result;
+    });
+
+    renderTable(sorted);
 }
 
 function closePopup(result: boolean): void {
@@ -283,13 +413,8 @@ function renderTable(types: PhoneNumberType[]): void {
 
 async function loadPhoneNumberTypes(): Promise<void> {
     const types = await getPhoneNumberTypes();
-    const ordered = [...types].sort((a, b) => {
-        const priorityA = Number(a.priority ?? Number.MAX_SAFE_INTEGER);
-        const priorityB = Number(b.priority ?? Number.MAX_SAFE_INTEGER);
-        return priorityA - priorityB;
-    });
-
-    renderTable(ordered);
+    allPhoneNumberTypes = types;
+    applyPhoneTypeFilterAndSort();
 }
 
 function openAddPanel(): void {
@@ -391,6 +516,7 @@ async function init(): Promise<void> {
     setupButtons();
     setupAddForm();
     setupEditForm();
+    setupPhoneTypeListControls();
     await loadPhoneNumberTypes();
 }
 

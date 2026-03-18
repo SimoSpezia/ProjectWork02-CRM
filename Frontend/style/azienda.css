@@ -141,6 +141,7 @@
 .company-website-link {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     max-width: 100%;
     padding: 0.32rem 0.65rem;
     border-radius: 999px;
@@ -150,17 +151,11 @@
     font-size: 0.78rem;
     font-weight: 600;
     text-decoration: none;
+    text-align: center;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease;
-}
-
-.company-website-link::after {
-    content: "↗";
-    font-size: 0.72rem;
-    margin-left: 0.35rem;
-    opacity: 0.72;
 }
 
 .company-website-link:hover {
@@ -212,6 +207,9 @@
     font-family: 'DM Mono', monospace;
     font-size: 0.85rem;
     color: var(--text-light);
+    overflow: visible;
+    text-overflow: clip;
+    max-width: none;
 }
 
 /* Larghezze colonne */
@@ -222,13 +220,13 @@
 .table-company th:nth-child(3),
 .table-company td:nth-child(3) { width: 13%; }
 .table-company th:nth-child(4),
-.table-company td:nth-child(4) { width: 10%; }
+.table-company td:nth-child(4) { width: 12%; }
 .table-company th:nth-child(5),
-.table-company td:nth-child(5) { width: 9%; }
+.table-company td:nth-child(5) { width: 10%; }
 .table-company th:nth-child(6),
-.table-company td:nth-child(6) { width: 22%; }
+.table-company td:nth-child(6) { width: 20%; }
 .table-company th:nth-child(7),
-.table-company td:nth-child(7) { width: 15%; }
+.table-company td:nth-child(7) { width: 13%; }
 
 /* Colonna azioni */
 .table-company th:nth-child(7) {

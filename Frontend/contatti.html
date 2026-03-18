@@ -16,8 +16,8 @@
         <button class="menu-toggle" aria-label="Toggle menu">☰</button>
         <div class="menu">
             <a class="menu-link" href="azienda.html">Aziende</a>
-            <a class="menu-link" href="email.html">Email</a>
-            <a class="menu-link" href="numeri.html">Numeri</a>
+            <a class="menu-link" href="email.html">Tipo-Email</a>
+            <a class="menu-link" href="numeri.html">Tipo-Numeri</a>
             <label class="theme-switch" for="theme-toggle" aria-label="Attiva tema scuro">
                 <span class="theme-icon sun" aria-hidden="true">☀</span>
                 <input type="checkbox" id="theme-toggle" class="theme-switch-input" aria-label="Switch tema chiaro e scuro">
@@ -61,7 +61,11 @@
                     <input type="text" id="contact-work-role" placeholder="Es. Sales Manager">
 
                     <label for="contact-gender">Genere</label>
-                    <input type="text" id="contact-gender" placeholder="Es. M / F / Altro">
+                    <select id="contact-gender">
+                        <option value="">Seleziona genere</option>
+                        <option value="M">M</option>
+                        <option value="F">F</option>
+                    </select>
 
                     <label for="contact-birthday">Data di nascita</label>
                     <input type="date" id="contact-birthday" required>
@@ -107,10 +111,26 @@
                     <input type="text" id="edit-contact-work-role">
 
                     <label for="edit-contact-gender">Genere</label>
-                    <input type="text" id="edit-contact-gender">
+                    <select id="edit-contact-gender">
+                        <option value="">Seleziona genere</option>
+                        <option value="M">M</option>
+                        <option value="F">F</option>
+                    </select>
 
                     <label for="edit-contact-birthday">Data di nascita</label>
                     <input type="date" id="edit-contact-birthday" required>
+
+                    <label>Email</label>
+                    <div class="contact-subitems-block">
+                        <div id="edit-contact-emails-list" class="contact-subitems-list"></div>
+                        <button type="button" id="edit-contact-email-add-btn" class="secondary-inline-btn">Aggiungi email</button>
+                    </div>
+
+                    <label>Telefoni</label>
+                    <div class="contact-subitems-block">
+                        <div id="edit-contact-phones-list" class="contact-subitems-list"></div>
+                        <button type="button" id="edit-contact-phone-add-btn" class="secondary-inline-btn">Aggiungi numero</button>
+                    </div>
 
                     <label for="edit-contact-note">Note</label>
                     <textarea id="edit-contact-note" rows="3"></textarea>
@@ -136,7 +156,6 @@
                             <th scope="col">Sesso</th>
                             <th scope="col">Data di nascita</th>
                             <th scope="col">Note</th>
-                            <th scope="col">Aggiunto il</th>
                             <th scope="col">Azioni</th>
                         </tr>
                     </thead>
