@@ -1,5 +1,5 @@
 import { createCompany, deleteCompany, getCompanies, getCompanyContacts, updateCompany } from "./apiAzienda.js";
-import { createContact, updateContact } from "./apiContact.js";
+import { createContactWithCompany, deleteContact, updateContact } from "./apiContact.js";
 import { createAddressSelectBinding } from "./address.js";
 import { hidePanel, initializeMenuAndTheme, showPanel } from "./common.js";
 const tableBody = document.getElementById("table-company-body");
@@ -175,9 +175,9 @@ function getCreateCompanyErrorMessage(error) {
 }
 function toIsoDate(value) {
     if (!value) {
-        return new Date().toISOString();
+        return new Date().toISOString().slice(0, 10);
     }
-    return new Date(`${value}T00:00:00`).toISOString();
+    return value;
 }
 function toDateInputValue(value) {
     if (!value) {
@@ -189,6 +189,43 @@ function toDateInputValue(value) {
     }
     return date.toISOString().slice(0, 10);
 }
+function readContactFromRow(row) {
+    const name = getFieldValue(row, "name");
+    const surname = getFieldValue(row, "surname");
+    const birthdayRaw = getFieldValue(row, "birthday");
+    if (!name && !surname && !birthdayRaw) {
+        return null;
+    }
+    if (!name || !surname || !birthdayRaw) {
+        throw new Error("Compila Nome, Cognome e Data di nascita per ogni contatto inserito.");
+    }
+    return {
+        contactId: Number(getFieldValue(row, "contactId")) || 0,
+        name,
+        surname,
+        title: getFieldValue(row, "title") || undefined,
+        workRole: getFieldValue(row, "workRole") || undefined,
+        gender: getFieldValue(row, "gender") || undefined,
+        birthday: toIsoDate(birthdayRaw),
+        note: getFieldValue(row, "note") || undefined,
+        dateAdded: getFieldValue(row, "dateAdded") || new Date().toISOString()
+    };
+}
+async function loadEditContactRows(companyId) {
+    if (!editContactsList) {
+        return;
+    }
+    clearEditContactRows();
+    try {
+        const contacts = await getCompanyContacts(companyId);
+        contacts.forEach((contact) => {
+            editContactsList.appendChild(createContactEditorRow(contact));
+        });
+    }
+    catch (_a) {
+        editContactsList.innerHTML = "";
+    }
+}
 function createContactEditorRow(contact) {
     var _a, _b, _c, _d, _e, _f, _g, _h, _j;
     const row = document.createElement("div");
@@ -197,7 +234,6 @@ function createContactEditorRow(contact) {
     const dateAdded = (_b = contact === null || contact === void 0 ? void 0 : contact.dateAdded) !== null && _b !== void 0 ? _b : new Date().toISOString();
     row.innerHTML = `
         <input type="hidden" data-field="contactId" value="${id}">
-        <input type="hidden" data-field="dateAdded" value="${dateAdded}">
 
         <label>Nome</label>
         <input type="text" data-field="name" value="${(_c = contact === null || contact === void 0 ? void 0 : contact.name) !== null && _c !== void 0 ? _c : ""}" required>
@@ -220,11 +256,43 @@ function createContactEditorRow(contact) {
         <label>Note contatto</label>
         <textarea data-field="note" rows="2">${(_j = contact === null || contact === void 0 ? void 0 : contact.note) !== null && _j !== void 0 ? _j : ""}</textarea>
 
+        <button type="button" class="edit-action-btn" data-action="save-contact-row">${id > 0 ? "Aggiorna contatto" : "Salva contatto"}</button>
+
         <button type="button" class="delete-action-btn" data-action="remove-contact-row">Rimuovi contatto</button>
     `;
     const removeButton = row.querySelector("[data-action='remove-contact-row']");
     removeButton === null || removeButton === void 0 ? void 0 : removeButton.addEventListener("click", () => {
         row.remove();
+        if (id > 0) {
+            deleteContact(id).catch(async (error) => {
+                await showMessagePopup("Errore", `Errore durante rimozione contatto: ${error.message}`);
+            });
+        }
+    });
+    const saveButton = row.querySelector("[data-action='save-contact-row']");
+    saveButton === null || saveButton === void 0 ? void 0 : saveButton.addEventListener("click", async () => {
+        if (editingCompanyId == null) {
+            await showMessagePopup("Errore", "Azienda non selezionata.");
+            return;
+        }
+        try {
+            const parsedContact = readContactFromRow(row);
+            if (!parsedContact) {
+                await showMessagePopup("Errore", "Inserisci almeno Nome, Cognome e Data di nascita.");
+                return;
+            }
+            const payload = toContactUpsertPayload(parsedContact);
+            if (parsedContact.contactId > 0) {
+                await updateContact(parsedContact.contactId, payload);
+            }
+            else {
+                await createContactWithCompany(editingCompanyId, payload);
+            }
+            await loadEditContactRows(editingCompanyId);
+        }
+        catch (error) {
+            showError(editError, getUpsertContactErrorMessage(error));
+        }
     });
     return row;
 }
@@ -240,26 +308,10 @@ function readContacts(listElement) {
     const rows = Array.from(listElement.querySelectorAll(".contact-editor-row"));
     const parsed = [];
     for (const row of rows) {
-        const name = getFieldValue(row, "name");
-        const surname = getFieldValue(row, "surname");
-        const birthdayRaw = getFieldValue(row, "birthday");
-        if (!name && !surname && !birthdayRaw) {
-            continue;
+        const parsedContact = readContactFromRow(row);
+        if (parsedContact) {
+            parsed.push(parsedContact);
         }
-        if (!name || !surname || !birthdayRaw) {
-            throw new Error("Compila Nome, Cognome e Data di nascita per ogni contatto inserito.");
-        }
-        parsed.push({
-            contactId: Number(getFieldValue(row, "contactId")) || 0,
-            name,
-            surname,
-            title: getFieldValue(row, "title") || undefined,
-            workRole: getFieldValue(row, "workRole") || undefined,
-            gender: getFieldValue(row, "gender") || undefined,
-            birthday: toIsoDate(birthdayRaw),
-            note: getFieldValue(row, "note") || undefined,
-            dateAdded: getFieldValue(row, "dateAdded") || new Date().toISOString()
-        });
     }
     return parsed;
 }
@@ -301,7 +353,7 @@ function hasCompanyChanges(current, original) {
         normalized(current.address.region) !== normalized(original.address.region) ||
         normalized(current.address.country) !== normalized(original.address.country));
 }
-function toContactUpsertPayload(contact, companyDenomination) {
+function toContactUpsertPayload(contact) {
     return {
         contactId: contact.contactId > 0 ? contact.contactId : undefined,
         name: contact.name,
@@ -310,22 +362,20 @@ function toContactUpsertPayload(contact, companyDenomination) {
         workRole: contact.workRole,
         gender: contact.gender,
         birthday: contact.birthday,
-        note: contact.note,
-        dateAdded: contact.dateAdded || new Date().toISOString(),
-        companyDenomination
+        note: contact.note
     };
 }
-async function upsertCompanyContacts(editedContacts, companyDenomination) {
+async function upsertCompanyContacts(editedContacts, companyId) {
     if (editedContacts.length === 0) {
         return;
     }
     for (const contact of editedContacts) {
-        const payload = toContactUpsertPayload(contact, companyDenomination);
+        const payload = toContactUpsertPayload(contact);
         if (contact.contactId > 0) {
             await updateContact(contact.contactId, payload);
             continue;
         }
-        await createContact(payload);
+        await createContactWithCompany(companyId, payload);
     }
 }
 function buildAddCompanyPayload() {
@@ -526,20 +576,7 @@ async function openEditPanel(company) {
     setElementValue("edit-company-size", (_h = company.size) !== null && _h !== void 0 ? _h : "");
     setElementValue("edit-company-website", (_j = company.website) !== null && _j !== void 0 ? _j : "");
     setElementValue("edit-company-notes", (_k = company.note) !== null && _k !== void 0 ? _k : "");
-    clearEditContactRows();
-    try {
-        const contacts = await getCompanyContacts(company.companyId);
-        if (editContactsList) {
-            contacts.forEach((contact) => {
-                editContactsList.appendChild(createContactEditorRow(contact));
-            });
-        }
-    }
-    catch (_l) {
-        if (editContactsList) {
-            editContactsList.innerHTML = "";
-        }
-    }
+    await loadEditContactRows(company.companyId);
     showPanel(editPanel, addButton);
 }
 function setupAddForm() {
@@ -592,7 +629,7 @@ function setupEditForm() {
                     }
                 }
             }
-            await upsertCompanyContacts(contacts, payload.denomination);
+            await upsertCompanyContacts(contacts, editingCompanyId);
             hidePanel(editPanel, addButton);
             editingCompanyId = null;
             editingCompanySnapshot = null;

@@ -11,6 +11,8 @@ import {
 import {
     ContactUpsertPayload,
     createContact,
+    createContactWithCompany,
+    deleteContact,
     updateContact
 } from "./apiContact.js";
 import { createAddressSelectBinding } from "./address.js";
@@ -234,9 +236,9 @@ function getCreateCompanyErrorMessage(error: unknown): string {
 
 function toIsoDate(value: string): string {
     if (!value) {
-        return new Date().toISOString();
+        return new Date().toISOString().slice(0, 10);
     }
-    return new Date(`${value}T00:00:00`).toISOString();
+    return value;
 }
 
 function toDateInputValue(value: string): string {
@@ -250,6 +252,49 @@ function toDateInputValue(value: string): string {
     return date.toISOString().slice(0, 10);
 }
 
+function readContactFromRow(row: HTMLElement): ContactDto | null {
+    const name = getFieldValue(row, "name");
+    const surname = getFieldValue(row, "surname");
+    const birthdayRaw = getFieldValue(row, "birthday");
+
+    if (!name && !surname && !birthdayRaw) {
+        return null;
+    }
+
+    if (!name || !surname || !birthdayRaw) {
+        throw new Error("Compila Nome, Cognome e Data di nascita per ogni contatto inserito.");
+    }
+
+    return {
+        contactId: Number(getFieldValue(row, "contactId")) || 0,
+        name,
+        surname,
+        title: getFieldValue(row, "title") || undefined,
+        workRole: getFieldValue(row, "workRole") || undefined,
+        gender: getFieldValue(row, "gender") || undefined,
+        birthday: toIsoDate(birthdayRaw),
+        note: getFieldValue(row, "note") || undefined,
+        dateAdded: getFieldValue(row, "dateAdded") || new Date().toISOString()
+    };
+}
+
+async function loadEditContactRows(companyId: number): Promise<void> {
+    if (!editContactsList) {
+        return;
+    }
+
+    clearEditContactRows();
+
+    try {
+        const contacts = await getCompanyContacts(companyId);
+        contacts.forEach((contact) => {
+            editContactsList.appendChild(createContactEditorRow(contact));
+        });
+    } catch {
+        editContactsList.innerHTML = "";
+    }
+}
+
 function createContactEditorRow(contact?: ContactDto): HTMLDivElement {
     const row = document.createElement("div");
     row.className = "contact-editor-row";
@@ -259,7 +304,6 @@ function createContactEditorRow(contact?: ContactDto): HTMLDivElement {
 
     row.innerHTML = `
         <input type="hidden" data-field="contactId" value="${id}">
-        <input type="hidden" data-field="dateAdded" value="${dateAdded}">
 
         <label>Nome</label>
         <input type="text" data-field="name" value="${contact?.name ?? ""}" required>
@@ -282,12 +326,46 @@ function createContactEditorRow(contact?: ContactDto): HTMLDivElement {
         <label>Note contatto</label>
         <textarea data-field="note" rows="2">${contact?.note ?? ""}</textarea>
 
+        <button type="button" class="edit-action-btn" data-action="save-contact-row">${id > 0 ? "Aggiorna contatto" : "Salva contatto"}</button>
+
         <button type="button" class="delete-action-btn" data-action="remove-contact-row">Rimuovi contatto</button>
     `;
 
     const removeButton = row.querySelector("[data-action='remove-contact-row']") as HTMLButtonElement | null;
     removeButton?.addEventListener("click", () => {
         row.remove();
+        if (id > 0) {
+            deleteContact(id).catch(async (error) => {
+                await showMessagePopup("Errore", `Errore durante rimozione contatto: ${(error as Error).message}`);
+            });
+        }
+    });
+
+    const saveButton = row.querySelector("[data-action='save-contact-row']") as HTMLButtonElement | null;
+    saveButton?.addEventListener("click", async () => {
+        if (editingCompanyId == null) {
+            await showMessagePopup("Errore", "Azienda non selezionata.");
+            return;
+        }
+
+        try {
+            const parsedContact = readContactFromRow(row);
+            if (!parsedContact) {
+                await showMessagePopup("Errore", "Inserisci almeno Nome, Cognome e Data di nascita.");
+                return;
+            }
+            
+            const payload = toContactUpsertPayload(parsedContact);
+            if (parsedContact.contactId > 0) {
+                await updateContact(parsedContact.contactId, payload);
+            } else {
+                await createContactWithCompany(editingCompanyId, payload);
+            }
+
+            await loadEditContactRows(editingCompanyId);
+        } catch (error) {
+            showError(editError, getUpsertContactErrorMessage(error));
+        }
     });
 
     return row;
@@ -307,29 +385,10 @@ function readContacts(listElement: HTMLDivElement | null): ContactDto[] {
     const parsed: ContactDto[] = [];
 
     for (const row of rows) {
-        const name = getFieldValue(row, "name");
-        const surname = getFieldValue(row, "surname");
-        const birthdayRaw = getFieldValue(row, "birthday");
-
-        if (!name && !surname && !birthdayRaw) {
-            continue;
+        const parsedContact = readContactFromRow(row);
+        if (parsedContact) {
+            parsed.push(parsedContact);
         }
-
-        if (!name || !surname || !birthdayRaw) {
-            throw new Error("Compila Nome, Cognome e Data di nascita per ogni contatto inserito.");
-        }
-
-        parsed.push({
-            contactId: Number(getFieldValue(row, "contactId")) || 0,
-            name,
-            surname,
-            title: getFieldValue(row, "title") || undefined,
-            workRole: getFieldValue(row, "workRole") || undefined,
-            gender: getFieldValue(row, "gender") || undefined,
-            birthday: toIsoDate(birthdayRaw),
-            note: getFieldValue(row, "note") || undefined,
-            dateAdded: getFieldValue(row, "dateAdded") || new Date().toISOString()
-        });
     }
 
     return parsed;
@@ -379,7 +438,7 @@ function hasCompanyChanges(current: CompanyUpsertPayload, original: CompanyUpser
     );
 }
 
-function toContactUpsertPayload(contact: ContactDto, companyDenomination: string): ContactUpsertPayload {
+function toContactUpsertPayload(contact: ContactDto): ContactUpsertPayload {
     return {
         contactId: contact.contactId > 0 ? contact.contactId : undefined,
         name: contact.name,
@@ -388,26 +447,24 @@ function toContactUpsertPayload(contact: ContactDto, companyDenomination: string
         workRole: contact.workRole,
         gender: contact.gender,
         birthday: contact.birthday,
-        note: contact.note,
-        dateAdded: contact.dateAdded || new Date().toISOString(),
-        companyDenomination
+        note: contact.note
     };
 }
 
-async function upsertCompanyContacts(editedContacts: ContactDto[], companyDenomination: string): Promise<void> {
+async function upsertCompanyContacts(editedContacts: ContactDto[], companyId: number): Promise<void> {
     if (editedContacts.length === 0) {
         return;
     }
 
     for (const contact of editedContacts) {
-        const payload = toContactUpsertPayload(contact, companyDenomination);
+        const payload = toContactUpsertPayload(contact);
 
         if (contact.contactId > 0) {
             await updateContact(contact.contactId, payload);
             continue;
         }
 
-        await createContact(payload);
+        await createContactWithCompany(companyId, payload);
     }
 }
 
@@ -637,20 +694,7 @@ async function openEditPanel(company: CompanySimpleDto): Promise<void> {
     setElementValue("edit-company-website", company.website ?? "");
     setElementValue("edit-company-notes", company.note ?? "");
 
-    clearEditContactRows();
-
-    try {
-        const contacts = await getCompanyContacts(company.companyId);
-        if (editContactsList) {
-            contacts.forEach((contact) => {
-                editContactsList.appendChild(createContactEditorRow(contact));
-            });
-        }
-    } catch {
-        if (editContactsList) {
-            editContactsList.innerHTML = "";
-        }
-    }
+    await loadEditContactRows(company.companyId);
 
     showPanel(editPanel, addButton);
 }
@@ -711,7 +755,7 @@ function setupEditForm(): void {
                 }
             }
 
-            await upsertCompanyContacts(contacts, payload.denomination);
+            await upsertCompanyContacts(contacts, editingCompanyId);
             hidePanel(editPanel, addButton);
             editingCompanyId = null;
             editingCompanySnapshot = null;

@@ -5,9 +5,10 @@ const FIELD_LABELS = {
     title: "Titolo",
     workrole: "Ruolo",
     gender: "Genere",
-    birthday: "Data di nascita",
+    birthday: "yyyy-mm-dd",
+    email: "example@example.com",
+    phone: "123456789",
     note: "Note",
-    dateadded: "Data inserimento",
     companydenomination: "Denominazione azienda"
 };
 function normalizeKey(rawKey) {
@@ -66,6 +67,9 @@ async function fetchJson(url, init) {
 export function getContact() {
     return fetchJson(`${API_BASE_URL}/Contact/all`);
 }
+export function getContactWithDetails(contactId) {
+    return fetchJson(`${API_BASE_URL}/Contact/${contactId}/WithDetails`);
+}
 async function handleContactUpsertResponse(response) {
     if (response.ok) {
         return;
@@ -86,6 +90,15 @@ export function createContact(payload) {
         body: JSON.stringify(payload)
     }).then(handleContactUpsertResponse);
 }
+export function createContactWithCompany(companyId, payload) {
+    return fetch(`${API_BASE_URL}/Contact/withCompany/${companyId}`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+    }).then(handleContactUpsertResponse);
+}
 export function updateContact(contactId, payload) {
     return fetch(`${API_BASE_URL}/Contact/${contactId}`, {
         method: "PUT",
@@ -97,6 +110,62 @@ export function updateContact(contactId, payload) {
 }
 export async function deleteContact(contactId) {
     const response = await fetch(`${API_BASE_URL}/Contact/${contactId}`, {
+        method: "DELETE"
+    });
+    if (response.status === 204) {
+        return;
+    }
+    const message = await response.text();
+    throw new Error(message || `HTTP ${response.status}`);
+}
+export function createMailAddress(payload) {
+    return fetch(`${API_BASE_URL}/MailAddress`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+    }).then(handleContactUpsertResponse);
+}
+export function updateMailAddress(mailAddressId, payload) {
+    return fetch(`${API_BASE_URL}/MailAddress/${mailAddressId}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+    }).then(handleContactUpsertResponse);
+}
+export async function deleteMailAddress(mailAddressId) {
+    const response = await fetch(`${API_BASE_URL}/MailAddress/${mailAddressId}`, {
+        method: "DELETE"
+    });
+    if (response.status === 204) {
+        return;
+    }
+    const message = await response.text();
+    throw new Error(message || `HTTP ${response.status}`);
+}
+export function createPhoneNumber(payload) {
+    return fetch(`${API_BASE_URL}/PhoneNumber`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+    }).then(handleContactUpsertResponse);
+}
+export function updatePhoneNumber(phoneNumberId, payload) {
+    return fetch(`${API_BASE_URL}/PhoneNumber/${phoneNumberId}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+    }).then(handleContactUpsertResponse);
+}
+export async function deletePhoneNumber(phoneNumberId) {
+    const response = await fetch(`${API_BASE_URL}/PhoneNumber/${phoneNumberId}`, {
         method: "DELETE"
     });
     if (response.status === 204) {

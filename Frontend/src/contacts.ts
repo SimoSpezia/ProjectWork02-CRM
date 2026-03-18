@@ -1,12 +1,23 @@
 import { hidePanel, initializeMenuAndTheme, showPanel } from "./common.js";
 import { createAddressSelectBinding } from "./address.js";
 import {
+    ContactDetailsDto,
     ContactDto,
     ContactUpsertPayload,
-    getContact,
+    MailAddressDto,
+    PhoneNumberDto,
     createContact,
+    createContactWithCompany,
+    createMailAddress,
+    createPhoneNumber,
     deleteContact,
-    updateContact
+    deleteMailAddress,
+    deletePhoneNumber,
+    getContact,
+    getContactWithDetails,
+    updateContact,
+    updateMailAddress,
+    updatePhoneNumber
 } from "./apiContact.js";
 import { CompanySimpleDto, getCompanies } from "./apiAzienda.js";
 
@@ -23,6 +34,11 @@ const editForm = document.getElementById("edit-contact-form") as HTMLFormElement
 const editCancelButton = document.getElementById("cancel-edit-contact") as HTMLButtonElement | null;
 const editError = document.getElementById("edit-contact-error") as HTMLParagraphElement | null;
 
+const emailListContainer = document.getElementById("edit-contact-emails-list") as HTMLDivElement | null;
+const addEmailButton = document.getElementById("edit-contact-email-add-btn") as HTMLButtonElement | null;
+const phoneListContainer = document.getElementById("edit-contact-phones-list") as HTMLDivElement | null;
+const addPhoneButton = document.getElementById("edit-contact-phone-add-btn") as HTMLButtonElement | null;
+
 const popupOverlay = document.getElementById("company-popup-overlay") as HTMLDivElement | null;
 const popupTitle = document.getElementById("company-popup-title") as HTMLHeadingElement | null;
 const popupMessage = document.getElementById("company-popup-message") as HTMLParagraphElement | null;
@@ -30,9 +46,10 @@ const popupCancelButton = document.getElementById("company-popup-cancel") as HTM
 const popupConfirmButton = document.getElementById("company-popup-confirm") as HTMLButtonElement | null;
 
 let editingContactId: number | null = null;
+let editingContactDetails: ContactDetailsDto | null = null;
 let popupResolver: ((result: boolean) => void) | null = null;
 let popupMode: "confirm" | "message" | null = null;
-let companyOptions: string[] = [];
+let companyOptions: CompanySimpleDto[] = [];
 
 const addAddressBinding = createAddressSelectBinding({
     countryId: "contact-address-country",
@@ -60,26 +77,7 @@ function setElementValue(id: string, value: string): void {
     }
 }
 
-function ensureSelectOption(selectId: string, value: string): void {
-    if (!value) {
-        return;
-    }
-
-    const select = document.getElementById(selectId) as HTMLSelectElement | null;
-    if (!select) {
-        return;
-    }
-
-    const exists = Array.from(select.options).some((option) => option.value === value);
-    if (!exists) {
-        const option = document.createElement("option");
-        option.value = value;
-        option.textContent = value;
-        select.appendChild(option);
-    }
-}
-
-function populateCompanySelect(selectId: string, selectedValue = ""): void {
+function populateCompanySelect(selectId: string, selectedDenomination = ""): void {
     const select = document.getElementById(selectId) as HTMLSelectElement | null;
     if (!select) {
         return;
@@ -92,31 +90,45 @@ function populateCompanySelect(selectId: string, selectedValue = ""): void {
     placeholderOption.textContent = "Seleziona azienda";
     select.appendChild(placeholderOption);
 
-    for (const companyName of companyOptions) {
+    for (const company of companyOptions) {
         const option = document.createElement("option");
-        option.value = companyName;
-        option.textContent = companyName;
+        option.value = String(company.companyId);
+        option.textContent = company.denomination;
         select.appendChild(option);
     }
 
-    if (selectedValue) {
-        ensureSelectOption(selectId, selectedValue);
-        select.value = selectedValue;
+    const normalizedSelected = selectedDenomination.trim().toLowerCase();
+    if (normalizedSelected) {
+        const selectedCompany = companyOptions.find(
+            (company) => company.denomination.trim().toLowerCase() === normalizedSelected
+        );
+        if (selectedCompany) {
+            select.value = String(selectedCompany.companyId);
+            return;
+        }
+
+        select.value = "";
         return;
     }
 
     select.value = "";
 }
 
+function getSelectedCompanyId(selectId: string): number | null {
+    const rawValue = elementValue(selectId);
+    const parsed = Number(rawValue);
+    if (!Number.isInteger(parsed) || parsed <= 0) {
+        return null;
+    }
+
+    return parsed;
+}
+
 async function loadCompanyOptions(): Promise<void> {
     const companies: CompanySimpleDto[] = await getCompanies();
-    const uniqueNames = new Set(
-        companies
-            .map((company) => company.denomination?.trim() ?? "")
-            .filter((name) => name.length > 0)
-    );
-
-    companyOptions = Array.from(uniqueNames).sort((a, b) => a.localeCompare(b, "it", { sensitivity: "base" }));
+    companyOptions = companies
+        .filter((company) => company.denomination?.trim().length > 0)
+        .sort((a, b) => a.denomination.localeCompare(b.denomination, "it", { sensitivity: "base" }));
 
     populateCompanySelect("contact-company");
     populateCompanySelect("edit-contact-company");
@@ -255,9 +267,9 @@ function getUpsertErrorMessage(error: unknown): string {
 
 function toIsoDate(value: string): string {
     if (!value) {
-        return new Date().toISOString();
+        return new Date().toISOString().slice(0, 10);
     }
-    return new Date(`${value}T00:00:00`).toISOString();
+    return value;
 }
 
 function toDateInputValue(value: string): string {
@@ -288,13 +300,11 @@ function buildAddPayload(): ContactUpsertPayload {
     return {
         name: elementValue("contact-name"),
         surname: elementValue("contact-surname"),
-        companyDenomination: elementValue("contact-company") || undefined,
         title: elementValue("contact-title") || undefined,
         workRole: elementValue("contact-work-role") || undefined,
         gender: elementValue("contact-gender") || undefined,
         birthday: toIsoDate(elementValue("contact-birthday")),
         note: elementValue("contact-note") || undefined,
-        dateAdded: new Date().toISOString()
     };
 }
 
@@ -303,27 +313,281 @@ function buildEditPayload(): ContactUpsertPayload {
         contactId: editingContactId ?? undefined,
         name: elementValue("edit-contact-name"),
         surname: elementValue("edit-contact-surname"),
-        companyDenomination: elementValue("edit-contact-company") || undefined,
         title: elementValue("edit-contact-title-input") || undefined,
         workRole: elementValue("edit-contact-work-role") || undefined,
         gender: elementValue("edit-contact-gender") || undefined,
         birthday: toIsoDate(elementValue("edit-contact-birthday")),
         note: elementValue("edit-contact-note") || undefined,
-        dateAdded: elementValue("edit-contact-date-added") || new Date().toISOString()
     };
 }
 
 function fillEditForm(contact: ContactDto): void {
     setElementValue("edit-contact-id", String(contact.contactId));
-    setElementValue("edit-contact-date-added", contact.dateAdded);
     setElementValue("edit-contact-name", contact.name);
     setElementValue("edit-contact-surname", contact.surname);
     populateCompanySelect("edit-contact-company", contact.companyDenomination ?? "");
     setElementValue("edit-contact-title-input", contact.title ?? "");
     setElementValue("edit-contact-work-role", contact.workRole ?? "");
     setElementValue("edit-contact-gender", contact.gender ?? "");
-    setElementValue("edit-contact-birthday", toDateInputValue(contact.birthday));
+    setElementValue("edit-contact-birthday", toDateInputValue(contact.birthday ?? ""));
     setElementValue("edit-contact-note", contact.note ?? "");
+}
+
+function createEmailRow(item: MailAddressDto): HTMLDivElement {
+    const row = document.createElement("div");
+    row.className = "contact-subitem-row";
+    row.dataset.id = String(item.mailAddressId ?? 0);
+
+    const input = document.createElement("input");
+    input.type = "email";
+    input.className = "contact-subitem-input";
+    input.placeholder = "email@esempio.it";
+    input.value = item.mail ?? "";
+
+    const removeButton = document.createElement("button");
+    removeButton.type = "button";
+    removeButton.className = "delete-action-btn mini-delete";
+    removeButton.textContent = "Elimina";
+    removeButton.addEventListener("click", () => {
+        row.remove();
+    });
+
+    row.appendChild(input);
+    row.appendChild(removeButton);
+    return row;
+}
+
+function createPhoneRow(item: PhoneNumberDto): HTMLDivElement {
+    const row = document.createElement("div");
+    row.className = "contact-subitem-row contact-phone-row";
+    row.dataset.id = String(item.phoneNumberId ?? 0);
+
+    const prefixInput = document.createElement("input");
+    prefixInput.type = "text";
+    prefixInput.className = "contact-subitem-input contact-phone-prefix";
+    prefixInput.placeholder = "+39";
+    prefixInput.value = item.prefix ?? "";
+
+    const numberInput = document.createElement("input");
+    numberInput.type = "text";
+    numberInput.className = "contact-subitem-input contact-phone-number";
+    numberInput.placeholder = "3331234567";
+    numberInput.value = item.number ?? "";
+
+    const nationalityInput = document.createElement("input");
+    nationalityInput.type = "text";
+    nationalityInput.className = "contact-subitem-input contact-phone-nationality";
+    nationalityInput.placeholder = "IT";
+    nationalityInput.value = item.nationality ?? "IT";
+
+    const removeButton = document.createElement("button");
+    removeButton.type = "button";
+    removeButton.className = "delete-action-btn mini-delete";
+    removeButton.textContent = "Elimina";
+    removeButton.addEventListener("click", () => {
+        row.remove();
+    });
+
+    row.appendChild(prefixInput);
+    row.appendChild(numberInput);
+    row.appendChild(nationalityInput);
+    row.appendChild(removeButton);
+    return row;
+}
+
+function renderMailAddressRows(items: MailAddressDto[]): void {
+    if (!emailListContainer) {
+        return;
+    }
+
+    emailListContainer.innerHTML = "";
+
+    if (items.length === 0) {
+        const empty = document.createElement("p");
+        empty.className = "contact-subitems-empty";
+        empty.textContent = "Nessuna email presente.";
+        emailListContainer.appendChild(empty);
+        return;
+    }
+
+    for (const item of items) {
+        emailListContainer.appendChild(createEmailRow(item));
+    }
+}
+
+function renderPhoneRows(items: PhoneNumberDto[]): void {
+    if (!phoneListContainer) {
+        return;
+    }
+
+    phoneListContainer.innerHTML = "";
+
+    if (items.length === 0) {
+        const empty = document.createElement("p");
+        empty.className = "contact-subitems-empty";
+        empty.textContent = "Nessun numero presente.";
+        phoneListContainer.appendChild(empty);
+        return;
+    }
+
+    for (const item of items) {
+        phoneListContainer.appendChild(createPhoneRow(item));
+    }
+}
+
+function collectMailAddressRows(): MailAddressDto[] {
+    if (!emailListContainer) {
+        return [];
+    }
+
+    const rows = Array.from(emailListContainer.querySelectorAll<HTMLDivElement>(".contact-subitem-row"));
+    return rows.map((row) => {
+        const input = row.querySelector<HTMLInputElement>(".contact-subitem-input");
+        return {
+            mailAddressId: Number(row.dataset.id ?? "0"),
+            mail: input?.value.trim() ?? ""
+        };
+    });
+}
+
+function collectPhoneRows(): PhoneNumberDto[] {
+    if (!phoneListContainer) {
+        return [];
+    }
+
+    const rows = Array.from(phoneListContainer.querySelectorAll<HTMLDivElement>(".contact-subitem-row"));
+    return rows.map((row) => ({
+        phoneNumberId: Number(row.dataset.id ?? "0"),
+        prefix: row.querySelector<HTMLInputElement>(".contact-phone-prefix")?.value.trim() || undefined,
+        number: row.querySelector<HTMLInputElement>(".contact-phone-number")?.value.trim() ?? "",
+        nationality: row.querySelector<HTMLInputElement>(".contact-phone-nationality")?.value.trim() || "IT"
+    }));
+}
+
+async function syncMailAddresses(contactId: number): Promise<void> {
+    const originalItems = editingContactDetails?.mailAddresses ?? [];
+    const currentItems = collectMailAddressRows();
+
+    const currentIds = new Set(currentItems.filter((item) => item.mailAddressId > 0).map((item) => item.mailAddressId));
+    for (const original of originalItems) {
+        if (original.mailAddressId > 0 && !currentIds.has(original.mailAddressId)) {
+            await deleteMailAddress(original.mailAddressId);
+        }
+    }
+
+    for (const item of currentItems) {
+        const mail = item.mail.trim();
+        if (!mail) {
+            if (item.mailAddressId > 0) {
+                await deleteMailAddress(item.mailAddressId);
+            }
+            continue;
+        }
+
+        if (item.mailAddressId > 0) {
+            const original = originalItems.find((m) => m.mailAddressId === item.mailAddressId);
+            if (!original || original.mail !== mail) {
+                await updateMailAddress(item.mailAddressId, {
+                    mailAddressId: item.mailAddressId,
+                    mail,
+                    contactId
+                });
+            }
+            continue;
+        }
+
+        await createMailAddress({
+            mailAddressId: 0,
+            mail,
+            contactId
+        });
+    }
+}
+
+async function syncPhoneNumbers(contactId: number): Promise<void> {
+    const originalItems = editingContactDetails?.phoneNumbers ?? [];
+    const currentItems = collectPhoneRows();
+
+    const currentIds = new Set(currentItems.filter((item) => item.phoneNumberId > 0).map((item) => item.phoneNumberId));
+    for (const original of originalItems) {
+        if (original.phoneNumberId > 0 && !currentIds.has(original.phoneNumberId)) {
+            await deletePhoneNumber(original.phoneNumberId);
+        }
+    }
+
+    for (const item of currentItems) {
+        const number = item.number.trim();
+        const nationality = (item.nationality ?? "").trim() || "IT";
+        const prefix = item.prefix?.trim() || undefined;
+
+        if (!number) {
+            if (item.phoneNumberId > 0) {
+                await deletePhoneNumber(item.phoneNumberId);
+            }
+            continue;
+        }
+
+        if (item.phoneNumberId > 0) {
+            const original = originalItems.find((p) => p.phoneNumberId === item.phoneNumberId);
+            const changed = !original
+                || original.number !== number
+                || (original.prefix ?? "") !== (prefix ?? "")
+                || (original.nationality ?? "") !== nationality;
+
+            if (changed) {
+                await updatePhoneNumber(item.phoneNumberId, {
+                    phoneNumberId: item.phoneNumberId,
+                    number,
+                    prefix,
+                    nationality,
+                    contactId
+                });
+            }
+            continue;
+        }
+
+        await createPhoneNumber({
+            phoneNumberId: 0,
+            number,
+            prefix,
+            nationality,
+            contactId
+        });
+    }
+}
+
+async function syncContactChannels(): Promise<void> {
+    if (editingContactId == null) {
+        return;
+    }
+
+    await syncMailAddresses(editingContactId);
+    await syncPhoneNumbers(editingContactId);
+}
+
+async function openEditPanel(contact: ContactDto): Promise<void> {
+    if (!editPanel || !addButton) {
+        return;
+    }
+
+    editingContactId = contact.contactId;
+    clearError(editError);
+    fillEditForm(contact);
+    renderMailAddressRows([]);
+    renderPhoneRows([]);
+
+    try {
+        const details = await getContactWithDetails(contact.contactId);
+        editingContactDetails = details;
+        fillEditForm(details);
+        renderMailAddressRows(details.mailAddresses ?? []);
+        renderPhoneRows(details.phoneNumbers ?? []);
+        showPanel(editPanel, addButton);
+    } catch (error) {
+        editingContactDetails = null;
+        editingContactId = null;
+        await showMessagePopup("Errore", `Impossibile caricare i dettagli del contatto: ${(error as Error).message}`);
+    }
 }
 
 function buildActionsCell(contact: ContactDto): HTMLTableCellElement {
@@ -335,15 +599,8 @@ function buildActionsCell(contact: ContactDto): HTMLTableCellElement {
     editButton.type = "button";
     editButton.className = "edit-action-btn";
     editButton.textContent = "Modifica";
-    editButton.addEventListener("click", () => {
-        if (!editPanel || !addButton) {
-            return;
-        }
-
-        editingContactId = contact.contactId;
-        clearError(editError);
-        fillEditForm(contact);
-        showPanel(editPanel, addButton);
+    editButton.addEventListener("click", async () => {
+        await openEditPanel(contact);
     });
 
     const deleteButton = document.createElement("button");
@@ -407,16 +664,13 @@ function renderTable(contacts: ContactDto[]): void {
         genderCell.textContent = contact.gender || "-";
 
         const birthdayCell = document.createElement("td");
-        birthdayCell.textContent = toDisplayDate(contact.birthday);
+        birthdayCell.textContent = toDisplayDate(contact.birthday ?? "");
 
         const noteCell = document.createElement("td");
         const noteWrapper = document.createElement("div");
         noteWrapper.className = "note-cell";
         noteWrapper.textContent = contact.note || "-";
         noteCell.appendChild(noteWrapper);
-
-        const addedCell = document.createElement("td");
-        addedCell.textContent = toDisplayDate(contact.dateAdded);
 
         row.appendChild(nameCell);
         row.appendChild(surnameCell);
@@ -426,7 +680,6 @@ function renderTable(contacts: ContactDto[]): void {
         row.appendChild(genderCell);
         row.appendChild(birthdayCell);
         row.appendChild(noteCell);
-        row.appendChild(addedCell);
         row.appendChild(buildActionsCell(contact));
 
         tableBody.appendChild(row);
@@ -460,7 +713,14 @@ function setupAddForm(): void {
 
         try {
             const payload = buildAddPayload();
-            await createContact(payload);
+            const selectedCompanyId = getSelectedCompanyId("contact-company");
+
+            if (selectedCompanyId != null) {
+                await createContactWithCompany(selectedCompanyId, payload);
+            } else {
+                await createContact(payload);
+            }
+
             addForm.reset();
             hidePanel(addPanel, addButton);
             await loadContacts();
@@ -486,13 +746,62 @@ function setupEditForm(): void {
 
         try {
             const payload = buildEditPayload();
+            const selectedCompanyId = getSelectedCompanyId("edit-contact-company");
+            const selectedCompanyName = selectedCompanyId == null
+                ? ""
+                : (companyOptions.find((company) => company.companyId === selectedCompanyId)?.denomination ?? "").trim().toLowerCase();
+            const currentCompanyName = (editingContactDetails?.companyDenomination ?? "").trim().toLowerCase();
+
+            if (selectedCompanyName !== currentCompanyName) {
+                showError(editError, "Cambio azienda su contatto esistente non supportato da questa API. Crea un nuovo contatto con l'azienda corretta.");
+                return;
+            }
+
             await updateContact(editingContactId, payload);
+            await syncContactChannels();
             hidePanel(editPanel, addButton);
             editingContactId = null;
+            editingContactDetails = null;
             await loadContacts();
         } catch (error) {
             showError(editError, getUpsertErrorMessage(error));
         }
+    });
+}
+
+function setupEditSubitemButtons(): void {
+    addEmailButton?.addEventListener("click", () => {
+        if (!emailListContainer) {
+            return;
+        }
+
+        const emptyElement = emailListContainer.querySelector(".contact-subitems-empty");
+        if (emptyElement) {
+            emptyElement.remove();
+        }
+
+        emailListContainer.appendChild(createEmailRow({
+            mailAddressId: 0,
+            mail: ""
+        }));
+    });
+
+    addPhoneButton?.addEventListener("click", () => {
+        if (!phoneListContainer) {
+            return;
+        }
+
+        const emptyElement = phoneListContainer.querySelector(".contact-subitems-empty");
+        if (emptyElement) {
+            emptyElement.remove();
+        }
+
+        phoneListContainer.appendChild(createPhoneRow({
+            phoneNumberId: 0,
+            number: "",
+            prefix: "+39",
+            nationality: "IT"
+        }));
     });
 }
 
@@ -510,7 +819,10 @@ function setupButtons(): void {
         if (editPanel && addButton) {
             hidePanel(editPanel, addButton);
             editForm?.reset();
+            renderMailAddressRows([]);
+            renderPhoneRows([]);
             editingContactId = null;
+            editingContactDetails = null;
         }
     });
 }
@@ -524,6 +836,7 @@ async function init(): Promise<void> {
     setupButtons();
     setupAddForm();
     setupEditForm();
+    setupEditSubitemButtons();
     await loadContacts();
 }
 
