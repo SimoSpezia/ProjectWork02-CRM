@@ -33,6 +33,23 @@ namespace Crm_Gruppo_5.Dto
             return simpledto;
         }
 
+        public ContactSimpleDto MapEntitytoSimpleDto(Contact entity)
+        {
+            ContactSimpleDto simpledto = new ContactSimpleDto
+            {
+                ContactId = entity.ContactId,
+                Name = entity.Name,
+                Surname = entity.Surname,
+                Title = entity.Title,
+                WorkRole = entity.WorkRole,
+                Gender = entity.Gender,
+                Birthday = entity.Birthday,
+                Note = entity.Note,
+                Address = entity.Address != null ? MapBaseEntityToDto(entity.Address) : null
+            };
+            return simpledto;
+        }
+
         public Contact MapDtoToEntity(ContactDto dto)
         {
             Contact entity = new Contact
