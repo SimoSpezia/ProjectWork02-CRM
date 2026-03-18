@@ -455,6 +455,81 @@ function fillEditForm(contact: ContactDto): void {
     setElementValue("edit-contact-note", contact.note ?? "");
 }
 
+function ensureSubitemsPlaceholder(container: HTMLDivElement | null, message: string): void {
+    if (!container) {
+        return;
+    }
+
+    const hasRows = container.querySelector(".contact-subitem-row") != null;
+    const emptyElement = container.querySelector<HTMLParagraphElement>(".contact-subitems-empty");
+
+    if (hasRows) {
+        emptyElement?.remove();
+        return;
+    }
+
+    if (emptyElement) {
+        return;
+    }
+
+    const empty = document.createElement("p");
+    empty.className = "contact-subitems-empty";
+    empty.textContent = message;
+    container.appendChild(empty);
+}
+
+function setEmailRowEditMode(row: HTMLDivElement, isEditing: boolean): void {
+    const input = row.querySelector<HTMLInputElement>(".contact-subitem-input");
+    const editButton = row.querySelector<HTMLButtonElement>(".contact-email-edit");
+    const saveButton = row.querySelector<HTMLButtonElement>(".contact-email-save");
+
+    if (input) {
+        input.disabled = !isEditing;
+    }
+
+    if (editButton) {
+        editButton.disabled = isEditing;
+    }
+
+    if (saveButton) {
+        saveButton.disabled = !isEditing;
+    }
+}
+
+function setPhoneRowEditMode(row: HTMLDivElement, isEditing: boolean): void {
+    const inputs = row.querySelectorAll<HTMLInputElement>(".contact-subitem-input");
+    const editButton = row.querySelector<HTMLButtonElement>(".contact-phone-edit");
+    const saveButton = row.querySelector<HTMLButtonElement>(".contact-phone-save");
+
+    for (const input of inputs) {
+        input.disabled = !isEditing;
+    }
+
+    if (editButton) {
+        editButton.disabled = isEditing;
+    }
+
+    if (saveButton) {
+        saveButton.disabled = !isEditing;
+    }
+}
+
+async function refreshEditContactChannels(): Promise<void> {
+    if (editingContactId == null) {
+        return;
+    }
+
+    const details = await getContactWithDetails(editingContactId);
+    editingContactDetails = {
+        ...(editingContactDetails ?? details),
+        mailAddresses: details.mailAddresses ?? [],
+        phoneNumbers: details.phoneNumbers ?? []
+    };
+
+    renderMailAddressRows(editingContactDetails.mailAddresses ?? []);
+    renderPhoneRows(editingContactDetails.phoneNumbers ?? []);
+}
+
 function createEmailRow(item: MailAddressDto): HTMLDivElement {
     const row = document.createElement("div");
     row.className = "contact-subitem-row";
@@ -466,16 +541,110 @@ function createEmailRow(item: MailAddressDto): HTMLDivElement {
     input.placeholder = "email@esempio.it";
     input.value = item.mail ?? "";
 
+    const actions = document.createElement("div");
+    actions.className = "contact-subitem-actions";
+
+    const editButton = document.createElement("button");
+    editButton.type = "button";
+    editButton.className = "edit-action-btn mini-action contact-email-edit";
+    editButton.textContent = "Modifica";
+
+    const saveButton = document.createElement("button");
+    saveButton.type = "button";
+    saveButton.className = "save-action-btn mini-action contact-email-save";
+    saveButton.textContent = "Salva";
+
     const removeButton = document.createElement("button");
     removeButton.type = "button";
-    removeButton.className = "delete-action-btn mini-delete";
+    removeButton.className = "delete-action-btn mini-action mini-delete";
     removeButton.textContent = "Elimina";
-    removeButton.addEventListener("click", () => {
-        row.remove();
+
+    editButton.addEventListener("click", () => {
+        clearError(editError);
+        setEmailRowEditMode(row, true);
+    });
+
+    saveButton.addEventListener("click", async () => {
+        clearError(editError);
+
+        if (editingContactId == null) {
+            showError(editError, "Contatto non selezionato.");
+            return;
+        }
+
+        const mail = input.value.trim();
+        if (!mail) {
+            showError(editError, "Inserisci una email valida prima di salvare.");
+            return;
+        }
+
+        try {
+            const mailAddressId = Number(row.dataset.id ?? "0");
+            if (mailAddressId > 0) {
+                await updateMailAddress(mailAddressId, {
+                    mailAddressId,
+                    mail,
+                    contactId: editingContactId
+                });
+
+                const list = editingContactDetails?.mailAddresses ?? [];
+                const current = list.find((entry) => entry.mailAddressId === mailAddressId);
+                if (current) {
+                    current.mail = mail;
+                }
+                setEmailRowEditMode(row, false);
+                return;
+            }
+
+            await createMailAddress({
+                mailAddressId: 0,
+                mail,
+                contactId: editingContactId
+            });
+            await refreshEditContactChannels();
+        } catch (error) {
+            showError(editError, getUpsertErrorMessage(error));
+        }
+    });
+
+    removeButton.addEventListener("click", async () => {
+        clearError(editError);
+
+        const mailAddressId = Number(row.dataset.id ?? "0");
+        if (mailAddressId <= 0) {
+            row.remove();
+            ensureSubitemsPlaceholder(emailListContainer, "Nessuna email presente.");
+            return;
+        }
+
+        const confirmed = await openPopup({
+            mode: "confirm",
+            title: "Conferma eliminazione",
+            message: "Vuoi eliminare questa email?",
+            confirmText: "Elimina",
+            cancelText: "Annulla",
+            destructive: true
+        });
+
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+            await deleteMailAddress(mailAddressId);
+            await refreshEditContactChannels();
+        } catch (error) {
+            showError(editError, getUpsertErrorMessage(error));
+        }
     });
 
     row.appendChild(input);
-    row.appendChild(removeButton);
+    actions.appendChild(editButton);
+    actions.appendChild(saveButton);
+    actions.appendChild(removeButton);
+    row.appendChild(actions);
+
+    setEmailRowEditMode(row, (item.mailAddressId ?? 0) <= 0);
     return row;
 }
 
@@ -502,18 +671,121 @@ function createPhoneRow(item: PhoneNumberDto): HTMLDivElement {
     nationalityInput.placeholder = "IT";
     nationalityInput.value = item.nationality ?? "IT";
 
+    const actions = document.createElement("div");
+    actions.className = "contact-subitem-actions";
+
+    const editButton = document.createElement("button");
+    editButton.type = "button";
+    editButton.className = "edit-action-btn mini-action contact-phone-edit";
+    editButton.textContent = "Modifica";
+
+    const saveButton = document.createElement("button");
+    saveButton.type = "button";
+    saveButton.className = "save-action-btn mini-action contact-phone-save";
+    saveButton.textContent = "Salva";
+
     const removeButton = document.createElement("button");
     removeButton.type = "button";
-    removeButton.className = "delete-action-btn mini-delete";
+    removeButton.className = "delete-action-btn mini-action mini-delete";
     removeButton.textContent = "Elimina";
-    removeButton.addEventListener("click", () => {
-        row.remove();
+
+    editButton.addEventListener("click", () => {
+        clearError(editError);
+        setPhoneRowEditMode(row, true);
+    });
+
+    saveButton.addEventListener("click", async () => {
+        clearError(editError);
+
+        if (editingContactId == null) {
+            showError(editError, "Contatto non selezionato.");
+            return;
+        }
+
+        const number = numberInput.value.trim();
+        const nationality = nationalityInput.value.trim() || "IT";
+        const prefix = prefixInput.value.trim() || undefined;
+
+        if (!number) {
+            showError(editError, "Inserisci un numero di telefono prima di salvare.");
+            return;
+        }
+
+        try {
+            const phoneNumberId = Number(row.dataset.id ?? "0");
+            if (phoneNumberId > 0) {
+                await updatePhoneNumber(phoneNumberId, {
+                    phoneNumberId,
+                    number,
+                    prefix,
+                    nationality,
+                    contactId: editingContactId
+                });
+
+                const list = editingContactDetails?.phoneNumbers ?? [];
+                const current = list.find((entry) => entry.phoneNumberId === phoneNumberId);
+                if (current) {
+                    current.number = number;
+                    current.prefix = prefix;
+                    current.nationality = nationality;
+                }
+                setPhoneRowEditMode(row, false);
+                return;
+            }
+
+            await createPhoneNumber({
+                phoneNumberId: 0,
+                number,
+                prefix,
+                nationality,
+                contactId: editingContactId
+            });
+            await refreshEditContactChannels();
+        } catch (error) {
+            showError(editError, getUpsertErrorMessage(error));
+        }
+    });
+
+    removeButton.addEventListener("click", async () => {
+        clearError(editError);
+
+        const phoneNumberId = Number(row.dataset.id ?? "0");
+        if (phoneNumberId <= 0) {
+            row.remove();
+            ensureSubitemsPlaceholder(phoneListContainer, "Nessun numero presente.");
+            return;
+        }
+
+        const confirmed = await openPopup({
+            mode: "confirm",
+            title: "Conferma eliminazione",
+            message: "Vuoi eliminare questo numero di telefono?",
+            confirmText: "Elimina",
+            cancelText: "Annulla",
+            destructive: true
+        });
+
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+            await deletePhoneNumber(phoneNumberId);
+            await refreshEditContactChannels();
+        } catch (error) {
+            showError(editError, getUpsertErrorMessage(error));
+        }
     });
 
     row.appendChild(prefixInput);
     row.appendChild(numberInput);
     row.appendChild(nationalityInput);
-    row.appendChild(removeButton);
+    actions.appendChild(editButton);
+    actions.appendChild(saveButton);
+    actions.appendChild(removeButton);
+    row.appendChild(actions);
+
+    setPhoneRowEditMode(row, (item.phoneNumberId ?? 0) <= 0);
     return row;
 }
 
@@ -535,6 +807,8 @@ function renderMailAddressRows(items: MailAddressDto[]): void {
     for (const item of items) {
         emailListContainer.appendChild(createEmailRow(item));
     }
+
+    ensureSubitemsPlaceholder(emailListContainer, "Nessuna email presente.");
 }
 
 function renderPhoneRows(items: PhoneNumberDto[]): void {
@@ -555,136 +829,7 @@ function renderPhoneRows(items: PhoneNumberDto[]): void {
     for (const item of items) {
         phoneListContainer.appendChild(createPhoneRow(item));
     }
-}
-
-function collectMailAddressRows(): MailAddressDto[] {
-    if (!emailListContainer) {
-        return [];
-    }
-
-    const rows = Array.from(emailListContainer.querySelectorAll<HTMLDivElement>(".contact-subitem-row"));
-    return rows.map((row) => {
-        const input = row.querySelector<HTMLInputElement>(".contact-subitem-input");
-        return {
-            mailAddressId: Number(row.dataset.id ?? "0"),
-            mail: input?.value.trim() ?? ""
-        };
-    });
-}
-
-function collectPhoneRows(): PhoneNumberDto[] {
-    if (!phoneListContainer) {
-        return [];
-    }
-
-    const rows = Array.from(phoneListContainer.querySelectorAll<HTMLDivElement>(".contact-subitem-row"));
-    return rows.map((row) => ({
-        phoneNumberId: Number(row.dataset.id ?? "0"),
-        prefix: row.querySelector<HTMLInputElement>(".contact-phone-prefix")?.value.trim() || undefined,
-        number: row.querySelector<HTMLInputElement>(".contact-phone-number")?.value.trim() ?? "",
-        nationality: row.querySelector<HTMLInputElement>(".contact-phone-nationality")?.value.trim() || "IT"
-    }));
-}
-
-async function syncMailAddresses(contactId: number): Promise<void> {
-    const originalItems = editingContactDetails?.mailAddresses ?? [];
-    const currentItems = collectMailAddressRows();
-
-    const currentIds = new Set(currentItems.filter((item) => item.mailAddressId > 0).map((item) => item.mailAddressId));
-    for (const original of originalItems) {
-        if (original.mailAddressId > 0 && !currentIds.has(original.mailAddressId)) {
-            await deleteMailAddress(original.mailAddressId);
-        }
-    }
-
-    for (const item of currentItems) {
-        const mail = item.mail.trim();
-        if (!mail) {
-            if (item.mailAddressId > 0) {
-                await deleteMailAddress(item.mailAddressId);
-            }
-            continue;
-        }
-
-        if (item.mailAddressId > 0) {
-            const original = originalItems.find((m) => m.mailAddressId === item.mailAddressId);
-            if (!original || original.mail !== mail) {
-                await updateMailAddress(item.mailAddressId, {
-                    mailAddressId: item.mailAddressId,
-                    mail,
-                    contactId
-                });
-            }
-            continue;
-        }
-
-        await createMailAddress({
-            mailAddressId: 0,
-            mail,
-            contactId
-        });
-    }
-}
-
-async function syncPhoneNumbers(contactId: number): Promise<void> {
-    const originalItems = editingContactDetails?.phoneNumbers ?? [];
-    const currentItems = collectPhoneRows();
-
-    const currentIds = new Set(currentItems.filter((item) => item.phoneNumberId > 0).map((item) => item.phoneNumberId));
-    for (const original of originalItems) {
-        if (original.phoneNumberId > 0 && !currentIds.has(original.phoneNumberId)) {
-            await deletePhoneNumber(original.phoneNumberId);
-        }
-    }
-
-    for (const item of currentItems) {
-        const number = item.number.trim();
-        const nationality = (item.nationality ?? "").trim() || "IT";
-        const prefix = item.prefix?.trim() || undefined;
-
-        if (!number) {
-            if (item.phoneNumberId > 0) {
-                await deletePhoneNumber(item.phoneNumberId);
-            }
-            continue;
-        }
-
-        if (item.phoneNumberId > 0) {
-            const original = originalItems.find((p) => p.phoneNumberId === item.phoneNumberId);
-            const changed = !original
-                || original.number !== number
-                || (original.prefix ?? "") !== (prefix ?? "")
-                || (original.nationality ?? "") !== nationality;
-
-            if (changed) {
-                await updatePhoneNumber(item.phoneNumberId, {
-                    phoneNumberId: item.phoneNumberId,
-                    number,
-                    prefix,
-                    nationality,
-                    contactId
-                });
-            }
-            continue;
-        }
-
-        await createPhoneNumber({
-            phoneNumberId: 0,
-            number,
-            prefix,
-            nationality,
-            contactId
-        });
-    }
-}
-
-async function syncContactChannels(): Promise<void> {
-    if (editingContactId == null) {
-        return;
-    }
-
-    await syncMailAddresses(editingContactId);
-    await syncPhoneNumbers(editingContactId);
+    ensureSubitemsPlaceholder(phoneListContainer, "Nessun numero presente.");
 }
 
 async function openEditPanel(contact: ContactDto): Promise<void> {
@@ -881,7 +1026,6 @@ function setupEditForm(): void {
             }
 
             await updateContact(editingContactId, payload);
-            await syncContactChannels();
             hidePanel(editPanel, addButton);
             editingContactId = null;
             editingContactDetails = null;
@@ -903,10 +1047,12 @@ function setupEditSubitemButtons(): void {
             emptyElement.remove();
         }
 
-        emailListContainer.appendChild(createEmailRow({
+        const row = createEmailRow({
             mailAddressId: 0,
             mail: ""
-        }));
+        });
+        emailListContainer.appendChild(row);
+        ensureSubitemsPlaceholder(emailListContainer, "Nessuna email presente.");
     });
 
     addPhoneButton?.addEventListener("click", () => {
@@ -919,12 +1065,14 @@ function setupEditSubitemButtons(): void {
             emptyElement.remove();
         }
 
-        phoneListContainer.appendChild(createPhoneRow({
+        const row = createPhoneRow({
             phoneNumberId: 0,
             number: "",
             prefix: "+39",
             nationality: "IT"
-        }));
+        });
+        phoneListContainer.appendChild(row);
+        ensureSubitemsPlaceholder(phoneListContainer, "Nessun numero presente.");
     });
 }
 

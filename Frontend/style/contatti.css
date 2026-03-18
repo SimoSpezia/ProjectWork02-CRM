@@ -265,17 +265,51 @@
 
 .contact-subitem-row {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr);
     gap: 0.45rem;
     align-items: center;
 }
 
 .contact-phone-row {
-    grid-template-columns: 84px minmax(0, 1fr) 80px auto;
+    grid-template-columns: 84px minmax(0, 1fr) 80px;
+}
+
+.contact-subitem-actions {
+    display: flex;
+    gap: 0.35rem;
+    align-items: center;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    grid-column: 1 / -1;
 }
 
 .contact-subitem-input {
     width: 100%;
+}
+
+.mini-action {
+    padding: 0.34rem 0.54rem;
+    min-width: 64px;
+    font-size: 0.74rem;
+}
+
+.save-action-btn {
+    border: 1px solid #0f7c47;
+    background-color: #e8f7ef;
+    color: #0f7c47;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.save-action-btn:hover {
+    background-color: #d8f1e4;
+}
+
+.save-action-btn:disabled,
+.contact-subitem-actions .edit-action-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
 }
 
 .secondary-inline-btn {
