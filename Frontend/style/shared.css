@@ -246,6 +246,10 @@ body {
     border-color: var(--border) !important;
 }
 
+:root[data-theme="dark"] .list-controls {
+    background: linear-gradient(180deg, #2a313a 0%, #242b34 100%);
+}
+
 :root[data-theme="dark"] .company-contacts-list .contact-editor-row:nth-child(odd) {
     background-color: #2b333d !important;
 }
