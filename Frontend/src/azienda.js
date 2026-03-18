@@ -688,20 +688,35 @@ function buildEditCompanyPayload() {
 function buildAddressCell(company) {
     var _a, _b;
     const address = resolveCompanyAddress(company);
+    const hasAddress = [
+        address.street,
+        address.streetNumber,
+        address.zip,
+        address.city,
+        address.province,
+        address.region,
+        address.country
+    ].some((value) => { var _a; return Boolean((_a = value === null || value === void 0 ? void 0 : value.trim) === null || _a === void 0 ? void 0 : _a.call(value)); });
     const cell = document.createElement("td");
     const summary = document.createElement("button");
     summary.type = "button";
     summary.className = "address-toggle";
-    summary.textContent = `${address.street} ${address.streetNumber}`.trim() || "-";
+    summary.textContent = hasAddress
+        ? `${address.street} ${address.streetNumber}`.trim() || address.city || address.country
+        : "...";
     const details = document.createElement("div");
     details.className = "address-details";
     details.hidden = true;
     details.textContent = `${address.street} ${address.streetNumber}, ${address.zip} ${address.city} (${(_a = address.province) !== null && _a !== void 0 ? _a : ""}), ${(_b = address.region) !== null && _b !== void 0 ? _b : ""}, ${address.country}`;
-    summary.addEventListener("click", () => {
-        details.hidden = !details.hidden;
-    });
+    if (hasAddress) {
+        summary.addEventListener("click", () => {
+            details.hidden = !details.hidden;
+        });
+    }
     cell.appendChild(summary);
-    cell.appendChild(details);
+    if (hasAddress) {
+        cell.appendChild(details);
+    }
     return cell;
 }
 function buildWebsiteCell(website) {

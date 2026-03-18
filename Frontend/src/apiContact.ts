@@ -16,6 +16,19 @@ export interface ContactDto {
     companydenomination?: string;
 }
 
+export interface AddressDto {
+    addressId: number;
+    country?: string;
+    region?: string;
+    province?: string;
+    city?: string;
+    street?: string;
+    streetNumber?: string;
+    zip?: string;
+    companyId?: number | null;
+    contactId?: number | null;
+}
+
 export interface CategoryDto {
     categoryId: number;
     description: string;
@@ -60,6 +73,7 @@ export interface PhoneNumberDto {
 export interface ContactDetailsDto extends ContactDto {
     mailAddresses?: MailAddressDto[];
     phoneNumbers?: PhoneNumberDto[];
+    address?: AddressDto;
     company?: {
         companyId: number;
         denomination: string;
@@ -347,4 +361,18 @@ export async function deletePhoneNumber(phoneNumberId: number): Promise<void> {
 
     const message = await response.text();
     throw new Error(message || `HTTP ${response.status}`);
+}
+
+export function createAddress(payload: AddressDto): Promise<AddressDto> {
+    return fetchJson<AddressDto>(`${API_BASE_URL}/Address`, {
+        method: "POST",
+        body: JSON.stringify(payload)
+    });
+}
+
+export function updateAddress(addressId: number, payload: AddressDto): Promise<AddressDto> {
+    return fetchJson<AddressDto>(`${API_BASE_URL}/Address/${addressId}`, {
+        method: "PUT",
+        body: JSON.stringify(payload)
+    });
 }

@@ -212,3 +212,15 @@ export async function deletePhoneNumber(phoneNumberId) {
     const message = await response.text();
     throw new Error(message || `HTTP ${response.status}`);
 }
+export function createAddress(payload) {
+    return fetchJson(`${API_BASE_URL}/Address`, {
+        method: "POST",
+        body: JSON.stringify(payload)
+    });
+}
+export function updateAddress(addressId, payload) {
+    return fetchJson(`${API_BASE_URL}/Address/${addressId}`, {
+        method: "PUT",
+        body: JSON.stringify(payload)
+    });
+}

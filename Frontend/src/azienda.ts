@@ -838,24 +838,39 @@ function buildEditCompanyPayload(): CompanyUpsertPayload {
 
 function buildAddressCell(company: CompanySimpleDto): HTMLTableCellElement {
     const address = resolveCompanyAddress(company);
+    const hasAddress = [
+        address.street,
+        address.streetNumber,
+        address.zip,
+        address.city,
+        address.province,
+        address.region,
+        address.country
+    ].some((value) => Boolean(value?.trim()));
 
     const cell = document.createElement("td");
     const summary = document.createElement("button");
     summary.type = "button";
     summary.className = "address-toggle";
-    summary.textContent = `${address.street} ${address.streetNumber}`.trim() || "-";
+    summary.textContent = hasAddress
+        ? `${address.street} ${address.streetNumber}`.trim() || address.city || address.country
+        : "...";
 
     const details = document.createElement("div");
     details.className = "address-details";
     details.hidden = true;
     details.textContent = `${address.street} ${address.streetNumber}, ${address.zip} ${address.city} (${address.province ?? ""}), ${address.region ?? ""}, ${address.country}`;
 
-    summary.addEventListener("click", () => {
-        details.hidden = !details.hidden;
-    });
+    if (hasAddress) {
+        summary.addEventListener("click", () => {
+            details.hidden = !details.hidden;
+        });
+    }
 
     cell.appendChild(summary);
-    cell.appendChild(details);
+    if (hasAddress) {
+        cell.appendChild(details);
+    }
     return cell;
 }
 

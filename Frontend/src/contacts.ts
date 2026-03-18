@@ -3,6 +3,7 @@ import { createAddressSelectBinding } from "./address.js";
 import { getMailAddressTypes } from "./apiMailAddressType.js";
 import { getPhoneNumberTypes } from "./apiPhoneNumberType.js";
 import {
+    AddressDto,
     CategoryDto,
     ContactTypeDto,
     ContactDetailsDto,
@@ -11,6 +12,7 @@ import {
     MailAddressDto,
     PhoneNumberDto,
     addCategoryToContact,
+    createAddress,
     createContact,
     createContactAndReturn,
     createContactWithCompany,
@@ -26,6 +28,7 @@ import {
     getContactTypes,
     getContactWithDetails,
     removeCategoryFromContact,
+    updateAddress,
     updateContact,
     updateMailAddress,
     updatePhoneNumber
@@ -196,6 +199,79 @@ function validatePhoneFields(prefix: string, number: string, nationality: string
     }
 
     return null;
+}
+
+function normalizeAddressValue(value?: string): string | undefined {
+    const normalized = (value ?? "").trim();
+    return normalized.length > 0 ? normalized : undefined;
+}
+
+function buildAddressPayload(contactId: number, addressId: number | null, formPrefix: "contact" | "edit-contact"): AddressDto {
+    return {
+        addressId: addressId ?? 0,
+        contactId,
+        companyId: null,
+        country: normalizeAddressValue(elementValue(`${formPrefix}-address-country`)),
+        region: normalizeAddressValue(elementValue(`${formPrefix}-address-region`)),
+        province: normalizeAddressValue(elementValue(`${formPrefix}-address-province`)),
+        city: normalizeAddressValue(elementValue(`${formPrefix}-address-city`)),
+        street: normalizeAddressValue(elementValue(`${formPrefix}-address-street`)),
+        streetNumber: normalizeAddressValue(elementValue(`${formPrefix}-address-street-number`)),
+        zip: normalizeAddressValue(elementValue(`${formPrefix}-address-zip`))
+    };
+}
+
+function hasAnyAddressValue(address: AddressDto): boolean {
+    return [
+        address.country,
+        address.region,
+        address.province,
+        address.city,
+        address.street,
+        address.streetNumber,
+        address.zip
+    ].some((value) => (value ?? "").trim().length > 0);
+}
+
+async function upsertContactAddress(contactId: number, existingAddressId: number | null): Promise<void> {
+    const payload = buildAddressPayload(contactId, existingAddressId, "edit-contact");
+    if (!hasAnyAddressValue(payload)) {
+        return;
+    }
+
+    if (existingAddressId != null && existingAddressId > 0) {
+        await updateAddress(existingAddressId, payload);
+        return;
+    }
+
+    await createAddress({
+        ...payload,
+        addressId: 0,
+        contactId
+    });
+}
+
+async function createContactAddressFromAddForm(contactId: number): Promise<void> {
+    const payload = buildAddressPayload(contactId, null, "contact");
+    if (!hasAnyAddressValue(payload)) {
+        return;
+    }
+
+    await createAddress({
+        ...payload,
+        addressId: 0,
+        contactId
+    });
+}
+
+function fillEditAddressFields(address?: AddressDto | null): void {
+    setElementValue("edit-contact-address-street", address?.street ?? "");
+    setElementValue("edit-contact-address-street-number", address?.streetNumber ?? "");
+    setElementValue("edit-contact-address-zip", address?.zip ?? "");
+    setElementValue("edit-contact-address-country", address?.country ?? "");
+    setElementValue("edit-contact-address-region", address?.region ?? "");
+    setElementValue("edit-contact-address-province", address?.province ?? "");
+    setElementValue("edit-contact-address-city", address?.city ?? "");
 }
 
 function populateCompanySelect(selectId: string, selectedDenomination = ""): void {
@@ -688,14 +764,17 @@ function getContactCompanyDenomination(contact: ContactDto): string {
 }
 
 function fillEditForm(contact: ContactDto): void {
+    const associatedCompanyDenomination = getContactCompanyDenomination(contact);
+    const details = contact as ContactDetailsDto;
+
     setElementValue("edit-contact-id", String(contact.contactId));
     setElementValue("edit-contact-name", contact.name);
     setElementValue("edit-contact-surname", contact.surname);
-    populateCompanySelect("edit-contact-company", getContactCompanyDenomination(contact));
+    populateCompanySelect("edit-contact-company", associatedCompanyDenomination);
     setElementValue("edit-contact-title-input", contact.title ?? "");
     setElementValue("edit-contact-work-role", contact.workRole ?? "");
     const selectedTypeDescription = (
-        (contact as ContactDetailsDto).contactType?.description
+        details.contactType?.description
         ?? contact.typeDenomination
         ?? ""
     ).trim();
@@ -704,6 +783,7 @@ function fillEditForm(contact: ContactDto): void {
     setElementValue("edit-contact-gender", contact.gender ?? "");
     setElementValue("edit-contact-birthday", toDateInputValue(contact.birthday ?? ""));
     setElementValue("edit-contact-note", contact.note ?? "");
+    fillEditAddressFields(details.address);
 }
 
 async function syncContactCategorySelection(contactId: number): Promise<void> {
@@ -772,7 +852,7 @@ async function migrateContactToSelectedCompany(
     sourceContactId: number,
     selectedCompanyId: number | null,
     payload: ContactUpsertPayload
-): Promise<void> {
+): Promise<number> {
     const createdContact = selectedCompanyId == null
         ? await createContactAndReturn(payload)
         : await createContactWithCompanyAndReturn(selectedCompanyId, payload);
@@ -780,6 +860,8 @@ async function migrateContactToSelectedCompany(
     await copyChannelsToContact(createdContact.contactId);
     await applySelectedCategoryToContact(createdContact.contactId);
     await deleteContact(sourceContactId);
+
+    return createdContact.contactId;
 }
 
 function ensureSubitemsPlaceholder(container: HTMLDivElement | null, message: string): void {
@@ -1391,12 +1473,11 @@ function setupAddForm(): void {
             }
 
             const selectedCompanyId = getSelectedCompanyId("contact-company");
+            const createdContact = selectedCompanyId != null
+                ? await createContactWithCompanyAndReturn(selectedCompanyId, payload)
+                : await createContactAndReturn(payload);
 
-            if (selectedCompanyId != null) {
-                await createContactWithCompany(selectedCompanyId, payload);
-            } else {
-                await createContact(payload);
-            }
+            await createContactAddressFromAddForm(createdContact.contactId);
 
             addForm.reset();
             hidePanel(addPanel, addButton);
@@ -1438,10 +1519,12 @@ function setupEditForm(): void {
                 : getContactCompanyDenomination(editingContactDetails).trim().toLowerCase();
 
             if (selectedCompanyName !== currentCompanyName) {
-                await migrateContactToSelectedCompany(editingContactId, selectedCompanyId, payload);
+                const createdContactId = await migrateContactToSelectedCompany(editingContactId, selectedCompanyId, payload);
+                await upsertContactAddress(createdContactId, null);
             } else {
                 await updateContact(editingContactId, payload);
                 await syncContactCategorySelection(editingContactId);
+                await upsertContactAddress(editingContactId, editingContactDetails?.address?.addressId ?? null);
             }
 
             hidePanel(editPanel, addButton);
@@ -1453,6 +1536,7 @@ function setupEditForm(): void {
             showError(editError, getUpsertErrorMessage(error));
         }
     });
+
 }
 
 function setupEditSubitemButtons(): void {
