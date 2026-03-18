@@ -271,7 +271,7 @@
 }
 
 .contact-phone-row {
-    grid-template-columns: 84px minmax(0, 1fr) 80px;
+    grid-template-columns: 140px 84px minmax(0, 1fr) 80px;
 }
 
 .contact-subitem-actions {

@@ -1,5 +1,7 @@
 import { hidePanel, initializeMenuAndTheme, showPanel } from "./common.js";
 import { createAddressSelectBinding } from "./address.js";
+import { getMailAddressTypes } from "./apiMailAddressType.js";
+import { getPhoneNumberTypes } from "./apiPhoneNumberType.js";
 import {
     ContactDetailsDto,
     ContactDto,
@@ -20,6 +22,12 @@ import {
     updatePhoneNumber
 } from "./apiContact.js";
 import { CompanySimpleDto, getCompanies } from "./apiAzienda.js";
+
+type ContactChannelTypeOption = {
+    id: number;
+    description: string;
+    priority: number;
+};
 
 const tableBody = document.getElementById("table-contact-body") as HTMLTableSectionElement | null;
 
@@ -50,6 +58,8 @@ let editingContactDetails: ContactDetailsDto | null = null;
 let popupResolver: ((result: boolean) => void) | null = null;
 let popupMode: "confirm" | "message" | null = null;
 let companyOptions: CompanySimpleDto[] = [];
+let mailAddressTypeOptions: ContactChannelTypeOption[] = [];
+let phoneNumberTypeOptions: ContactChannelTypeOption[] = [];
 let allContacts: ContactDto[] = [];
 let contactNameFilter = "";
 let contactSortField: "name" | "surname" | "company" | "birthday" = "name";
@@ -58,6 +68,12 @@ let contactSortDirection: "asc" | "desc" = "asc";
 let contactNameFilterInput: HTMLInputElement | null = null;
 let contactSortFieldSelect: HTMLSelectElement | null = null;
 let contactSortDirectionButton: HTMLButtonElement | null = null;
+
+const PERSON_NAME_REGEX = /^[A-Za-zÀ-ÖØ-öø-ÿ' -]{2,60}$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
+const PHONE_PREFIX_REGEX = /^\+[0-9]{1,4}$/;
+const PHONE_NUMBER_REGEX = /^[0-9]{5,15}$/;
+const NATIONALITY_REGEX = /^[A-Za-z]{2}$/;
 
 const addAddressBinding = createAddressSelectBinding({
     countryId: "contact-address-country",
@@ -83,6 +99,91 @@ function setElementValue(id: string, value: string): void {
     if (element) {
         element.value = value;
     }
+}
+
+function isValidPersonName(value: string): boolean {
+    return PERSON_NAME_REGEX.test(value.trim());
+}
+
+function isValidEmail(value: string): boolean {
+    return EMAIL_REGEX.test(value.trim());
+}
+
+function validateBirthday(value?: string): string | null {
+    const birthday = (value ?? "").trim();
+    if (!birthday) {
+        return "Inserisci la data di nascita.";
+    }
+
+    const birthDate = new Date(birthday);
+    if (Number.isNaN(birthDate.getTime())) {
+        return "Data di nascita non valida.";
+    }
+
+    const today = new Date();
+    const todayAtMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    if (birthDate > todayAtMidnight) {
+        return "La data di nascita non puo essere nel futuro.";
+    }
+
+    if (birthDate.getFullYear() < 1900) {
+        return "Inserisci una data di nascita realistica (dal 1900 in poi).";
+    }
+
+    return null;
+}
+
+function validateContactPayload(payload: ContactUpsertPayload): string | null {
+    if (!isValidPersonName(payload.name ?? "")) {
+        return "Nome non valido: usa almeno 2 caratteri alfabetici.";
+    }
+
+    if (!isValidPersonName(payload.surname ?? "")) {
+        return "Cognome non valido: usa almeno 2 caratteri alfabetici.";
+    }
+
+    const birthdayError = validateBirthday(payload.birthday);
+    if (birthdayError) {
+        return birthdayError;
+    }
+
+    if ((payload.title ?? "").length > 80) {
+        return "Titolo troppo lungo (massimo 80 caratteri).";
+    }
+
+    if ((payload.workRole ?? "").length > 120) {
+        return "Ruolo troppo lungo (massimo 120 caratteri).";
+    }
+
+    if ((payload.gender ?? "").length > 20) {
+        return "Genere troppo lungo (massimo 20 caratteri).";
+    }
+
+    if ((payload.note ?? "").length > 1000) {
+        return "Note troppo lunghe (massimo 1000 caratteri).";
+    }
+
+    return null;
+}
+
+function validatePhoneFields(prefix: string, number: string, nationality: string): string | null {
+    const normalizedNumber = number.trim();
+    const normalizedPrefix = prefix.trim();
+    const normalizedNationality = nationality.trim();
+
+    if (!PHONE_NUMBER_REGEX.test(normalizedNumber)) {
+        return "Numero non valido: inserisci solo cifre (5-15).";
+    }
+
+    if (normalizedPrefix && !PHONE_PREFIX_REGEX.test(normalizedPrefix)) {
+        return "Prefisso non valido: usa il formato +39.";
+    }
+
+    if (!NATIONALITY_REGEX.test(normalizedNationality)) {
+        return "Nazionalita non valida: inserisci un codice a 2 lettere (es. IT).";
+    }
+
+    return null;
 }
 
 function populateCompanySelect(selectId: string, selectedDenomination = ""): void {
@@ -140,6 +241,35 @@ async function loadCompanyOptions(): Promise<void> {
 
     populateCompanySelect("contact-company");
     populateCompanySelect("edit-contact-company");
+}
+
+async function loadContactChannelTypeOptions(): Promise<void> {
+    try {
+        const [mailTypes, phoneTypes] = await Promise.all([
+            getMailAddressTypes(),
+            getPhoneNumberTypes()
+        ]);
+
+        mailAddressTypeOptions = [...mailTypes]
+            .sort((a, b) => a.priority - b.priority || a.description.localeCompare(b.description, "it", { sensitivity: "base" }))
+            .map((item) => ({
+                id: item.mailAddressTypeId,
+                description: item.description,
+                priority: item.priority
+            }));
+
+        phoneNumberTypeOptions = [...phoneTypes]
+            .sort((a, b) => a.priority - b.priority || a.description.localeCompare(b.description, "it", { sensitivity: "base" }))
+            .map((item) => ({
+                id: item.phoneNumberTypeId,
+                description: item.description,
+                priority: item.priority
+            }));
+    } catch (error) {
+        console.error("Errore caricamento tipi email/telefono", error);
+        mailAddressTypeOptions = [];
+        phoneNumberTypeOptions = [];
+    }
 }
 
 function showError(errorElement: HTMLParagraphElement | null, message: string): void {
@@ -443,11 +573,26 @@ function buildEditPayload(): ContactUpsertPayload {
     };
 }
 
+function getContactCompanyDenomination(contact: ContactDto): string {
+    if ((contact.companyDenomination ?? "").trim()) {
+        return contact.companyDenomination ?? "";
+    }
+
+    if ("company" in contact) {
+        const detailCompany = (contact as ContactDetailsDto).company;
+        if ((detailCompany?.denomination ?? "").trim()) {
+            return detailCompany?.denomination ?? "";
+        }
+    }
+
+    return "";
+}
+
 function fillEditForm(contact: ContactDto): void {
     setElementValue("edit-contact-id", String(contact.contactId));
     setElementValue("edit-contact-name", contact.name);
     setElementValue("edit-contact-surname", contact.surname);
-    populateCompanySelect("edit-contact-company", contact.companyDenomination ?? "");
+    populateCompanySelect("edit-contact-company", getContactCompanyDenomination(contact));
     setElementValue("edit-contact-title-input", contact.title ?? "");
     setElementValue("edit-contact-work-role", contact.workRole ?? "");
     setElementValue("edit-contact-gender", contact.gender ?? "");
@@ -478,12 +623,50 @@ function ensureSubitemsPlaceholder(container: HTMLDivElement | null, message: st
     container.appendChild(empty);
 }
 
+function createTypeSelect(
+    options: ContactChannelTypeOption[],
+    placeholder: string,
+    selectedId?: number | null
+): HTMLSelectElement {
+    const select = document.createElement("select");
+    select.className = "contact-subitem-input contact-subitem-select";
+
+    const placeholderOption = document.createElement("option");
+    placeholderOption.value = "";
+    placeholderOption.textContent = placeholder;
+    select.appendChild(placeholderOption);
+
+    for (const option of options) {
+        const item = document.createElement("option");
+        item.value = String(option.id);
+        item.textContent = option.description;
+        select.appendChild(item);
+    }
+
+    if (selectedId != null && selectedId > 0) {
+        select.value = String(selectedId);
+    } else {
+        select.value = "";
+    }
+
+    return select;
+}
+
+function parseOptionalTypeId(select: HTMLSelectElement): number | undefined {
+    const parsed = Number(select.value);
+    if (!Number.isInteger(parsed) || parsed <= 0) {
+        return undefined;
+    }
+
+    return parsed;
+}
+
 function setEmailRowEditMode(row: HTMLDivElement, isEditing: boolean): void {
-    const input = row.querySelector<HTMLInputElement>(".contact-subitem-input");
+    const inputs = row.querySelectorAll<HTMLInputElement | HTMLSelectElement>(".contact-subitem-input");
     const editButton = row.querySelector<HTMLButtonElement>(".contact-email-edit");
     const saveButton = row.querySelector<HTMLButtonElement>(".contact-email-save");
 
-    if (input) {
+    for (const input of inputs) {
         input.disabled = !isEditing;
     }
 
@@ -497,7 +680,7 @@ function setEmailRowEditMode(row: HTMLDivElement, isEditing: boolean): void {
 }
 
 function setPhoneRowEditMode(row: HTMLDivElement, isEditing: boolean): void {
-    const inputs = row.querySelectorAll<HTMLInputElement>(".contact-subitem-input");
+    const inputs = row.querySelectorAll<HTMLInputElement | HTMLSelectElement>(".contact-subitem-input");
     const editButton = row.querySelector<HTMLButtonElement>(".contact-phone-edit");
     const saveButton = row.querySelector<HTMLButtonElement>(".contact-phone-save");
 
@@ -539,7 +722,14 @@ function createEmailRow(item: MailAddressDto): HTMLDivElement {
     input.type = "email";
     input.className = "contact-subitem-input";
     input.placeholder = "email@esempio.it";
+    input.maxLength = 120;
     input.value = item.mail ?? "";
+
+    const typeSelect = createTypeSelect(
+        mailAddressTypeOptions,
+        "Tipo email",
+        item.mailAddressTypeId ?? item.mailAddressType?.mailAddressTypeId ?? null
+    );
 
     const actions = document.createElement("div");
     actions.className = "contact-subitem-actions";
@@ -573,17 +763,19 @@ function createEmailRow(item: MailAddressDto): HTMLDivElement {
         }
 
         const mail = input.value.trim();
-        if (!mail) {
-            showError(editError, "Inserisci una email valida prima di salvare.");
+        if (!isValidEmail(mail)) {
+            showError(editError, "Inserisci una email valida (es. nome@dominio.it). ");
             return;
         }
 
         try {
             const mailAddressId = Number(row.dataset.id ?? "0");
+            const mailAddressTypeId = parseOptionalTypeId(typeSelect);
             if (mailAddressId > 0) {
                 await updateMailAddress(mailAddressId, {
                     mailAddressId,
                     mail,
+                    mailAddressTypeId,
                     contactId: editingContactId
                 });
 
@@ -591,6 +783,7 @@ function createEmailRow(item: MailAddressDto): HTMLDivElement {
                 const current = list.find((entry) => entry.mailAddressId === mailAddressId);
                 if (current) {
                     current.mail = mail;
+                    current.mailAddressTypeId = mailAddressTypeId;
                 }
                 setEmailRowEditMode(row, false);
                 return;
@@ -599,6 +792,7 @@ function createEmailRow(item: MailAddressDto): HTMLDivElement {
             await createMailAddress({
                 mailAddressId: 0,
                 mail,
+                mailAddressTypeId,
                 contactId: editingContactId
             });
             await refreshEditContactChannels();
@@ -639,6 +833,7 @@ function createEmailRow(item: MailAddressDto): HTMLDivElement {
     });
 
     row.appendChild(input);
+    row.appendChild(typeSelect);
     actions.appendChild(editButton);
     actions.appendChild(saveButton);
     actions.appendChild(removeButton);
@@ -657,19 +852,28 @@ function createPhoneRow(item: PhoneNumberDto): HTMLDivElement {
     prefixInput.type = "text";
     prefixInput.className = "contact-subitem-input contact-phone-prefix";
     prefixInput.placeholder = "+39";
+    prefixInput.maxLength = 5;
     prefixInput.value = item.prefix ?? "";
 
     const numberInput = document.createElement("input");
     numberInput.type = "text";
     numberInput.className = "contact-subitem-input contact-phone-number";
     numberInput.placeholder = "3331234567";
+    numberInput.maxLength = 15;
     numberInput.value = item.number ?? "";
 
     const nationalityInput = document.createElement("input");
     nationalityInput.type = "text";
     nationalityInput.className = "contact-subitem-input contact-phone-nationality";
     nationalityInput.placeholder = "IT";
+    nationalityInput.maxLength = 2;
     nationalityInput.value = item.nationality ?? "IT";
+
+    const typeSelect = createTypeSelect(
+        phoneNumberTypeOptions,
+        "Tipo numero",
+        item.phoneNumberTypeId ?? item.phoneNumberType?.phoneNumberTypeId ?? null
+    );
 
     const actions = document.createElement("div");
     actions.className = "contact-subitem-actions";
@@ -703,22 +907,27 @@ function createPhoneRow(item: PhoneNumberDto): HTMLDivElement {
         }
 
         const number = numberInput.value.trim();
-        const nationality = nationalityInput.value.trim() || "IT";
+        const nationality = (nationalityInput.value.trim() || "IT").toUpperCase();
         const prefix = prefixInput.value.trim() || undefined;
 
-        if (!number) {
-            showError(editError, "Inserisci un numero di telefono prima di salvare.");
+        const phoneError = validatePhoneFields(prefix ?? "", number, nationality);
+        if (phoneError) {
+            showError(editError, phoneError);
             return;
         }
 
+        nationalityInput.value = nationality;
+
         try {
             const phoneNumberId = Number(row.dataset.id ?? "0");
+            const phoneNumberTypeId = parseOptionalTypeId(typeSelect);
             if (phoneNumberId > 0) {
                 await updatePhoneNumber(phoneNumberId, {
                     phoneNumberId,
                     number,
                     prefix,
                     nationality,
+                    phoneNumberTypeId,
                     contactId: editingContactId
                 });
 
@@ -728,6 +937,7 @@ function createPhoneRow(item: PhoneNumberDto): HTMLDivElement {
                     current.number = number;
                     current.prefix = prefix;
                     current.nationality = nationality;
+                    current.phoneNumberTypeId = phoneNumberTypeId;
                 }
                 setPhoneRowEditMode(row, false);
                 return;
@@ -738,6 +948,7 @@ function createPhoneRow(item: PhoneNumberDto): HTMLDivElement {
                 number,
                 prefix,
                 nationality,
+                phoneNumberTypeId,
                 contactId: editingContactId
             });
             await refreshEditContactChannels();
@@ -777,6 +988,7 @@ function createPhoneRow(item: PhoneNumberDto): HTMLDivElement {
         }
     });
 
+    row.appendChild(typeSelect);
     row.appendChild(prefixInput);
     row.appendChild(numberInput);
     row.appendChild(nationalityInput);
@@ -981,6 +1193,12 @@ function setupAddForm(): void {
 
         try {
             const payload = buildAddPayload();
+            const validationError = validateContactPayload(payload);
+            if (validationError) {
+                showError(addError, validationError);
+                return;
+            }
+
             const selectedCompanyId = getSelectedCompanyId("contact-company");
 
             if (selectedCompanyId != null) {
@@ -1014,6 +1232,12 @@ function setupEditForm(): void {
 
         try {
             const payload = buildEditPayload();
+            const validationError = validateContactPayload(payload);
+            if (validationError) {
+                showError(editError, validationError);
+                return;
+            }
+
             const selectedCompanyId = getSelectedCompanyId("edit-contact-company");
             const selectedCompanyName = selectedCompanyId == null
                 ? ""
@@ -1103,6 +1327,7 @@ async function init(): Promise<void> {
     await addAddressBinding?.initialize();
     await editAddressBinding?.initialize();
     setupPopup();
+    await loadContactChannelTypeOptions();
     await loadCompanyOptions();
     setupButtons();
     setupAddForm();

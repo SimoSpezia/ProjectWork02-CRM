@@ -17,6 +17,12 @@ export interface ContactDto {
 export interface MailAddressDto {
     mailAddressId: number;
     mail: string;
+    mailAddressTypeId?: number;
+    mailAddressType?: {
+        mailAddressTypeId: number;
+        description: string;
+        priority: number;
+    };
     contactId?: number;
 }
 
@@ -25,6 +31,12 @@ export interface PhoneNumberDto {
     number: string;
     prefix?: string;
     nationality: string;
+    phoneNumberTypeId?: number;
+    phoneNumberType?: {
+        phoneNumberTypeId: number;
+        description: string;
+        priority: number;
+    };
     contactId?: number;
 }
 

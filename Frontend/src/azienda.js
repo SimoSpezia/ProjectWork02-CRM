@@ -33,6 +33,9 @@ let companySortDirection = "asc";
 let companyNameFilterInput = null;
 let companySortFieldSelect = null;
 let companySortDirectionButton = null;
+const PERSON_NAME_REGEX = /^[A-Za-zÀ-ÖØ-öø-ÿ' -]{2,60}$/;
+const VAT_NUMBER_REGEX = /^(IT)?\d{11}$/i;
+const ZIP_REGEX = /^\d{5}$/;
 const addAddressBinding = createAddressSelectBinding({
     countryId: "company-address-country",
     regionId: "company-address-region",
@@ -55,6 +58,77 @@ function setElementValue(id, value) {
     if (element) {
         element.value = value;
     }
+}
+function isValidPersonName(value) {
+    return PERSON_NAME_REGEX.test(value.trim());
+}
+function validateBirthday(value) {
+    const birthday = (value !== null && value !== void 0 ? value : "").trim();
+    if (!birthday) {
+        return "Inserisci la data di nascita.";
+    }
+    const birthDate = new Date(birthday);
+    if (Number.isNaN(birthDate.getTime())) {
+        return "Data di nascita non valida.";
+    }
+    const today = new Date();
+    const todayAtMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    if (birthDate > todayAtMidnight) {
+        return "La data di nascita non puo essere nel futuro.";
+    }
+    if (birthDate.getFullYear() < 1900) {
+        return "Inserisci una data di nascita realistica (dal 1900 in poi).";
+    }
+    return null;
+}
+function validateCompanyPayload(payload) {
+    var _a, _b, _c, _d, _e, _f, _g, _h;
+    const denomination = ((_a = payload.denomination) !== null && _a !== void 0 ? _a : "").trim();
+    const vatNumber = ((_b = payload.vatNumber) !== null && _b !== void 0 ? _b : "").trim();
+    const website = ((_c = payload.website) !== null && _c !== void 0 ? _c : "").trim();
+    const zip = ((_d = payload.address.zip) !== null && _d !== void 0 ? _d : "").trim();
+    if (denomination.length < 2 || denomination.length > 120) {
+        return "Nome azienda non valido (2-120 caratteri).";
+    }
+    if (!VAT_NUMBER_REGEX.test(vatNumber)) {
+        return "Partita IVA non valida: usa 11 cifre (opzionale prefisso IT).";
+    }
+    if (!ZIP_REGEX.test(zip)) {
+        return "CAP non valido: inserisci 5 cifre.";
+    }
+    if (!((_e = payload.address.country) === null || _e === void 0 ? void 0 : _e.trim())) {
+        return "Seleziona la nazione.";
+    }
+    if (!((_f = payload.address.region) === null || _f === void 0 ? void 0 : _f.trim())) {
+        return "Inserisci la regione.";
+    }
+    if (!((_g = payload.address.province) === null || _g === void 0 ? void 0 : _g.trim())) {
+        return "Inserisci la provincia.";
+    }
+    if (!((_h = payload.address.city) === null || _h === void 0 ? void 0 : _h.trim())) {
+        return "Inserisci la citta.";
+    }
+    if (!payload.address.street.trim()) {
+        return "Inserisci via/piazza.";
+    }
+    if (website) {
+        try {
+            const parsedUrl = new URL(website);
+            if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
+                return "Sito web non valido: usa un URL http o https.";
+            }
+        }
+        catch (_j) {
+            return "Sito web non valido: inserisci un URL completo (es. https://www.esempio.it).";
+        }
+    }
+    if ((payload.size || "").length > 80) {
+        return "Dimensione troppo lunga (massimo 80 caratteri).";
+    }
+    if ((payload.note || "").length > 1000) {
+        return "Note troppo lunghe (massimo 1000 caratteri).";
+    }
+    return null;
 }
 function showError(errorElement, message) {
     if (!errorElement) {
@@ -207,6 +281,16 @@ function readContactFromRow(row) {
     if (!name || !surname || !birthdayRaw) {
         throw new Error("Compila Nome, Cognome e Data di nascita per ogni contatto inserito.");
     }
+    if (!isValidPersonName(name)) {
+        throw new Error("Nome contatto non valido: usa almeno 2 caratteri alfabetici.");
+    }
+    if (!isValidPersonName(surname)) {
+        throw new Error("Cognome contatto non valido: usa almeno 2 caratteri alfabetici.");
+    }
+    const birthdayError = validateBirthday(birthdayRaw);
+    if (birthdayError) {
+        throw new Error(birthdayError);
+    }
     return {
         contactId: Number(getFieldValue(row, "contactId")) || 0,
         name,
@@ -256,7 +340,11 @@ function createContactEditorRow(contact) {
         <input type="text" data-field="workRole" value="${(_f = contact === null || contact === void 0 ? void 0 : contact.workRole) !== null && _f !== void 0 ? _f : ""}">
 
         <label>Genere</label>
-        <input type="text" data-field="gender" value="${(_g = contact === null || contact === void 0 ? void 0 : contact.gender) !== null && _g !== void 0 ? _g : ""}">
+        <select data-field="gender">
+            <option value="" ${(((_g = contact === null || contact === void 0 ? void 0 : contact.gender) !== null && _g !== void 0 ? _g : "") === "") ? "selected" : ""}>Seleziona genere</option>
+            <option value="M" ${(((_h = contact === null || contact === void 0 ? void 0 : contact.gender) !== null && _h !== void 0 ? _h : "") === "M") ? "selected" : ""}>M</option>
+            <option value="F" ${(((_j = contact === null || contact === void 0 ? void 0 : contact.gender) !== null && _j !== void 0 ? _j : "") === "F") ? "selected" : ""}>F</option>
+        </select>
 
         <label>Data di nascita</label>
         <input type="date" data-field="birthday" value="${toDateInputValue((_h = contact === null || contact === void 0 ? void 0 : contact.birthday) !== null && _h !== void 0 ? _h : "")}" required>
@@ -712,6 +800,11 @@ function setupAddForm() {
         clearError(addError);
         try {
             const payload = buildAddCompanyPayload();
+            const validationError = validateCompanyPayload(payload);
+            if (validationError) {
+                showError(addError, validationError);
+                return;
+            }
             await createCompany(payload);
             addForm.reset();
             await (addAddressBinding === null || addAddressBinding === void 0 ? void 0 : addAddressBinding.setAddress({
@@ -742,6 +835,11 @@ function setupEditForm() {
         }
         try {
             const payload = buildEditCompanyPayload();
+            const validationError = validateCompanyPayload(payload);
+            if (validationError) {
+                showError(editError, validationError);
+                return;
+            }
             const contacts = readContacts(editContactsList);
             if (hasCompanyChanges(payload, editingCompanySnapshot)) {
                 try {

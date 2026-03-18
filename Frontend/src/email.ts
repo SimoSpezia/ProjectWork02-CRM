@@ -86,10 +86,23 @@ function showError(errorElement: HTMLElement | null, message: string): void {
 
 function parsePriority(value: string): number {
     const parsed = Number.parseInt(value, 10);
-    if (Number.isNaN(parsed) || parsed < 0) {
-        throw new Error("Inserisci una priorita valida (numero intero maggiore o uguale a 0).");
+    if (Number.isNaN(parsed) || parsed < 0 || parsed > 999) {
+        throw new Error("Inserisci una priorita valida (numero intero tra 0 e 999).");
     }
     return parsed;
+}
+
+function parseDescription(value: string): string {
+    const description = value.trim();
+    if (description.length < 2 || description.length > 80) {
+        throw new Error("Descrizione non valida: usa da 2 a 80 caratteri.");
+    }
+
+    if (!/[A-Za-z0-9À-ÖØ-öø-ÿ]/.test(description)) {
+        throw new Error("Descrizione non valida: inserisci almeno una lettera o un numero.");
+    }
+
+    return description;
 }
 
 function getApiErrorMessage(error: unknown): string {
@@ -121,7 +134,7 @@ function getApiErrorMessage(error: unknown): string {
 function buildAddPayload(): MailAddressTypePayload {
     return {
         mailAddressTypeId: 0,
-        description: elementValue("email-type-description"),
+        description: parseDescription(elementValue("email-type-description")),
         priority: parsePriority(elementValue("email-type-priority"))
     };
 }
@@ -129,7 +142,7 @@ function buildAddPayload(): MailAddressTypePayload {
 function buildEditPayload(): MailAddressTypePayload {
     return {
         mailAddressTypeId: Number(elementValue("edit-email-type-id")) || 0,
-        description: elementValue("edit-email-type-description"),
+        description: parseDescription(elementValue("edit-email-type-description")),
         priority: parsePriority(elementValue("edit-email-type-priority"))
     };
 }
