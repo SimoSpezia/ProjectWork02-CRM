@@ -164,24 +164,15 @@ namespace Crm_Gruppo_5.Controllers
         [HttpDelete("{id}")]
         public IActionResult Delete([FromRoute] int id)
         {
-            var company = _ctx.Companies.Include(c => c.Contacts).SingleOrDefault(c => c.CompanyId == id);
+            var company = _ctx.Companies.SingleOrDefault(c => c.CompanyId == id);
 
             if (company == null)
             {
                 return BadRequest();
             }
-
-            if (company.Contacts != null && company.Contacts.Any())
-            {
-                return Conflict("Unable to delete the company");
-            }
-            else
-            {
                 _ctx.Companies.Remove(company);
                 _ctx.SaveChanges();
                 return NoContent();
-            }
-
         }
     }
 }

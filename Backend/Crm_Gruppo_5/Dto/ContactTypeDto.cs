@@ -5,6 +5,7 @@ namespace Crm_Gruppo_5.Dto
     public class ContactTypeDto
     {
         public int ContactTypeId { get; set; }
+        [MaxLength(ValidationLengths.LongText)]
         public required string Description { get; set; }
     }
 }

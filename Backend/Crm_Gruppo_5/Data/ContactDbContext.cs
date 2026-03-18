@@ -17,7 +17,7 @@ namespace Crm_Gruppo_5.Data
             modelBuilder.Entity<Contact>()
                 .HasOne(c => c.Company)
                 .WithMany(c => c.Contacts)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.SetNull);
 
             // Company - Address (1-a-1) [CASCADE]
             modelBuilder.Entity<Company>()
