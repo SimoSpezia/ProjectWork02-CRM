@@ -2,6 +2,6 @@
 <Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <ActiveDebugProfile>https</ActiveDebugProfile>
-    <NameOfLastUsedPublishProfile>C:\Users\SpezialeSimone\source\repos\CRM5\Backend\Crm_Gruppo_5\Properties\PublishProfiles\Crm5-backend - Zip Deploy.pubxml</NameOfLastUsedPublishProfile>
+    <NameOfLastUsedPublishProfile>C:\Users\SpezialeSimone\source\repos\CRM5\Backend\Crm_Gruppo_5\Properties\PublishProfiles\Crm-5-backend - Zip Deploy-Demo.pubxml</NameOfLastUsedPublishProfile>
   </PropertyGroup>
 </Project>
