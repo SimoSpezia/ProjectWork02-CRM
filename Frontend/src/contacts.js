@@ -573,21 +573,17 @@ function buildEditPayload() {
         note: elementValue("edit-contact-note") || undefined,
     };
 }
-function getContactCompanyDenomination(contact) {
-    var _a, _b, _c, _d, _e, _f;
-    if (((_a = contact.companyDenomination) !== null && _a !== void 0 ? _a : "").trim()) {
-        return (_b = contact.companyDenomination) !== null && _b !== void 0 ? _b : "";
-    }
-    if (((_c = contact.companydenomination) !== null && _c !== void 0 ? _c : "").trim()) {
-        return (_d = contact.companydenomination) !== null && _d !== void 0 ? _d : "";
-    }
-    if ("company" in contact) {
-        const detailCompany = contact.company;
-        if (((_e = detailCompany === null || detailCompany === void 0 ? void 0 : detailCompany.denomination) !== null && _e !== void 0 ? _e : "").trim()) {
-            return (_f = detailCompany === null || detailCompany === void 0 ? void 0 : detailCompany.denomination) !== null && _f !== void 0 ? _f : "";
+function firstNonEmptyValue(...values) {
+    for (const value of values) {
+        if ((value !== null && value !== void 0 ? value : "").trim().length > 0) {
+            return (value !== null && value !== void 0 ? value : "").trim();
         }
     }
     return "";
+}
+function getContactCompanyDenomination(contact) {
+    var _a, _b;
+    return firstNonEmptyValue(contact.companyDenomination, contact.companydenomination, contact.CompanyDenomination, contact.companyName, contact.CompanyName, contact.denomination, (_a = contact.company) === null || _a === void 0 ? void 0 : _a.denomination, (_b = contact.company) === null || _b === void 0 ? void 0 : _b.Denomination);
 }
 function fillEditForm(contact) {
     var _a, _b, _c, _d, _e, _f, _g, _h, _j;

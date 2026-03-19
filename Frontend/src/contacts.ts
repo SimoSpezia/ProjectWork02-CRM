@@ -744,23 +744,42 @@ function buildEditPayload(): ContactUpsertPayload {
     };
 }
 
-function getContactCompanyDenomination(contact: ContactDto): string {
-    if ((contact.companyDenomination ?? "").trim()) {
-        return contact.companyDenomination ?? "";
-    }
+type ContactCompanyNameCompat = {
+    companyDenomination?: string;
+    companydenomination?: string;
+    CompanyDenomination?: string;
+    companyName?: string;
+    CompanyName?: string;
+    denomination?: string;
+    company?: {
+        denomination?: string;
+        Denomination?: string;
+    };
+};
 
-    if ((contact.companydenomination ?? "").trim()) {
-        return contact.companydenomination ?? "";
-    }
-
-    if ("company" in contact) {
-        const detailCompany = (contact as ContactDetailsDto).company;
-        if ((detailCompany?.denomination ?? "").trim()) {
-            return detailCompany?.denomination ?? "";
+function firstNonEmptyValue(...values: Array<string | undefined | null>): string {
+    for (const value of values) {
+        if ((value ?? "").trim().length > 0) {
+            return value?.trim() ?? "";
         }
     }
 
     return "";
+}
+
+function getContactCompanyDenomination(contact: ContactDto): string {
+    const contactCompat = contact as ContactDto & ContactDetailsDto & ContactCompanyNameCompat;
+
+    return firstNonEmptyValue(
+        contactCompat.companyDenomination,
+        contactCompat.companydenomination,
+        contactCompat.CompanyDenomination,
+        contactCompat.companyName,
+        contactCompat.CompanyName,
+        contactCompat.denomination,
+        contactCompat.company?.denomination,
+        contactCompat.company?.Denomination
+    );
 }
 
 function fillEditForm(contact: ContactDto): void {
