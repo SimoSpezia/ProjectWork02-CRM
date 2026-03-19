@@ -4,6 +4,7 @@ namespace Crm_Gruppo_5.Dto
     public class Mapper
     {
 
+        // Mapper da Company Entity a CompanyDto.
         public CompanyDto MapBaseEntitytoDto(Company entity)
         {
             CompanyDto dto = new CompanyDto
@@ -18,6 +19,7 @@ namespace Crm_Gruppo_5.Dto
             return dto;
         }
 
+        // Mapper da Company Entity a CompanySimpleDto.
         public CompanySimpleDto MapEntitytoSimpleDto(Company entity)
         {
             CompanySimpleDto simpledto = new CompanySimpleDto
@@ -33,6 +35,7 @@ namespace Crm_Gruppo_5.Dto
             return simpledto;
         }
 
+        // Mapper da Contact Entity a ContactSimpleDto.
         public ContactSimpleDto MapEntitytoSimpleDto(Contact entity)
         {
             ContactSimpleDto simpledto = new ContactSimpleDto
@@ -52,6 +55,7 @@ namespace Crm_Gruppo_5.Dto
             return simpledto;
         }
 
+        // Mapper da ContactDto a Contact Entity.
         public Contact MapDtoToEntity(ContactDto dto)
         {
             Contact entity = new Contact
@@ -67,6 +71,7 @@ namespace Crm_Gruppo_5.Dto
             return entity;
         }
 
+        // Mapper da PhoneNumberDto a PhoneNumber Entity.
         public PhoneNumber MapDtoToEntity(PhoneNumberDto dto)
         {
             PhoneNumber entity = new PhoneNumber
@@ -78,6 +83,7 @@ namespace Crm_Gruppo_5.Dto
             return entity;
         }
 
+        // Mapper da MailAddressDto a MailAddress Entity.
         public MailAddress MapDtoToEntity(MailAddressDto dto)
         {
             MailAddress entity = new MailAddress
@@ -87,6 +93,7 @@ namespace Crm_Gruppo_5.Dto
             return entity;
         }
 
+        // Mapper da MailAddressTypeDto a MailAddressType Entity.
         public MailAddressType MapDtoToEntity(MailAddressTypeDto dto)
         {
             MailAddressType entity = new MailAddressType
@@ -97,6 +104,7 @@ namespace Crm_Gruppo_5.Dto
             return entity;
         }
 
+        // Mapper da AddressDto a Address Entity.
         public Address MapDtoToEntity(AddressDto dto)
         {
             Address entity = new Address
@@ -114,6 +122,7 @@ namespace Crm_Gruppo_5.Dto
             return entity;
         }
 
+        // Mapper da Address Entity a AddressDto.
         public AddressDto MapBaseEntityToDto(Address entity)
         {
             AddressDto dto = new AddressDto
@@ -132,6 +141,7 @@ namespace Crm_Gruppo_5.Dto
             return dto;
         }
 
+        // Mapper da CompanySimpleDto a Company Entity.
         public Company MapDtoToEntity(CompanySimpleDto dto)
         {
             Company entity = new Company
@@ -147,6 +157,7 @@ namespace Crm_Gruppo_5.Dto
             return entity;
         }
 
+        // Mapper da Contact Entity a ContactDto.
         public ContactDto MapBaseEntitytoDto(Contact entity)
         {
             ContactDto dto = new ContactDto
@@ -165,6 +176,7 @@ namespace Crm_Gruppo_5.Dto
             return dto;
         }
 
+        // Mapper da Contact Entity a ContactDetailsDto.
         public ContactDetailsDto MapEntityToContactDetailsDto(Contact entity)
         {
             ContactDetailsDto detailsDto = new ContactDetailsDto
@@ -187,6 +199,7 @@ namespace Crm_Gruppo_5.Dto
             return detailsDto;
         }
 
+        // Mapper da ContactType Entity a ContactTypeDto.
         public ContactTypeDto MapBaseEntitytoDto(ContactType entity)
         {
             if (entity == null)
@@ -200,6 +213,7 @@ namespace Crm_Gruppo_5.Dto
             return dto;
         }
 
+        // Mapper da MailAddress Entity a MailAddressDto.
         public MailAddressDto MapBaseEntitytoDto(MailAddress entity)
         {
             if (entity == null)
@@ -214,6 +228,7 @@ namespace Crm_Gruppo_5.Dto
             return dto;
         }
 
+        // Mapper da MailAddress Entity a MailAddressDetailsDto.
         public MailAddressDetailsDto MapEntityToMailAddressDetailsDto(MailAddress entity)
         {
             if (entity == null)
@@ -229,6 +244,7 @@ namespace Crm_Gruppo_5.Dto
             return dto;
         }
 
+        // Mapper da PhoneNumber Entity a PhoneNumberDto.
         public PhoneNumberDto MapBaseEntitytoDto(PhoneNumber entity)
         {
             if (entity == null)
@@ -245,6 +261,7 @@ namespace Crm_Gruppo_5.Dto
             return dto;
         }
 
+        // Mapper da PhoneNumberTypeDto a PhoneNumberType Entity.
         public PhoneNumberType MapDtoToEntity(PhoneNumberTypeDto dto)
         {
             PhoneNumberType entity = new PhoneNumberType
@@ -255,6 +272,7 @@ namespace Crm_Gruppo_5.Dto
             return entity;
         }
 
+        // Mapper da PhoneNumberType Entity a PhoneNumberTypeDto.
         public PhoneNumberTypeDto MapBaseEntitytoDto(PhoneNumberType entity)
         {
             if (entity == null)
@@ -269,6 +287,7 @@ namespace Crm_Gruppo_5.Dto
             return dto;
         }
 
+        // Mapper da PhoneNumber Entity a PhoneNumberDetailsDto.
         public PhoneNumberDetailsDto MapEntityToPhoneNumberDetailsDto(PhoneNumber entity)
         {
             if (entity == null)
@@ -286,6 +305,7 @@ namespace Crm_Gruppo_5.Dto
             return dto;
         }
 
+        // Mapper da Category Entity a CategoryDto.
         public CategoryDto MapBaseEntitytoDto(Category entity)
         {
             if (entity == null)
@@ -299,6 +319,7 @@ namespace Crm_Gruppo_5.Dto
             return dto;
         }
 
+        // Mapper da MailAddressType Entity a MailAddressTypeDto.
         public MailAddressTypeDto MapBaseEntitytoDto(MailAddressType entity)
         {
             if (entity == null)
@@ -313,6 +334,7 @@ namespace Crm_Gruppo_5.Dto
             return dto;
         }
 
+        // Mapper da ContactTypeDto a ContactType Entity.
         public ContactType MapDtoToEntity(ContactTypeDto dto)
         {
             ContactType entity = new ContactType
@@ -322,6 +344,7 @@ namespace Crm_Gruppo_5.Dto
             return entity;
         }
 
+        // Mapper da CategoryDto a Category Entity.
         public Category MapDtoToEntity(CategoryDto dto)
         {
             Category entity = new Category
