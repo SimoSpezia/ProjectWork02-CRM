@@ -129,6 +129,21 @@ namespace Crm_Gruppo_5.Controllers
             var entity = _mapper.MapDtoToEntity(mailAddress);
             entity.Contact = contact;
 
+            if (mailAddress.MailAddressTypeId.HasValue)
+            {
+                var mailAddressType = _ctx.MailAddressTypes.SingleOrDefault(t => t.MailAddressTypeId == mailAddress.MailAddressTypeId.Value);
+                if (mailAddressType == null)
+                {
+                    return BadRequest($"MailAddressType with id {mailAddress.MailAddressTypeId.Value} not found");
+                }
+
+                entity.MailAddressType = mailAddressType;
+            }
+            else
+            {
+                entity.MailAddressType = null;
+            }
+
             _ctx.MailAddresses.Add(entity);
 
             if (_ctx.SaveChanges() > 0)
@@ -143,7 +158,9 @@ namespace Crm_Gruppo_5.Controllers
         [Route("{id}")]
         public IActionResult Update([FromRoute] int id, [FromBody] MailAddressDto Dto)
         {
-            var mail = _ctx.MailAddresses.SingleOrDefault(m => m.MailAddressId == id);
+            var mail = _ctx.MailAddresses
+                .Include(m => m.MailAddressType)
+                .SingleOrDefault(m => m.MailAddressId == id);
 
             if (mail == null)
             {
@@ -151,6 +168,22 @@ namespace Crm_Gruppo_5.Controllers
             }
             if (!string.IsNullOrEmpty(Dto.Mail))
                 mail.Mail = Dto.Mail;
+
+            if (Dto.MailAddressTypeId.HasValue)
+            {
+                var mailAddressType = _ctx.MailAddressTypes.SingleOrDefault(t => t.MailAddressTypeId == Dto.MailAddressTypeId.Value);
+                if (mailAddressType == null)
+                {
+                    return BadRequest($"MailAddressType with id {Dto.MailAddressTypeId.Value} not found");
+                }
+
+                mail.MailAddressType = mailAddressType;
+            }
+            else
+            {
+                mail.MailAddressType = null;
+            }
+
             _ctx.SaveChanges();
 
             var result = _mapper.MapBaseEntitytoDto(mail);

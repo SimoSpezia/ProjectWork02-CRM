@@ -127,6 +127,21 @@ namespace Crm_Gruppo_5.Controllers
             var entity = _mapper.MapDtoToEntity(phoneNumber);
             entity.Contact = contact;
 
+            if (phoneNumber.PhoneNumberTypeId.HasValue)
+            {
+                var phoneNumberType = _ctx.PhoneNumberTypes.SingleOrDefault(t => t.PhoneNumberTypeId == phoneNumber.PhoneNumberTypeId.Value);
+                if (phoneNumberType == null)
+                {
+                    return BadRequest($"PhoneNumberType with id {phoneNumber.PhoneNumberTypeId.Value} not found");
+                }
+
+                entity.PhoneNumberType = phoneNumberType;
+            }
+            else
+            {
+                entity.PhoneNumberType = null;
+            }
+
             _ctx.PhoneNumbers.Add(entity);
 
             if (_ctx.SaveChanges() > 0)
@@ -141,7 +156,9 @@ namespace Crm_Gruppo_5.Controllers
         [Route("{id}")]
         public IActionResult Update([FromRoute] int id, [FromBody] PhoneNumberDto Dto)
         {
-            var phoneNumber = _ctx.PhoneNumbers.SingleOrDefault(c => c.PhoneNumberId == id);
+            var phoneNumber = _ctx.PhoneNumbers
+                .Include(c => c.PhoneNumberType)
+                .SingleOrDefault(c => c.PhoneNumberId == id);
 
             if (phoneNumber == null)
             {
@@ -153,6 +170,22 @@ namespace Crm_Gruppo_5.Controllers
                 phoneNumber.Prefix = Dto.Prefix;
             if (!string.IsNullOrEmpty(Dto.Nationality))
                 phoneNumber.Nationality = Dto.Nationality;
+
+            if (Dto.PhoneNumberTypeId.HasValue)
+            {
+                var phoneNumberType = _ctx.PhoneNumberTypes.SingleOrDefault(t => t.PhoneNumberTypeId == Dto.PhoneNumberTypeId.Value);
+                if (phoneNumberType == null)
+                {
+                    return BadRequest($"PhoneNumberType with id {Dto.PhoneNumberTypeId.Value} not found");
+                }
+
+                phoneNumber.PhoneNumberType = phoneNumberType;
+            }
+            else
+            {
+                phoneNumber.PhoneNumberType = null;
+            }
+
             _ctx.SaveChanges();
 
             var result = _mapper.MapBaseEntitytoDto(phoneNumber);

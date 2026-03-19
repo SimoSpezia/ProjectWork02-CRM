@@ -206,7 +206,8 @@ namespace Crm_Gruppo_5.Dto
             MailAddressDto dto = new MailAddressDto
             {
                 MailAddressId = entity.MailAddressId,
-                Mail = entity.Mail
+                Mail = entity.Mail,
+                MailAddressTypeId = entity.MailAddressType?.MailAddressTypeId
             };
             return dto;
         }
@@ -236,7 +237,8 @@ namespace Crm_Gruppo_5.Dto
                 PhoneNumberId = entity.PhoneNumberId,
                 Number = entity.Number,
                 Prefix = entity.Prefix,
-                Nationality = entity.Nationality
+                Nationality = entity.Nationality,
+                PhoneNumberTypeId = entity.PhoneNumberType?.PhoneNumberTypeId
             };
             return dto;
         }

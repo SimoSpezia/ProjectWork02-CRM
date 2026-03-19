@@ -11,5 +11,6 @@ namespace Crm_Gruppo_5.Dto
         public string? Prefix { get; set; }
         [MaxLength(ValidationLengths.DefaultString)]
         public required string Nationality { get; set; }
+        public int? PhoneNumberTypeId { get; set; }
     }
 }

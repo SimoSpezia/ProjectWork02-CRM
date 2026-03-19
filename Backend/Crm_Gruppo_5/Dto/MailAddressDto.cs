@@ -7,5 +7,6 @@ namespace Crm_Gruppo_5.Dto
         public int MailAddressId { get; set; }
         [MaxLength(ValidationLengths.Email)]
         public required string Mail { get; set; }
+        public int? MailAddressTypeId { get; set; }
     }
 }
