@@ -13,6 +13,7 @@ namespace Crm_Gruppo_5.Controllers
         private readonly ILogger<ContactController> _logger = logger;
         private readonly Mapper _mapper = mapper;
 
+        // Api che restituisce tutti i contatti non eliminati.
         [HttpGet]
         [Route("all")]
         public IActionResult GetAll()
@@ -36,6 +37,7 @@ namespace Crm_Gruppo_5.Controllers
             }
         }
 
+        // Api che restituisce un contatto tramite id.
         [HttpGet]
         [Route("{id}")]
         public IActionResult GetSingle([FromRoute] int id)
@@ -52,6 +54,7 @@ namespace Crm_Gruppo_5.Controllers
             return Ok(_mapper.MapEntitytoSimpleDto(contact));
         }
 
+        // Api che restituisce il dettaglio completo di un contatto.
         [HttpGet]
         [Route("{id}/WithDetails")]
         public IActionResult GetSingleWithDetails([FromRoute] int id)
@@ -90,6 +93,7 @@ namespace Crm_Gruppo_5.Controllers
             return Ok(resultDto);
         }
 
+        // Api che crea un contatto associandolo a un'azienda.
         [HttpPost]
         [Route("withCompany/{id}")]
         public IActionResult CreateWithCompany([FromRoute] int id, [FromBody] ContactDto contact)
@@ -116,6 +120,7 @@ namespace Crm_Gruppo_5.Controllers
             return BadRequest();
         }
 
+        // Api che crea un nuovo contatto.
         [HttpPost]
         public IActionResult Create(ContactDto contact)
         {
@@ -138,6 +143,7 @@ namespace Crm_Gruppo_5.Controllers
         }
 
 
+        // Api che aggiorna i dati di un contatto.
         [HttpPut]
         [Route("{id}")]
         public IActionResult Update([FromRoute] int id, [FromBody] ContactDto Dto)
@@ -171,6 +177,7 @@ namespace Crm_Gruppo_5.Controllers
             return Ok(result);
         }
 
+        // Api che esegue la cancellazione logica di un contatto.
         [HttpPatch]
         [Route("SoftDelete/{id}")]
         public IActionResult SoftDelete([FromRoute] int id)
@@ -192,6 +199,7 @@ namespace Crm_Gruppo_5.Controllers
                 return UnprocessableEntity("Unable to soft delete the contact.");
         }
 
+        // Api che esegue la cancellazione fisica di un contatto.
         [HttpDelete("HardDelete/{id}")]
         public IActionResult HardDelete([FromRoute] int id)
         {
@@ -219,6 +227,7 @@ namespace Crm_Gruppo_5.Controllers
 
         //API per gestione relazione tra Category e Contact (Groups nel DB)
 
+        // Api che restituisce le categorie associate a un contatto.
         [HttpGet]
         [Route("CategoryByContact/{id}")]
         public IActionResult GetCategory([FromRoute] int id)
@@ -245,6 +254,7 @@ namespace Crm_Gruppo_5.Controllers
             return Ok(result);
         }
 
+        // Api che collega una categoria a un contatto.
         [HttpPost]
         [Route("{id}/Category/{categoryId}")]
         public IActionResult AddCategoryToContact([FromRoute] int id, [FromRoute] int categoryId)
@@ -282,6 +292,7 @@ namespace Crm_Gruppo_5.Controllers
             return Ok(result);
         }
 
+        // Api che rimuove il collegamento tra categoria e contatto.
         [HttpDelete]
         [Route("{id}/Category/{categoryId}")]
         public IActionResult RemoveCategoryFromContact([FromRoute] int id, [FromRoute] int categoryId)

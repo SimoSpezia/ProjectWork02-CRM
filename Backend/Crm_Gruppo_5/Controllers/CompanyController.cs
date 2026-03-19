@@ -16,6 +16,7 @@ namespace Crm_Gruppo_5.Controllers
 
 
 
+        // Api che restituisce tutte le aziende con indirizzo.
         [HttpGet]
         [Route("all")]
         public IActionResult GetAll()
@@ -33,6 +34,7 @@ namespace Crm_Gruppo_5.Controllers
 
         }
 
+        // Api che restituisce una singola azienda tramite id.
         [HttpGet]
         [Route("{id}")]
         public IActionResult GetSingle([FromRoute] int id)
@@ -48,6 +50,7 @@ namespace Crm_Gruppo_5.Controllers
             return Ok(_mapper.MapEntitytoSimpleDto(company));
         }
 
+        // Api che restituisce i contatti collegati a un'azienda.
         [HttpGet]
         [Route("{id}/contact")]
         public IActionResult GetContacts([FromRoute] int id)
@@ -66,6 +69,7 @@ namespace Crm_Gruppo_5.Controllers
             return Ok(contactsDto);
         }
 
+        // Api che restituisce il numero di contatti per ogni azienda.
         [HttpGet]
         [Route("NumberContacts")]
         public IActionResult GetNumberContacts()
@@ -90,6 +94,7 @@ namespace Crm_Gruppo_5.Controllers
             else return NoContent();
         }
 
+        // Api che crea una nuova azienda.
         [HttpPost]
         public IActionResult Create(CompanySimpleDto company)
         {
@@ -117,6 +122,7 @@ namespace Crm_Gruppo_5.Controllers
 
             return BadRequest();
         }
+        // Api che aggiorna i dati di un'azienda esistente.
         [HttpPut]
         [Route("{id}")]
         public IActionResult Update([FromRoute] int id, [FromBody] CompanySimpleDto Dto)
@@ -161,6 +167,7 @@ namespace Crm_Gruppo_5.Controllers
             else
                 return UnprocessableEntity();
         }
+        // Api che elimina un'azienda tramite id.
         [HttpDelete("{id}")]
         public IActionResult Delete([FromRoute] int id)
         {

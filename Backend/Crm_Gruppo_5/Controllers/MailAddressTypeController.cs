@@ -11,6 +11,7 @@ namespace Crm_Gruppo_5.Controllers
         private readonly ILogger<MailAddressTypeController> _logger = logger;
         private readonly Mapper _mapper = mapper;
 
+        // Api che restituisce tutti i tipi di mail.
         [HttpGet]
         [Route("all")]
         public IActionResult GetAll()
@@ -27,6 +28,7 @@ namespace Crm_Gruppo_5.Controllers
             }
         }
 
+        // Api che restituisce un tipo di mail tramite id.
         [HttpGet]
         [Route("{id}")]
         public IActionResult GetSingle([FromRoute] int id)
@@ -41,6 +43,7 @@ namespace Crm_Gruppo_5.Controllers
             return Ok(_mapper.MapBaseEntitytoDto(mail));
         }
 
+        // Api che crea un nuovo tipo di mail.
         [HttpPost]
         public IActionResult Create(MailAddressTypeDto mailAddressType)
         {
@@ -58,6 +61,7 @@ namespace Crm_Gruppo_5.Controllers
             return BadRequest();
         }
 
+        // Api che aggiorna un tipo di mail.
         [HttpPut]
         [Route("{id}")]
         public IActionResult Update([FromRoute] int id, [FromBody] MailAddressTypeDto Dto)
@@ -79,6 +83,7 @@ namespace Crm_Gruppo_5.Controllers
             return Ok(result);
         }
 
+        // Api che elimina un tipo di mail.
         [HttpDelete("{id}")]
         public IActionResult Delete([FromRoute] int id)
         {

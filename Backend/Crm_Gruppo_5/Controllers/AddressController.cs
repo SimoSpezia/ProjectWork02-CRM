@@ -12,6 +12,7 @@ namespace Crm_Gruppo_5.Controllers
         private readonly ILogger<AddressController> _logger = logger;
         private readonly Mapper _mapper = mapper;
 
+        // Api che restituisce l'elenco completo degli indirizzi.
         [HttpGet]
         [Route("all")]
         public IActionResult GetAll()
@@ -28,6 +29,7 @@ namespace Crm_Gruppo_5.Controllers
             }
         }
 
+        // Api che restituisce il dettaglio di un indirizzo tramite id.
         [HttpGet]
         [Route("{id}")]
         public IActionResult GetSingle([FromRoute] int id)
@@ -42,6 +44,7 @@ namespace Crm_Gruppo_5.Controllers
             return Ok(_mapper.MapBaseEntityToDto(address));
         }
 
+        // Api che crea un nuovo indirizzo.
         [HttpPost]
         public IActionResult Create(AddressDto address)
         {
@@ -59,6 +62,7 @@ namespace Crm_Gruppo_5.Controllers
             return BadRequest();
         }
 
+        // Api che aggiorna i dati di un indirizzo esistente.
         [HttpPut]
         [Route("{id}")]
         public IActionResult Update([FromRoute] int id, [FromBody] AddressDto Dto)
@@ -96,6 +100,7 @@ namespace Crm_Gruppo_5.Controllers
             return Ok(result);
         }
 
+        // Api che elimina un indirizzo tramite id.
         [HttpDelete("{id}")]
         public IActionResult Delete([FromRoute] int id)
         {

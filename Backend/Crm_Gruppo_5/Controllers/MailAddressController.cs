@@ -13,6 +13,7 @@ namespace Crm_Gruppo_5.Controllers
         private readonly ILogger<MailAddressController> _logger = logger;
         private readonly Mapper _mapper = mapper;
 
+        // Api che restituisce tutte le mail.
         [HttpGet]
         [Route("all")]
         public IActionResult GetAll()
@@ -29,6 +30,7 @@ namespace Crm_Gruppo_5.Controllers
             }
         }
 
+        // Api che restituisce una mail tramite id.
         [HttpGet]
         [Route("{id}")]
         public IActionResult GetSingle([FromRoute] int id)
@@ -43,6 +45,7 @@ namespace Crm_Gruppo_5.Controllers
             return Ok(_mapper.MapBaseEntitytoDto(mail));
         }
 
+        // Api che filtra le mail per categoria e tipo opzionale.
         [HttpGet]
         [Route("by-category/{categoryId}")]
         public IActionResult GetByCategory([FromRoute] int categoryId, [FromQuery] int? Id)
@@ -70,6 +73,7 @@ namespace Crm_Gruppo_5.Controllers
             return Ok(result);
         }
 
+        // Api che filtra le mail per azienda e tipo opzionale.
         [HttpGet]
         [Route("by-company/{companyId}")]
         public IActionResult GetByCompany([FromRoute] int companyId, [FromQuery] int? Id)
@@ -97,6 +101,7 @@ namespace Crm_Gruppo_5.Controllers
             return Ok(result);
         }
 
+        // Api che restituisce le mail per tipo di indirizzo.
         [HttpGet]
         [Route("by-type/{Id}")]
         public IActionResult GetByMailAddressType([FromRoute] int Id)
@@ -113,6 +118,7 @@ namespace Crm_Gruppo_5.Controllers
             return Ok(result);
         }
 
+        // Api che crea una mail per un contatto specifico.
         [HttpPost]
         [Route("{Id}")]
         public IActionResult Create([FromRoute] int Id, [FromBody] MailAddressDto mailAddress)
@@ -154,6 +160,7 @@ namespace Crm_Gruppo_5.Controllers
             return BadRequest();
         }
 
+        // Api che aggiorna una mail esistente.
         [HttpPut]
         [Route("{id}")]
         public IActionResult Update([FromRoute] int id, [FromBody] MailAddressDto Dto)
@@ -191,6 +198,7 @@ namespace Crm_Gruppo_5.Controllers
             return Ok(result);
         }
 
+        // Api che elimina una mail tramite id.
         [HttpDelete]
         [Route("{id}")]
         public IActionResult Delete([FromRoute] int id)

@@ -12,6 +12,7 @@ namespace Crm_Gruppo_5.Controllers
         private readonly ILogger<CategoryController> _logger = logger;
         private readonly Mapper _mapper = mapper;
 
+        // Api che restituisce tutte le categorie disponibili.
         [HttpGet]
         [Route("all")]
         public IActionResult GetAll()
@@ -30,6 +31,7 @@ namespace Crm_Gruppo_5.Controllers
             }
         }
 
+        // Api che restituisce una categoria specifica tramite id.
         [HttpGet]
         [Route("{id}")]
         public IActionResult GetSingle([FromRoute] int id)
@@ -45,6 +47,7 @@ namespace Crm_Gruppo_5.Controllers
             return Ok(_mapper.MapBaseEntitytoDto(category));
         }
 
+        // Api che restituisce i contatti associati a una categoria.
         [HttpGet]
         [Route("WithContacts/{id}")]
         public IActionResult GetContacts([FromRoute] int id)
@@ -65,6 +68,7 @@ namespace Crm_Gruppo_5.Controllers
         }
 
 
+        // Api che crea una nuova categoria.
         [HttpPost]
         public IActionResult Create(CategoryDto category)
         {
@@ -82,6 +86,7 @@ namespace Crm_Gruppo_5.Controllers
             return BadRequest();
         }
 
+        // Api che aggiorna una categoria esistente.
         [HttpPut]
         [Route("{id}")]
         public IActionResult Update([FromRoute] int id, [FromBody] CategoryDto dto)
@@ -103,6 +108,7 @@ namespace Crm_Gruppo_5.Controllers
             return Ok(result);
         }
 
+        // Api che elimina una categoria tramite id.
         [HttpDelete("{id}")]
         public IActionResult Delete([FromRoute] int id)
         {

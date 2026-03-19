@@ -11,6 +11,7 @@ namespace Crm_Gruppo_5.Controllers
         private readonly ILogger<PhoneNumberTypeController> _logger = logger;
         private readonly Mapper _mapper = mapper;
 
+        // Api che restituisce tutti i tipi di numero.
         [HttpGet]
         [Route("all")]
         public IActionResult GetAll()
@@ -27,6 +28,7 @@ namespace Crm_Gruppo_5.Controllers
             }
         }
 
+        // Api che restituisce un tipo di numero tramite id.
         [HttpGet]
         [Route("{id}")]
         public IActionResult GetSingle([FromRoute] int id)
@@ -41,6 +43,7 @@ namespace Crm_Gruppo_5.Controllers
             return Ok(_mapper.MapBaseEntitytoDto(phoneType));
         }
 
+        // Api che crea un nuovo tipo di numero.
         [HttpPost]
         public IActionResult Create(PhoneNumberTypeDto phoneNumberType)
         {
@@ -58,6 +61,7 @@ namespace Crm_Gruppo_5.Controllers
             return BadRequest();
         }
 
+        // Api che aggiorna un tipo di numero.
         [HttpPut]
         [Route("{id}")]
         public IActionResult Update([FromRoute] int id, [FromBody] PhoneNumberTypeDto Dto)
@@ -80,6 +84,7 @@ namespace Crm_Gruppo_5.Controllers
             return Ok(result);
         }
 
+        // Api che elimina un tipo di numero.
         [HttpDelete("{id}")]
         public IActionResult Delete([FromRoute] int id)
         {

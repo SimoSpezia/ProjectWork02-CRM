@@ -14,6 +14,7 @@ namespace Crm_Gruppo_5.Controllers
         private readonly ILogger<PhoneNumberController> _logger = logger;
         private readonly Mapper _mapper = mapper;
 
+        // Api che restituisce tutti i numeri di telefono.
         [HttpGet]
         [Route("all")]
         public IActionResult GetAll()
@@ -30,6 +31,7 @@ namespace Crm_Gruppo_5.Controllers
             }
         }
 
+        // Api che restituisce un numero di telefono tramite id.
         [HttpGet]
         [Route("{id}")]
         public IActionResult GetSingle([FromRoute] int id)
@@ -43,6 +45,7 @@ namespace Crm_Gruppo_5.Controllers
             return Ok(_mapper.MapBaseEntitytoDto(phoneNumber));
         }
 
+        // Api che filtra i numeri per categoria e tipo opzionale.
         [HttpGet]
         [Route("by-category/{categoryId}")]
         public IActionResult GetByCategory([FromRoute] int categoryId, [FromQuery] int? Id)
@@ -70,6 +73,7 @@ namespace Crm_Gruppo_5.Controllers
             return Ok(result);
         }
 
+        // Api che filtra i numeri per azienda e tipo opzionale.
         [HttpGet]
         [Route("by-company/{companyId}")]
         public IActionResult GetByCompany([FromRoute] int companyId, [FromQuery] int? Id)
@@ -97,6 +101,7 @@ namespace Crm_Gruppo_5.Controllers
             return Ok(result);
         }
 
+        // Api che restituisce i numeri per tipo di telefono.
         [HttpGet]
         [Route("by-type/{Id}")]
         public IActionResult GetByPhoneNumberType([FromRoute] int Id)
@@ -113,6 +118,7 @@ namespace Crm_Gruppo_5.Controllers
             return Ok(result);
         }
 
+        // Api che crea un numero per un contatto specifico.
         [HttpPost]
         [Route("{Id}")]
         public IActionResult Create([FromRoute] int Id, PhoneNumberDto phoneNumber)
@@ -152,6 +158,7 @@ namespace Crm_Gruppo_5.Controllers
             return BadRequest();
         }
 
+        // Api che aggiorna un numero di telefono.
         [HttpPut]
         [Route("{id}")]
         public IActionResult Update([FromRoute] int id, [FromBody] PhoneNumberDto Dto)
@@ -193,6 +200,7 @@ namespace Crm_Gruppo_5.Controllers
             return Ok(result);
         }
 
+        // Api che elimina un numero di telefono.
         [HttpDelete("{id}")]
         public IActionResult Delete([FromRoute] int id)
         {
