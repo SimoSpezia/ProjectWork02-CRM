@@ -29,7 +29,6 @@ let allCompanies = [];
 let companyNameFilter = "";
 let companySortField = "denomination";
 let companySortDirection = "asc";
-
 let companyNameFilterInput = null;
 let companySortFieldSelect = null;
 let companySortDirectionButton = null;
@@ -59,6 +58,24 @@ function setElementValue(id, value) {
         element.value = value;
     }
 }
+function keepOnlyDigits(value) {
+    return value.replace(/\D/g, "");
+}
+function setupZipNumericInputs() {
+    const zipInputIds = ["company-address-zip", "edit-company-address-zip"];
+    for (const inputId of zipInputIds) {
+        const input = document.getElementById(inputId);
+        if (!input) {
+            continue;
+        }
+        input.addEventListener("input", () => {
+            const digitsOnlyValue = keepOnlyDigits(input.value);
+            if (input.value !== digitsOnlyValue) {
+                input.value = digitsOnlyValue;
+            }
+        });
+    }
+}
 function isValidPersonName(value) {
     return PERSON_NAME_REGEX.test(value.trim());
 }
@@ -82,11 +99,11 @@ function validateBirthday(value) {
     return null;
 }
 function validateCompanyPayload(payload) {
-    var _a, _b, _c, _d, _e, _f, _g, _h;
-    const denomination = ((_a = payload.denomination) !== null && _a !== void 0 ? _a : "").trim();
-    const vatNumber = ((_b = payload.vatNumber) !== null && _b !== void 0 ? _b : "").trim();
-    const website = ((_c = payload.website) !== null && _c !== void 0 ? _c : "").trim();
-    const zip = ((_d = payload.address.zip) !== null && _d !== void 0 ? _d : "").trim();
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q;
+    const denomination = (_b = (_a = payload.denomination) === null || _a === void 0 ? void 0 : _a.trim()) !== null && _b !== void 0 ? _b : "";
+    const vatNumber = (_d = (_c = payload.vatNumber) === null || _c === void 0 ? void 0 : _c.trim()) !== null && _d !== void 0 ? _d : "";
+    const website = (_f = (_e = payload.website) === null || _e === void 0 ? void 0 : _e.trim()) !== null && _f !== void 0 ? _f : "";
+    const zip = (_h = (_g = payload.address.zip) === null || _g === void 0 ? void 0 : _g.trim()) !== null && _h !== void 0 ? _h : "";
     if (denomination.length < 2 || denomination.length > 120) {
         return "Nome azienda non valido (2-120 caratteri).";
     }
@@ -96,19 +113,19 @@ function validateCompanyPayload(payload) {
     if (!ZIP_REGEX.test(zip)) {
         return "CAP non valido: inserisci 5 cifre.";
     }
-    if (!((_e = payload.address.country) === null || _e === void 0 ? void 0 : _e.trim())) {
+    if (!((_j = payload.address.country) === null || _j === void 0 ? void 0 : _j.trim())) {
         return "Seleziona la nazione.";
     }
-    if (!((_f = payload.address.region) === null || _f === void 0 ? void 0 : _f.trim())) {
+    if (!((_k = payload.address.region) === null || _k === void 0 ? void 0 : _k.trim())) {
         return "Inserisci la regione.";
     }
-    if (!((_g = payload.address.province) === null || _g === void 0 ? void 0 : _g.trim())) {
+    if (!((_l = payload.address.province) === null || _l === void 0 ? void 0 : _l.trim())) {
         return "Inserisci la provincia.";
     }
-    if (!((_h = payload.address.city) === null || _h === void 0 ? void 0 : _h.trim())) {
+    if (!((_m = payload.address.city) === null || _m === void 0 ? void 0 : _m.trim())) {
         return "Inserisci la citta.";
     }
-    if (!payload.address.street.trim()) {
+    if (!((_o = payload.address.street) === null || _o === void 0 ? void 0 : _o.trim())) {
         return "Inserisci via/piazza.";
     }
     if (website) {
@@ -118,14 +135,14 @@ function validateCompanyPayload(payload) {
                 return "Sito web non valido: usa un URL http o https.";
             }
         }
-        catch (_j) {
+        catch (_r) {
             return "Sito web non valido: inserisci un URL completo (es. https://www.esempio.it).";
         }
     }
-    if ((payload.size || "").length > 80) {
+    if (((_p = payload.size) !== null && _p !== void 0 ? _p : "").length > 80) {
         return "Dimensione troppo lunga (massimo 80 caratteri).";
     }
-    if ((payload.note || "").length > 1000) {
+    if (((_q = payload.note) !== null && _q !== void 0 ? _q : "").length > 1000) {
         return "Note troppo lunghe (massimo 1000 caratteri).";
     }
     return null;
@@ -319,7 +336,7 @@ async function loadEditContactRows(companyId) {
     }
 }
 function createContactEditorRow(contact) {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
     const row = document.createElement("div");
     row.className = "contact-editor-row";
     const id = (_a = contact === null || contact === void 0 ? void 0 : contact.contactId) !== null && _a !== void 0 ? _a : 0;
@@ -341,16 +358,16 @@ function createContactEditorRow(contact) {
 
         <label>Genere</label>
         <select data-field="gender">
-            <option value="" ${(((_g = contact === null || contact === void 0 ? void 0 : contact.gender) !== null && _g !== void 0 ? _g : "") === "") ? "selected" : ""}>Seleziona genere</option>
-            <option value="M" ${(((_h = contact === null || contact === void 0 ? void 0 : contact.gender) !== null && _h !== void 0 ? _h : "") === "M") ? "selected" : ""}>M</option>
-            <option value="F" ${(((_j = contact === null || contact === void 0 ? void 0 : contact.gender) !== null && _j !== void 0 ? _j : "") === "F") ? "selected" : ""}>F</option>
+            <option value="" ${((_g = contact === null || contact === void 0 ? void 0 : contact.gender) !== null && _g !== void 0 ? _g : "") === "" ? "selected" : ""}>Seleziona genere</option>
+            <option value="M" ${((_h = contact === null || contact === void 0 ? void 0 : contact.gender) !== null && _h !== void 0 ? _h : "") === "M" ? "selected" : ""}>M</option>
+            <option value="F" ${((_j = contact === null || contact === void 0 ? void 0 : contact.gender) !== null && _j !== void 0 ? _j : "") === "F" ? "selected" : ""}>F</option>
         </select>
 
         <label>Data di nascita</label>
-        <input type="date" data-field="birthday" value="${toDateInputValue((_h = contact === null || contact === void 0 ? void 0 : contact.birthday) !== null && _h !== void 0 ? _h : "")}" required>
+        <input type="date" data-field="birthday" value="${toDateInputValue((_k = contact === null || contact === void 0 ? void 0 : contact.birthday) !== null && _k !== void 0 ? _k : "")}" required>
 
         <label>Note contatto</label>
-        <textarea data-field="note" rows="2">${(_j = contact === null || contact === void 0 ? void 0 : contact.note) !== null && _j !== void 0 ? _j : ""}</textarea>
+        <textarea data-field="note" rows="2">${(_l = contact === null || contact === void 0 ? void 0 : contact.note) !== null && _l !== void 0 ? _l : ""}</textarea>
 
         <button type="button" class="edit-action-btn" data-action="save-contact-row">${id > 0 ? "Aggiorna contatto" : "Salva contatto"}</button>
 
@@ -412,16 +429,16 @@ function readContacts(listElement) {
     return parsed;
 }
 function resolveCompanyAddress(company) {
-    var _a, _b;
-    const source = (_a = company.address) !== null && _a !== void 0 ? _a : null;
+    var _a, _b, _c, _d, _e;
+    const source = company.address;
     return {
-        street: (_b = source === null || source === void 0 ? void 0 : source.street) !== null && _b !== void 0 ? _b : "",
-        streetNumber: (source === null || source === void 0 ? void 0 : source.streetNumber) || "",
-        zip: (source === null || source === void 0 ? void 0 : source.zip) || "",
-        city: (source === null || source === void 0 ? void 0 : source.city) || "",
+        street: (_a = source === null || source === void 0 ? void 0 : source.street) !== null && _a !== void 0 ? _a : "",
+        streetNumber: (_b = source === null || source === void 0 ? void 0 : source.streetNumber) !== null && _b !== void 0 ? _b : "",
+        zip: (_c = source === null || source === void 0 ? void 0 : source.zip) !== null && _c !== void 0 ? _c : "",
+        city: (_d = source === null || source === void 0 ? void 0 : source.city) !== null && _d !== void 0 ? _d : "",
         province: (source === null || source === void 0 ? void 0 : source.province) || undefined,
         region: (source === null || source === void 0 ? void 0 : source.region) || undefined,
-        country: (source === null || source === void 0 ? void 0 : source.country) || ""
+        country: (_e = source === null || source === void 0 ? void 0 : source.country) !== null && _e !== void 0 ? _e : ""
     };
 }
 function mapCompanyToPayload(company) {
@@ -438,102 +455,85 @@ function mapCompanyToPayload(company) {
 function normalized(value) {
     return (value !== null && value !== void 0 ? value : "").trim();
 }
-
 function normalizedLower(value) {
     return normalized(value).toLowerCase();
 }
-
 function compareText(a, b) {
     return a.localeCompare(b, "it", { sensitivity: "base" });
 }
-
 function companySortValue(company, field) {
     switch (field) {
-    case "vatNumber":
-        return normalizedLower(company.vatNumber);
-    case "size":
-        return normalizedLower(company.size || "");
-    case "city": {
-        const address = resolveCompanyAddress(company);
-        return normalizedLower(address.city);
-    }
-    case "denomination":
-    default:
-        return normalizedLower(company.denomination);
+        case "vatNumber":
+            return normalizedLower(company.vatNumber);
+        case "size":
+            return normalizedLower(company.size || "");
+        case "city": {
+            const address = resolveCompanyAddress(company);
+            return normalizedLower(address.city);
+        }
+        case "denomination":
+        default:
+            return normalizedLower(company.denomination);
     }
 }
-
 function updateCompanySortDirectionButton() {
     if (!companySortDirectionButton) {
         return;
     }
-
-    companySortDirectionButton.textContent = companySortDirection === "asc" ? "Ordine: crescente" : "Ordine: decrescente";
+    companySortDirectionButton.textContent = companySortDirection === "asc" ? "Ordinamento \u2191" : "Ordinamento \u2193";
 }
-
 function setupCompanyListControls() {
     const contentSection = document.querySelector(".content-section");
     const tableWrapper = document.querySelector(".table-wrapper");
     if (!contentSection || !tableWrapper) {
         return;
     }
-
     const controls = document.createElement("div");
     controls.id = "company-list-controls";
     controls.className = "list-controls";
-
     const nameFilter = document.createElement("input");
     nameFilter.type = "search";
     nameFilter.className = "list-control-input";
     nameFilter.id = "company-name-filter";
     nameFilter.placeholder = "Filtra per nome azienda...";
     nameFilter.setAttribute("aria-label", "Filtra aziende per nome");
-
     const sortField = document.createElement("select");
     sortField.className = "list-control-select";
     sortField.id = "company-sort-field";
     sortField.setAttribute("aria-label", "Ordina aziende per");
     sortField.innerHTML = `
-        <option value="denomination">Ordina per nome azienda</option>
-        <option value="vatNumber">Ordina per partita IVA</option>
-        <option value="size">Ordina per dimensione</option>
-        <option value="city">Ordina per città</option>
+        <option value="denomination">Nome azienda \u2191\u2193</option>
+        <option value="vatNumber">Partita IVA \u2191\u2193</option>
+        <option value="size">Dimensione \u2191\u2193</option>
+        <option value="city">Citta \u2191\u2193</option>
     `;
-
     const sortDirection = document.createElement("button");
     sortDirection.type = "button";
     sortDirection.className = "list-control-button";
     sortDirection.id = "company-sort-direction";
-
     controls.appendChild(nameFilter);
     controls.appendChild(sortField);
     controls.appendChild(sortDirection);
     contentSection.insertBefore(controls, tableWrapper);
-
     companyNameFilterInput = nameFilter;
     companySortFieldSelect = sortField;
     companySortDirectionButton = sortDirection;
-
     nameFilter.addEventListener("input", () => {
         companyNameFilter = normalizedLower(nameFilter.value);
         applyCompanyFilterAndSort();
     });
-
     sortField.addEventListener("change", () => {
         companySortField = sortField.value;
         applyCompanyFilterAndSort();
     });
-
     sortDirection.addEventListener("click", () => {
         companySortDirection = companySortDirection === "asc" ? "desc" : "asc";
         updateCompanySortDirectionButton();
         applyCompanyFilterAndSort();
     });
-
     sortField.value = companySortField;
     updateCompanySortDirectionButton();
 }
-
 function applyCompanyFilterAndSort() {
     const filtered = allCompanies.filter((company) => normalizedLower(company.denomination).includes(companyNameFilter));
     const sorted = [...filtered].sort((a, b) => {
@@ -542,7 +542,6 @@ function applyCompanyFilterAndSort() {
         const result = compareText(String(valueA), String(valueB));
         return companySortDirection === "asc" ? result : -result;
     });
-
     renderTable(sorted);
 }
 function hasCompanyChanges(current, original) {
@@ -561,6 +560,69 @@ function hasCompanyChanges(current, original) {
         normalized(current.address.province) !== normalized(original.address.province) ||
         normalized(current.address.region) !== normalized(original.address.region) ||
         normalized(current.address.country) !== normalized(original.address.country));
+}
+function validateEditedCompanyPayload(current, original) {
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q;
+    if (!original) {
+        return validateCompanyPayload(current);
+    }
+    const denominationChanged = normalized(current.denomination) !== normalized(original.denomination);
+    const vatChanged = normalized(current.vatNumber) !== normalized(original.vatNumber);
+    const websiteChanged = normalized(current.website) !== normalized(original.website);
+    const sizeChanged = normalized(current.size) !== normalized(original.size);
+    const noteChanged = normalized(current.note) !== normalized(original.note);
+    const zipChanged = normalized(current.address.zip) !== normalized(original.address.zip);
+    const countryChanged = normalized(current.address.country) !== normalized(original.address.country);
+    const regionChanged = normalized(current.address.region) !== normalized(original.address.region);
+    const provinceChanged = normalized(current.address.province) !== normalized(original.address.province);
+    const cityChanged = normalized(current.address.city) !== normalized(original.address.city);
+    const streetChanged = normalized(current.address.street) !== normalized(original.address.street);
+    const denomination = (_b = (_a = current.denomination) === null || _a === void 0 ? void 0 : _a.trim()) !== null && _b !== void 0 ? _b : "";
+    const vatNumber = (_d = (_c = current.vatNumber) === null || _c === void 0 ? void 0 : _c.trim()) !== null && _d !== void 0 ? _d : "";
+    const website = (_f = (_e = current.website) === null || _e === void 0 ? void 0 : _e.trim()) !== null && _f !== void 0 ? _f : "";
+    const zip = (_h = (_g = current.address.zip) === null || _g === void 0 ? void 0 : _g.trim()) !== null && _h !== void 0 ? _h : "";
+    if (denominationChanged && (denomination.length < 2 || denomination.length > 120)) {
+        return "Nome azienda non valido (2-120 caratteri).";
+    }
+    if (vatChanged && !VAT_NUMBER_REGEX.test(vatNumber)) {
+        return "Partita IVA non valida: usa 11 cifre (opzionale prefisso IT).";
+    }
+    if (zipChanged && zip && !ZIP_REGEX.test(zip)) {
+        return "CAP non valido: inserisci 5 cifre.";
+    }
+    if (countryChanged && !((_j = current.address.country) === null || _j === void 0 ? void 0 : _j.trim())) {
+        return "Seleziona la nazione.";
+    }
+    if (regionChanged && !((_k = current.address.region) === null || _k === void 0 ? void 0 : _k.trim())) {
+        return "Inserisci la regione.";
+    }
+    if (provinceChanged && !((_l = current.address.province) === null || _l === void 0 ? void 0 : _l.trim())) {
+        return "Inserisci la provincia.";
+    }
+    if (cityChanged && !((_m = current.address.city) === null || _m === void 0 ? void 0 : _m.trim())) {
+        return "Inserisci la citta.";
+    }
+    if (streetChanged && !((_o = current.address.street) === null || _o === void 0 ? void 0 : _o.trim())) {
+        return "Inserisci via/piazza.";
+    }
+    if (websiteChanged && website) {
+        try {
+            const parsedUrl = new URL(website);
+            if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
+                return "Sito web non valido: usa un URL http o https.";
+            }
+        }
+        catch (_r) {
+            return "Sito web non valido: inserisci un URL completo (es. https://www.esempio.it).";
+        }
+    }
+    if (sizeChanged && ((_p = current.size) !== null && _p !== void 0 ? _p : "").length > 80) {
+        return "Dimensione troppo lunga (massimo 80 caratteri).";
+    }
+    if (noteChanged && ((_q = current.note) !== null && _q !== void 0 ? _q : "").length > 1000) {
+        return "Note troppo lunghe (massimo 1000 caratteri).";
+    }
+    return null;
 }
 function toContactUpsertPayload(contact) {
     return {
@@ -626,20 +688,35 @@ function buildEditCompanyPayload() {
 function buildAddressCell(company) {
     var _a, _b;
     const address = resolveCompanyAddress(company);
+    const hasAddress = [
+        address.street,
+        address.streetNumber,
+        address.zip,
+        address.city,
+        address.province,
+        address.region,
+        address.country
+    ].some((value) => { var _a; return Boolean((_a = value === null || value === void 0 ? void 0 : value.trim) === null || _a === void 0 ? void 0 : _a.call(value)); });
     const cell = document.createElement("td");
     const summary = document.createElement("button");
     summary.type = "button";
     summary.className = "address-toggle";
-    summary.textContent = `${address.street} ${address.streetNumber}`.trim() || "-";
+    summary.textContent = hasAddress
+        ? `${address.street} ${address.streetNumber}`.trim() || address.city || address.country
+        : "...";
     const details = document.createElement("div");
     details.className = "address-details";
     details.hidden = true;
     details.textContent = `${address.street} ${address.streetNumber}, ${address.zip} ${address.city} (${(_a = address.province) !== null && _a !== void 0 ? _a : ""}), ${(_b = address.region) !== null && _b !== void 0 ? _b : ""}, ${address.country}`;
-    summary.addEventListener("click", () => {
-        details.hidden = !details.hidden;
-    });
+    if (hasAddress) {
+        summary.addEventListener("click", () => {
+            details.hidden = !details.hidden;
+        });
+    }
     cell.appendChild(summary);
-    cell.appendChild(details);
+    if (hasAddress) {
+        cell.appendChild(details);
+    }
     return cell;
 }
 function buildWebsiteCell(website) {
@@ -766,7 +843,7 @@ function openAddPanel() {
     showPanel(addPanel, addButton);
 }
 async function openEditPanel(company) {
-    var _a, _b, _c;
+    var _a, _b, _c, _d, _e;
     if (!editPanel || !addButton) {
         return;
     }
@@ -786,8 +863,8 @@ async function openEditPanel(company) {
     }));
     setElementValue("edit-company-partitaIVA", company.vatNumber);
     setElementValue("edit-company-size", (_c = company.size) !== null && _c !== void 0 ? _c : "");
-    setElementValue("edit-company-website", company.website !== null && company.website !== void 0 ? company.website : "");
-    setElementValue("edit-company-notes", company.note !== null && company.note !== void 0 ? company.note : "");
+    setElementValue("edit-company-website", (_d = company.website) !== null && _d !== void 0 ? _d : "");
+    setElementValue("edit-company-notes", (_e = company.note) !== null && _e !== void 0 ? _e : "");
     await loadEditContactRows(company.companyId);
     showPanel(editPanel, addButton);
 }
@@ -835,7 +912,7 @@ function setupEditForm() {
         }
         try {
             const payload = buildEditCompanyPayload();
-            const validationError = validateCompanyPayload(payload);
+            const validationError = validateEditedCompanyPayload(payload, editingCompanySnapshot);
             if (validationError) {
                 showError(editError, validationError);
                 return;
@@ -911,6 +988,7 @@ async function init() {
     initializeMenuAndTheme();
     await (addAddressBinding === null || addAddressBinding === void 0 ? void 0 : addAddressBinding.initialize());
     await (editAddressBinding === null || editAddressBinding === void 0 ? void 0 : editAddressBinding.initialize());
+    setupZipNumericInputs();
     setupPopup();
     setupButtons();
     setupAddForm();

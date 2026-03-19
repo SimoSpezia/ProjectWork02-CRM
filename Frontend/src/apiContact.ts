@@ -6,12 +6,42 @@ export interface ContactDto {
     surname: string,
     title?: string,
     workRole?: string,
+    typeDenomination?: string,
     gender?: string,
     birthday?: string,
     email?: string,
     phone?:string,
     note?: string,
     companyDenomination?: string;
+    companydenomination?: string;
+}
+
+export interface AddressDto {
+    addressId: number;
+    country?: string;
+    region?: string;
+    province?: string;
+    city?: string;
+    street?: string;
+    streetNumber?: string;
+    zip?: string;
+    companyId?: number | null;
+    contactId?: number | null;
+}
+
+export interface CategoryDto {
+    categoryId: number;
+    description: string;
+}
+
+export interface ContactTypeDto {
+    contactTypeId: number;
+    description: string;
+}
+
+export interface GroupContactDto {
+    contactId: number;
+    categories: CategoryDto[];
 }
 
 export interface MailAddressDto {
@@ -43,10 +73,13 @@ export interface PhoneNumberDto {
 export interface ContactDetailsDto extends ContactDto {
     mailAddresses?: MailAddressDto[];
     phoneNumbers?: PhoneNumberDto[];
+    address?: AddressDto;
     company?: {
         companyId: number;
         denomination: string;
     };
+    contactType?: ContactTypeDto;
+    categoriesAsString?: string;
 }
 
 export interface ContactUpsertPayload {
@@ -55,6 +88,7 @@ export interface ContactUpsertPayload {
     surname: string;
     title?: string;
     workRole?: string;
+    typeDenomination?: string;
     gender?: string;
     birthday?: string;
     email?:string;
@@ -70,6 +104,7 @@ const FIELD_LABELS: Record<string, string> = {
     surname: "Cognome",
     title: "Titolo",
     workrole: "Ruolo",
+    typedenomination: "Tipo",
     gender: "Genere",
     birthday: "yyyy-mm-dd",
     email: "example@example.com",
@@ -159,6 +194,30 @@ export function getContactWithDetails(contactId: number): Promise<ContactDetails
     return fetchJson<ContactDetailsDto>(`${API_BASE_URL}/Contact/${contactId}/WithDetails`);
 }
 
+export function getContactTypes(): Promise<ContactTypeDto[]> {
+    return fetchJson<ContactTypeDto[]>(`${API_BASE_URL}/ContactType/all`);
+}
+
+export function getCategories(): Promise<CategoryDto[]> {
+    return fetchJson<CategoryDto[]>(`${API_BASE_URL}/Category/all`);
+}
+
+export function getCategoriesByContact(contactId: number): Promise<GroupContactDto> {
+    return fetchJson<GroupContactDto>(`${API_BASE_URL}/Contact/CategoryByContact/${contactId}`);
+}
+
+export function addCategoryToContact(contactId: number, categoryId: number): Promise<GroupContactDto> {
+    return fetchJson<GroupContactDto>(`${API_BASE_URL}/Contact/${contactId}/Category/${categoryId}`, {
+        method: "POST"
+    });
+}
+
+export function removeCategoryFromContact(contactId: number, categoryId: number): Promise<GroupContactDto> {
+    return fetchJson<GroupContactDto>(`${API_BASE_URL}/Contact/${contactId}/Category/${categoryId}`, {
+        method: "DELETE"
+    });
+}
+
 async function handleContactUpsertResponse(response: Response): Promise<void> {
     if (response.ok) {
         return;
@@ -183,6 +242,13 @@ export function createContact(payload: ContactUpsertPayload): Promise<void> {
     }).then(handleContactUpsertResponse);
 }
 
+export function createContactAndReturn(payload: ContactUpsertPayload): Promise<ContactDto> {
+    return fetchJson<ContactDto>(`${API_BASE_URL}/Contact`, {
+        method: "POST",
+        body: JSON.stringify(payload)
+    });
+}
+
 export function createContactWithCompany(companyId: number, payload: ContactUpsertPayload): Promise<void> {
     return fetch(`${API_BASE_URL}/Contact/withCompany/${companyId}`, {
         method: "POST",
@@ -191,6 +257,13 @@ export function createContactWithCompany(companyId: number, payload: ContactUpse
         },
         body: JSON.stringify(payload)
     }).then(handleContactUpsertResponse);
+}
+
+export function createContactWithCompanyAndReturn(companyId: number, payload: ContactUpsertPayload): Promise<ContactDto> {
+    return fetchJson<ContactDto>(`${API_BASE_URL}/Contact/withCompany/${companyId}`, {
+        method: "POST",
+        body: JSON.stringify(payload)
+    });
 }
 
 export function updateContact(contactId: number, payload: ContactUpsertPayload): Promise<void> {
@@ -288,4 +361,18 @@ export async function deletePhoneNumber(phoneNumberId: number): Promise<void> {
 
     const message = await response.text();
     throw new Error(message || `HTTP ${response.status}`);
+}
+
+export function createAddress(payload: AddressDto): Promise<AddressDto> {
+    return fetchJson<AddressDto>(`${API_BASE_URL}/Address`, {
+        method: "POST",
+        body: JSON.stringify(payload)
+    });
+}
+
+export function updateAddress(addressId: number, payload: AddressDto): Promise<AddressDto> {
+    return fetchJson<AddressDto>(`${API_BASE_URL}/Address/${addressId}`, {
+        method: "PUT",
+        body: JSON.stringify(payload)
+    });
 }

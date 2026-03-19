@@ -84,6 +84,28 @@ function setElementValue(id: string, value: string): void {
     }
 }
 
+function keepOnlyDigits(value: string): string {
+    return value.replace(/\D/g, "");
+}
+
+function setupZipNumericInputs(): void {
+    const zipInputIds = ["company-address-zip", "edit-company-address-zip"];
+
+    for (const inputId of zipInputIds) {
+        const input = document.getElementById(inputId) as HTMLInputElement | null;
+        if (!input) {
+            continue;
+        }
+
+        input.addEventListener("input", () => {
+            const digitsOnlyValue = keepOnlyDigits(input.value);
+            if (input.value !== digitsOnlyValue) {
+                input.value = digitsOnlyValue;
+            }
+        });
+    }
+}
+
 function isValidPersonName(value: string): boolean {
     return PERSON_NAME_REGEX.test(value.trim());
 }
@@ -670,6 +692,82 @@ function hasCompanyChanges(current: CompanyUpsertPayload, original: CompanyUpser
     );
 }
 
+function validateEditedCompanyPayload(current: CompanyUpsertPayload, original: CompanyUpsertPayload | null): string | null {
+    if (!original) {
+        return validateCompanyPayload(current);
+    }
+
+    const denominationChanged = normalized(current.denomination) !== normalized(original.denomination);
+    const vatChanged = normalized(current.vatNumber) !== normalized(original.vatNumber);
+    const websiteChanged = normalized(current.website) !== normalized(original.website);
+    const sizeChanged = normalized(current.size) !== normalized(original.size);
+    const noteChanged = normalized(current.note) !== normalized(original.note);
+    const zipChanged = normalized(current.address.zip) !== normalized(original.address.zip);
+    const countryChanged = normalized(current.address.country) !== normalized(original.address.country);
+    const regionChanged = normalized(current.address.region) !== normalized(original.address.region);
+    const provinceChanged = normalized(current.address.province) !== normalized(original.address.province);
+    const cityChanged = normalized(current.address.city) !== normalized(original.address.city);
+    const streetChanged = normalized(current.address.street) !== normalized(original.address.street);
+
+    const denomination = current.denomination?.trim() ?? "";
+    const vatNumber = current.vatNumber?.trim() ?? "";
+    const website = current.website?.trim() ?? "";
+    const zip = current.address.zip?.trim() ?? "";
+
+    if (denominationChanged && (denomination.length < 2 || denomination.length > 120)) {
+        return "Nome azienda non valido (2-120 caratteri).";
+    }
+
+    if (vatChanged && !VAT_NUMBER_REGEX.test(vatNumber)) {
+        return "Partita IVA non valida: usa 11 cifre (opzionale prefisso IT).";
+    }
+
+    if (zipChanged && zip && !ZIP_REGEX.test(zip)) {
+        return "CAP non valido: inserisci 5 cifre.";
+    }
+
+    if (countryChanged && !current.address.country?.trim()) {
+        return "Seleziona la nazione.";
+    }
+
+    if (regionChanged && !current.address.region?.trim()) {
+        return "Inserisci la regione.";
+    }
+
+    if (provinceChanged && !current.address.province?.trim()) {
+        return "Inserisci la provincia.";
+    }
+
+    if (cityChanged && !current.address.city?.trim()) {
+        return "Inserisci la citta.";
+    }
+
+    if (streetChanged && !current.address.street?.trim()) {
+        return "Inserisci via/piazza.";
+    }
+
+    if (websiteChanged && website) {
+        try {
+            const parsedUrl = new URL(website);
+            if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
+                return "Sito web non valido: usa un URL http o https.";
+            }
+        } catch {
+            return "Sito web non valido: inserisci un URL completo (es. https://www.esempio.it).";
+        }
+    }
+
+    if (sizeChanged && (current.size ?? "").length > 80) {
+        return "Dimensione troppo lunga (massimo 80 caratteri).";
+    }
+
+    if (noteChanged && (current.note ?? "").length > 1000) {
+        return "Note troppo lunghe (massimo 1000 caratteri).";
+    }
+
+    return null;
+}
+
 function toContactUpsertPayload(contact: ContactDto): ContactUpsertPayload {
     return {
         contactId: contact.contactId > 0 ? contact.contactId : undefined,
@@ -740,24 +838,39 @@ function buildEditCompanyPayload(): CompanyUpsertPayload {
 
 function buildAddressCell(company: CompanySimpleDto): HTMLTableCellElement {
     const address = resolveCompanyAddress(company);
+    const hasAddress = [
+        address.street,
+        address.streetNumber,
+        address.zip,
+        address.city,
+        address.province,
+        address.region,
+        address.country
+    ].some((value) => Boolean(value?.trim()));
 
     const cell = document.createElement("td");
     const summary = document.createElement("button");
     summary.type = "button";
     summary.className = "address-toggle";
-    summary.textContent = `${address.street} ${address.streetNumber}`.trim() || "-";
+    summary.textContent = hasAddress
+        ? `${address.street} ${address.streetNumber}`.trim() || address.city || address.country
+        : "...";
 
     const details = document.createElement("div");
     details.className = "address-details";
     details.hidden = true;
     details.textContent = `${address.street} ${address.streetNumber}, ${address.zip} ${address.city} (${address.province ?? ""}), ${address.region ?? ""}, ${address.country}`;
 
-    summary.addEventListener("click", () => {
-        details.hidden = !details.hidden;
-    });
+    if (hasAddress) {
+        summary.addEventListener("click", () => {
+            details.hidden = !details.hidden;
+        });
+    }
 
     cell.appendChild(summary);
-    cell.appendChild(details);
+    if (hasAddress) {
+        cell.appendChild(details);
+    }
     return cell;
 }
 
@@ -986,7 +1099,7 @@ function setupEditForm(): void {
 
         try {
             const payload = buildEditCompanyPayload();
-            const validationError = validateCompanyPayload(payload);
+            const validationError = validateEditedCompanyPayload(payload, editingCompanySnapshot);
             if (validationError) {
                 showError(editError, validationError);
                 return;
@@ -1070,6 +1183,7 @@ async function init(): Promise<void> {
     initializeMenuAndTheme();
     await addAddressBinding?.initialize();
     await editAddressBinding?.initialize();
+    setupZipNumericInputs();
     setupPopup();
     setupButtons();
     setupAddForm();

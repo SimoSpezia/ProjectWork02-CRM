@@ -765,6 +765,15 @@
     grid-column: 1 / -1;
 }
 
+.form-error {
+    grid-column: 1 / -1;
+    min-height: 1.1rem;
+    color: #9b1f2f;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin: 0;
+}
+
 /* Bottoni form */
 .form-buttons {
     display: flex;

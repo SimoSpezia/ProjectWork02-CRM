@@ -240,11 +240,70 @@
     grid-column: 1 / -1;
 }
 
+#add-contact-form > .contact-address-section,
+#edit-contact-form > .contact-address-section {
+    grid-column: 1 / -1;
+}
+
+.contact-address-section {
+    display: grid;
+    grid-template-columns: 170px minmax(0, 1fr);
+    column-gap: 1rem;
+    row-gap: 0.7rem;
+    border: 1px solid #dbe5f0;
+    border-radius: 10px;
+    background-color: #f8fbff;
+    padding: 0.8rem;
+    margin: 0.35rem 0;
+}
+
+.contact-address-section-header {
+    grid-column: 1 / -1;
+    padding-bottom: 0.2rem;
+    border-bottom: 1px solid #e5edf5;
+}
+
+.contact-address-section-header h3 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+}
+
+.contact-address-section > label {
+    margin-bottom: 0;
+    align-self: center;
+}
+
+.contact-address-section > input,
+.contact-address-section > select {
+    width: 100%;
+}
+
+:root[data-theme="dark"] .contact-address-section {
+    background-color: #2a313a;
+    border-color: var(--border);
+}
+
+:root[data-theme="dark"] .contact-address-section-header {
+    border-bottom-color: var(--border);
+}
+
+:root[data-theme="dark"] .contact-address-section-header h3,
+:root[data-theme="dark"] .contact-address-section > label {
+    color: var(--text-light);
+}
+
 .contact-subitems-block {
     display: flex;
     flex-direction: column;
     gap: 0.55rem;
     width: 100%;
+}
+
+#edit-contact-form > .contact-channels-start,
+#edit-contact-form > .contact-channels-start-block {
+    margin-top: 0.35rem;
 }
 
 .contact-subitems-list {
@@ -263,6 +322,31 @@
     background-color: #f8fafc;
 }
 
+:root[data-theme="dark"] .contact-subitems-empty {
+    background-color: #2a313a;
+    border-color: var(--border);
+    color: #d2d9e1;
+}
+
+:root[data-theme="dark"] :is(#add-contact-form, #edit-contact-form) .form-buttons button[type="button"] {
+    background-color: #2d353f;
+    color: #dbe2ea;
+    border: 1.5px solid var(--border);
+}
+
+:root[data-theme="dark"] :is(#add-contact-form, #edit-contact-form) .form-buttons button[type="button"]:hover {
+    background-color: #333d48;
+    color: #f2f5f9;
+    border-color: #5a6776;
+}
+
+:root[data-theme="dark"] :is(#add-contact-form, #edit-contact-form) .form-buttons button[type="button"]:active {
+    background-color: #28313b;
+    color: #f2f5f9;
+    border-color: #546273;
+    transform: translateY(0);
+}
+
 .contact-subitem-row {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
@@ -271,7 +355,11 @@
 }
 
 .contact-phone-row {
-    grid-template-columns: 140px 84px minmax(0, 1fr) 80px;
+    grid-template-columns: 84px minmax(0, 1fr) 80px;
+}
+
+.contact-phone-row .contact-subitem-select {
+    grid-column: 1 / -1;
 }
 
 .contact-subitem-actions {
@@ -347,6 +435,10 @@
 @media (max-width: 700px) {
     #add-contact-form,
     #edit-contact-form {
+        grid-template-columns: 1fr;
+    }
+
+    .contact-address-section {
         grid-template-columns: 1fr;
     }
 

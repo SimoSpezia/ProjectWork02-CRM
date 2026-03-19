@@ -23,8 +23,10 @@ namespace Crm_Gruppo_5.Controllers
                 var result = _ctx.Contacts
                     .Where(c => !c.IsDeleted)
                     .Include(c => c.Company)
+                    .Include(c=>c.Address)
+                    .Include(c=>c.ContactType)
                     .ToList()
-                    .ConvertAll(_mapper.MapBaseEntitytoDto);
+                    .ConvertAll(_mapper.MapEntitytoSimpleDto);
                 return Ok(result);
             }
             catch (Exception ex)
@@ -39,6 +41,7 @@ namespace Crm_Gruppo_5.Controllers
         public IActionResult GetSingle([FromRoute] int id)
         {
             var contact = _ctx.Contacts
+                          .Include(c => c.Address)
                           .SingleOrDefault(c => c.ContactId == id && !c.IsDeleted);
 
             if (contact == null)
@@ -46,7 +49,7 @@ namespace Crm_Gruppo_5.Controllers
                 return NotFound($"Contact with id {id} not found");
             }
 
-            return Ok(_mapper.MapBaseEntitytoDto(contact));
+            return Ok(_mapper.MapEntitytoSimpleDto(contact));
         }
 
         [HttpGet]
@@ -117,6 +120,10 @@ namespace Crm_Gruppo_5.Controllers
         public IActionResult Create(ContactDto contact)
         {
             contact.ContactId = 0;
+            if(string.IsNullOrWhiteSpace(contact.Name) || string.IsNullOrWhiteSpace(contact.Surname))
+            {
+                return BadRequest("Name and Surname are required fields.");
+            }
 
             var result = _mapper.MapDtoToEntity(contact);
 

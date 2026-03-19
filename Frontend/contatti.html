@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="it">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +9,7 @@
     <link rel="stylesheet" href="style/contatti.css">
     <title>Contatti</title>
 </head>
+
 <body>
     <div class="header">
         <div class="header-title">
@@ -15,12 +17,14 @@
         </div>
         <button class="menu-toggle" aria-label="Toggle menu">☰</button>
         <div class="menu">
+            <a class="menu-link" href="contatti.html">Contatti</a>
             <a class="menu-link" href="azienda.html">Aziende</a>
             <a class="menu-link" href="email.html">Tipo-Email</a>
             <a class="menu-link" href="numeri.html">Tipo-Numeri</a>
             <label class="theme-switch" for="theme-toggle" aria-label="Attiva tema scuro">
                 <span class="theme-icon sun" aria-hidden="true">☀</span>
-                <input type="checkbox" id="theme-toggle" class="theme-switch-input" aria-label="Switch tema chiaro e scuro">
+                <input type="checkbox" id="theme-toggle" class="theme-switch-input"
+                    aria-label="Switch tema chiaro e scuro">
                 <span class="theme-slider" aria-hidden="true"></span>
                 <span class="theme-icon moon" aria-hidden="true">☾</span>
             </label>
@@ -35,12 +39,8 @@
                 </button>
             </div>
 
-            <div id="add-contact-panel"
-                 class="add-company-panel"
-                 role="dialog"
-                 aria-modal="true"
-                 aria-labelledby="add-contact-title"
-                 style="display:none;">
+            <div id="add-contact-panel" class="add-company-panel" role="dialog" aria-modal="true"
+                aria-labelledby="add-contact-title" style="display:none;">
                 <h2 id="add-contact-title">Aggiungi Nuovo Contatto</h2>
                 <form id="add-contact-form" novalidate>
                     <label for="contact-name">Nome</label>
@@ -53,6 +53,35 @@
                     <select id="contact-company">
                         <option value="">Seleziona azienda</option>
                     </select>
+
+                    <div class="contact-address-section" aria-label="Indirizzo contatto">
+                        <div class="contact-address-section-header">
+                            <h3>Indirizzo contatto</h3>
+                        </div>
+
+                        <label for="contact-address-country">Nazione</label>
+                        <select id="contact-address-country">
+                            <option value="">Seleziona nazione</option>
+                        </select>
+
+                        <label for="contact-address-region">Regione</label>
+                        <input type="text" id="contact-address-region" maxlength="120" placeholder="Es. Lombardia">
+
+                        <label for="contact-address-province">Provincia</label>
+                        <input type="text" id="contact-address-province" maxlength="120" placeholder="Es. MI">
+
+                        <label for="contact-address-city">Citta</label>
+                        <input type="text" id="contact-address-city" maxlength="120" placeholder="Es. Milano">
+
+                        <label for="contact-address-zip">CAP</label>
+                        <input type="text" id="contact-address-zip" maxlength="10" placeholder="Es. 20100">
+
+                        <label for="contact-address-street">Via / Piazza</label>
+                        <input type="text" id="contact-address-street" maxlength="120" placeholder="Es. Via Roma">
+
+                        <label for="contact-address-street-number">Numero civico</label>
+                        <input type="text" id="contact-address-street-number" maxlength="20" placeholder="Es. 10A">
+                    </div>
 
                     <label for="contact-title">Titolo</label>
                     <input type="text" id="contact-title" placeholder="Es. Dott.">
@@ -82,12 +111,8 @@
                 </form>
             </div>
 
-            <div id="edit-contact-panel"
-                 class="add-company-panel"
-                 role="dialog"
-                 aria-modal="true"
-                 aria-labelledby="edit-contact-title"
-                 style="display:none;">
+            <div id="edit-contact-panel" class="add-company-panel" role="dialog" aria-modal="true"
+                aria-labelledby="edit-contact-title" style="display:none;">
                 <h2 id="edit-contact-title">Modifica Contatto</h2>
                 <form id="edit-contact-form" novalidate>
                     <input type="hidden" id="edit-contact-id">
@@ -104,11 +129,50 @@
                         <option value="">Seleziona azienda</option>
                     </select>
 
+                    <div class="contact-address-section" aria-label="Indirizzo contatto">
+                        <div class="contact-address-section-header">
+                            <h3>Indirizzo contatto</h3>
+                        </div>
+
+                        <label for="edit-contact-address-country">Nazione</label>
+                        <select id="edit-contact-address-country">
+                            <option value="">Seleziona nazione</option>
+                        </select>
+
+                        <label for="edit-contact-address-region">Regione</label>
+                        <input type="text" id="edit-contact-address-region" maxlength="120" placeholder="Es. Lombardia">
+
+                        <label for="edit-contact-address-province">Provincia</label>
+                        <input type="text" id="edit-contact-address-province" maxlength="120" placeholder="Es. MI">
+
+                        <label for="edit-contact-address-city">Citta</label>
+                        <input type="text" id="edit-contact-address-city" maxlength="120" placeholder="Es. Milano">
+
+                        <label for="edit-contact-address-zip">CAP</label>
+                        <input type="text" id="edit-contact-address-zip" maxlength="10" placeholder="Es. 20100">
+
+                        <label for="edit-contact-address-street">Via / Piazza</label>
+                        <input type="text" id="edit-contact-address-street" maxlength="120" placeholder="Es. Via Roma">
+
+                        <label for="edit-contact-address-street-number">Numero civico</label>
+                        <input type="text" id="edit-contact-address-street-number" maxlength="20" placeholder="Es. 10A">
+                    </div>
+
                     <label for="edit-contact-title-input">Titolo</label>
                     <input type="text" id="edit-contact-title-input">
 
                     <label for="edit-contact-work-role">Ruolo</label>
                     <input type="text" id="edit-contact-work-role">
+
+                    <label for="edit-contact-type-denomination">Tipo contatto</label>
+                    <select id="edit-contact-type-denomination">
+                        <option value="">Seleziona tipo contatto</option>
+                    </select>
+
+                    <label for="edit-contact-category">Categoria</label>
+                    <select id="edit-contact-category">
+                        <option value="">Seleziona categoria</option>
+                    </select>
 
                     <label for="edit-contact-gender">Genere</label>
                     <select id="edit-contact-gender">
@@ -120,16 +184,18 @@
                     <label for="edit-contact-birthday">Data di nascita</label>
                     <input type="date" id="edit-contact-birthday" required>
 
-                    <label>Email</label>
-                    <div class="contact-subitems-block">
+                    <label class="contact-channels-start">Email</label>
+                    <div class="contact-subitems-block contact-channels-start-block">
                         <div id="edit-contact-emails-list" class="contact-subitems-list"></div>
-                        <button type="button" id="edit-contact-email-add-btn" class="secondary-inline-btn">Aggiungi email</button>
+                        <button type="button" id="edit-contact-email-add-btn" class="secondary-inline-btn">Aggiungi
+                            email</button>
                     </div>
 
                     <label>Telefoni</label>
                     <div class="contact-subitems-block">
                         <div id="edit-contact-phones-list" class="contact-subitems-list"></div>
-                        <button type="button" id="edit-contact-phone-add-btn" class="secondary-inline-btn">Aggiungi numero</button>
+                        <button type="button" id="edit-contact-phone-add-btn" class="secondary-inline-btn">Aggiungi
+                            numero</button>
                     </div>
 
                     <label for="edit-contact-note">Note</label>
@@ -165,12 +231,15 @@
             </div>
 
             <div id="company-popup-overlay" class="company-popup-overlay" hidden>
-                <div class="company-popup" role="dialog" aria-modal="true" aria-labelledby="company-popup-title" aria-describedby="company-popup-message">
+                <div class="company-popup" role="dialog" aria-modal="true" aria-labelledby="company-popup-title"
+                    aria-describedby="company-popup-message">
                     <h3 id="company-popup-title">Conferma azione</h3>
                     <p id="company-popup-message"></p>
                     <div class="company-popup-actions">
-                        <button type="button" id="company-popup-cancel" class="company-popup-btn company-popup-btn-secondary">Annulla</button>
-                        <button type="button" id="company-popup-confirm" class="company-popup-btn company-popup-btn-primary">Conferma</button>
+                        <button type="button" id="company-popup-cancel"
+                            class="company-popup-btn company-popup-btn-secondary">Annulla</button>
+                        <button type="button" id="company-popup-confirm"
+                            class="company-popup-btn company-popup-btn-primary">Conferma</button>
                     </div>
                 </div>
             </div>
@@ -179,4 +248,5 @@
 
     <script type="module" src="src/contacts.js"></script>
 </body>
+
 </html>

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="it">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <link rel="stylesheet" href="style/numeri.css">
     <title>Numeri</title>
 </head>
+
 <body>
     <div class="header">
         <div class="header-title">
@@ -17,9 +19,11 @@
             <a class="menu-link" href="contatti.html">Contatti</a>
             <a class="menu-link" href="azienda.html">Azienda</a>
             <a class="menu-link" href="email.html">Tipo-Email</a>
+            <a class="menu-link" href="numeri.html">Tipo-Numeri</a>
             <label class="theme-switch" for="theme-toggle" aria-label="Attiva tema scuro">
                 <span class="theme-icon sun" aria-hidden="true">☀</span>
-                <input type="checkbox" id="theme-toggle" class="theme-switch-input" aria-label="Switch tema chiaro e scuro">
+                <input type="checkbox" id="theme-toggle" class="theme-switch-input"
+                    aria-label="Switch tema chiaro e scuro">
                 <span class="theme-slider" aria-hidden="true"></span>
                 <span class="theme-icon moon" aria-hidden="true">☾</span>
             </label>
@@ -34,12 +38,8 @@
                 </button>
             </div>
 
-            <div id="add-phone-type-panel"
-                 class="add-phone-panel"
-                 role="dialog"
-                 aria-modal="true"
-                 aria-labelledby="add-phone-title"
-                 style="display:none;">
+            <div id="add-phone-type-panel" class="add-phone-panel" role="dialog" aria-modal="true"
+                aria-labelledby="add-phone-title" style="display:none;">
                 <h2 id="add-phone-title">Aggiungi Tipo Numero</h2>
                 <form id="add-phone-type-form" novalidate>
                     <label for="phone-type-description">Descrizione</label>
@@ -57,12 +57,8 @@
                 </form>
             </div>
 
-            <div id="edit-phone-type-panel"
-                 class="add-phone-panel"
-                 role="dialog"
-                 aria-modal="true"
-                 aria-labelledby="edit-phone-title"
-                 style="display:none;">
+            <div id="edit-phone-type-panel" class="add-phone-panel" role="dialog" aria-modal="true"
+                aria-labelledby="edit-phone-title" style="display:none;">
                 <h2 id="edit-phone-title">Modifica Tipo Numero</h2>
                 <form id="edit-phone-type-form" novalidate>
                     <input type="hidden" id="edit-phone-type-id">
@@ -98,12 +94,15 @@
             </div>
 
             <div id="phone-popup-overlay" class="phone-popup-overlay" hidden>
-                <div class="phone-popup" role="dialog" aria-modal="true" aria-labelledby="phone-popup-title" aria-describedby="phone-popup-message">
+                <div class="phone-popup" role="dialog" aria-modal="true" aria-labelledby="phone-popup-title"
+                    aria-describedby="phone-popup-message">
                     <h3 id="phone-popup-title">Conferma azione</h3>
                     <p id="phone-popup-message"></p>
                     <div class="phone-popup-actions">
-                        <button type="button" id="phone-popup-cancel" class="phone-popup-btn phone-popup-btn-secondary">Annulla</button>
-                        <button type="button" id="phone-popup-confirm" class="phone-popup-btn phone-popup-btn-primary">Conferma</button>
+                        <button type="button" id="phone-popup-cancel"
+                            class="phone-popup-btn phone-popup-btn-secondary">Annulla</button>
+                        <button type="button" id="phone-popup-confirm"
+                            class="phone-popup-btn phone-popup-btn-primary">Conferma</button>
                     </div>
                 </div>
             </div>
@@ -112,4 +111,5 @@
 
     <script type="module" src="src/numeri.js"></script>
 </body>
+
 </html>

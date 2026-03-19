@@ -21,5 +21,7 @@ namespace Crm_Gruppo_5.Dto
         public string? Note { get; set; }
         [MaxLength(ValidationLengths.DefaultString)]
         public string? CompanyDenomination { get; set; }
+        [MaxLength(ValidationLengths.LongText)]
+        public string? TypeDenomination { get; set; }
     }
 }

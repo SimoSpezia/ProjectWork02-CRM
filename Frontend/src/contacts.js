@@ -2,7 +2,7 @@ import { hidePanel, initializeMenuAndTheme, showPanel } from "./common.js";
 import { createAddressSelectBinding } from "./address.js";
 import { getMailAddressTypes } from "./apiMailAddressType.js";
 import { getPhoneNumberTypes } from "./apiPhoneNumberType.js";
-import { createContact, createContactWithCompany, createMailAddress, createPhoneNumber, deleteContact, deleteMailAddress, deletePhoneNumber, getContact, getContactWithDetails, updateContact, updateMailAddress, updatePhoneNumber } from "./apiContact.js";
+import { addCategoryToContact, createAddress, createContact, createContactAndReturn, createContactWithCompany, createContactWithCompanyAndReturn, createMailAddress, createPhoneNumber, deleteContact, deleteMailAddress, deletePhoneNumber, getCategories, getCategoriesByContact, getContact, getContactTypes, getContactWithDetails, removeCategoryFromContact, updateAddress, updateContact, updateMailAddress, updatePhoneNumber } from "./apiContact.js";
 import { getCompanies } from "./apiAzienda.js";
 const tableBody = document.getElementById("table-contact-body");
 const addButton = document.getElementById("add-contact-btn");
@@ -28,8 +28,11 @@ let editingContactDetails = null;
 let popupResolver = null;
 let popupMode = null;
 let companyOptions = [];
+let categoryOptions = [];
+let contactTypeOptions = [];
 let mailAddressTypeOptions = [];
 let phoneNumberTypeOptions = [];
+let editingCategoryIds = [];
 let allContacts = [];
 let contactNameFilter = "";
 let contactSortField = "name";
@@ -42,6 +45,63 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
 const PHONE_PREFIX_REGEX = /^\+[0-9]{1,4}$/;
 const PHONE_NUMBER_REGEX = /^[0-9]{5,15}$/;
 const NATIONALITY_REGEX = /^[A-Za-z]{2}$/;
+function normalizeAddressValue(value) {
+    const normalized = (value !== null && value !== void 0 ? value : "").trim();
+    return normalized.length > 0 ? normalized : undefined;
+}
+function buildAddressPayload(contactId, addressId, formPrefix) {
+    return {
+        addressId: addressId !== null && addressId !== void 0 ? addressId : 0,
+        contactId,
+        companyId: null,
+        country: normalizeAddressValue(elementValue(`${formPrefix}-address-country`)),
+        region: normalizeAddressValue(elementValue(`${formPrefix}-address-region`)),
+        province: normalizeAddressValue(elementValue(`${formPrefix}-address-province`)),
+        city: normalizeAddressValue(elementValue(`${formPrefix}-address-city`)),
+        street: normalizeAddressValue(elementValue(`${formPrefix}-address-street`)),
+        streetNumber: normalizeAddressValue(elementValue(`${formPrefix}-address-street-number`)),
+        zip: normalizeAddressValue(elementValue(`${formPrefix}-address-zip`))
+    };
+}
+function hasAnyAddressValue(address) {
+    return [
+        address.country,
+        address.region,
+        address.province,
+        address.city,
+        address.street,
+        address.streetNumber,
+        address.zip
+    ].some((value) => { var _a; return ((_a = value !== null && value !== void 0 ? value : "") === null || _a === void 0 ? void 0 : _a.trim().length) > 0; });
+}
+async function upsertContactAddress(contactId, existingAddressId) {
+    const payload = buildAddressPayload(contactId, existingAddressId, "edit-contact");
+    if (!hasAnyAddressValue(payload)) {
+        return;
+    }
+    if (existingAddressId != null && existingAddressId > 0) {
+        await updateAddress(existingAddressId, payload);
+        return;
+    }
+    await createAddress(Object.assign(Object.assign({}, payload), { addressId: 0, contactId }));
+}
+async function createContactAddressFromAddForm(contactId) {
+    const payload = buildAddressPayload(contactId, null, "contact");
+    if (!hasAnyAddressValue(payload)) {
+        return;
+    }
+    await createAddress(Object.assign(Object.assign({}, payload), { addressId: 0, contactId }));
+}
+function fillEditAddressFields(address) {
+    var _a, _b, _c, _d, _e, _f, _g;
+    setElementValue("edit-contact-address-street", (_a = address === null || address === void 0 ? void 0 : address.street) !== null && _a !== void 0 ? _a : "");
+    setElementValue("edit-contact-address-street-number", (_b = address === null || address === void 0 ? void 0 : address.streetNumber) !== null && _b !== void 0 ? _b : "");
+    setElementValue("edit-contact-address-zip", (_c = address === null || address === void 0 ? void 0 : address.zip) !== null && _c !== void 0 ? _c : "");
+    setElementValue("edit-contact-address-country", (_d = address === null || address === void 0 ? void 0 : address.country) !== null && _d !== void 0 ? _d : "");
+    setElementValue("edit-contact-address-region", (_e = address === null || address === void 0 ? void 0 : address.region) !== null && _e !== void 0 ? _e : "");
+    setElementValue("edit-contact-address-province", (_f = address === null || address === void 0 ? void 0 : address.province) !== null && _f !== void 0 ? _f : "");
+    setElementValue("edit-contact-address-city", (_g = address === null || address === void 0 ? void 0 : address.city) !== null && _g !== void 0 ? _g : "");
+}
 const addAddressBinding = createAddressSelectBinding({
     countryId: "contact-address-country",
     regionId: "contact-address-region",
@@ -167,6 +227,50 @@ function getSelectedCompanyId(selectId) {
     }
     return parsed;
 }
+function getSelectedPositiveNumber(selectId) {
+    const rawValue = elementValue(selectId);
+    const parsed = Number(rawValue);
+    if (!Number.isInteger(parsed) || parsed <= 0) {
+        return null;
+    }
+    return parsed;
+}
+function populateSimpleSelect(selectId, options, placeholder, selectedValue = "") {
+    const select = document.getElementById(selectId);
+    if (!select) {
+        return;
+    }
+    select.innerHTML = "";
+    const placeholderOption = document.createElement("option");
+    placeholderOption.value = "";
+    placeholderOption.textContent = placeholder;
+    select.appendChild(placeholderOption);
+    for (const option of options) {
+        const item = document.createElement("option");
+        item.value = option.value;
+        item.textContent = option.label;
+        select.appendChild(item);
+    }
+    select.value = selectedValue;
+    if (select.value !== selectedValue) {
+        select.value = "";
+    }
+}
+function populateContactTypeSelect(selectedTypeDescription = "") {
+    const options = contactTypeOptions.map((item) => ({
+        value: item.description,
+        label: item.description
+    }));
+    populateSimpleSelect("edit-contact-type-denomination", options, "Seleziona tipo contatto", selectedTypeDescription);
+}
+function populateCategorySelect(selectedCategoryId) {
+    const options = categoryOptions.map((item) => ({
+        value: String(item.categoryId),
+        label: item.description
+    }));
+    const selectedValue = selectedCategoryId != null && selectedCategoryId > 0 ? String(selectedCategoryId) : "";
+    populateSimpleSelect("edit-contact-category", options, "Seleziona categoria", selectedValue);
+}
 async function loadCompanyOptions() {
     const companies = await getCompanies();
     companyOptions = companies
@@ -174,6 +278,27 @@ async function loadCompanyOptions() {
         .sort((a, b) => a.denomination.localeCompare(b.denomination, "it", { sensitivity: "base" }));
     populateCompanySelect("contact-company");
     populateCompanySelect("edit-contact-company");
+}
+async function loadContactMetadataOptions() {
+    try {
+        const [categories, contactTypes] = await Promise.all([
+            getCategories(),
+            getContactTypes()
+        ]);
+        categoryOptions = [...categories]
+            .filter((item) => { var _a; return ((_a = item.description) === null || _a === void 0 ? void 0 : _a.trim().length) > 0; })
+            .sort((a, b) => a.description.localeCompare(b.description, "it", { sensitivity: "base" }));
+        contactTypeOptions = [...contactTypes]
+            .filter((item) => { var _a; return ((_a = item.description) === null || _a === void 0 ? void 0 : _a.trim().length) > 0; })
+            .sort((a, b) => a.description.localeCompare(b.description, "it", { sensitivity: "base" }));
+    }
+    catch (error) {
+        console.error("Errore caricamento categorie/tipi contatto", error);
+        categoryOptions = [];
+        contactTypeOptions = [];
+    }
+    populateContactTypeSelect();
+    populateCategorySelect(null);
 }
 async function loadContactChannelTypeOptions() {
     try {
@@ -340,7 +465,7 @@ function contactSortValue(contact, field) {
         case "surname":
             return normalizeText(contact.surname);
         case "company":
-            return normalizeText(contact.companyDenomination || "");
+            return normalizeText(getContactCompanyDenomination(contact));
         case "birthday": {
             const timestamp = new Date(contact.birthday || "").getTime();
             return Number.isNaN(timestamp) ? Number.MIN_SAFE_INTEGER : timestamp;
@@ -442,35 +567,106 @@ function buildEditPayload() {
         surname: elementValue("edit-contact-surname"),
         title: elementValue("edit-contact-title-input") || undefined,
         workRole: elementValue("edit-contact-work-role") || undefined,
+        typeDenomination: elementValue("edit-contact-type-denomination") || undefined,
         gender: elementValue("edit-contact-gender") || undefined,
         birthday: toIsoDate(elementValue("edit-contact-birthday")),
         note: elementValue("edit-contact-note") || undefined,
     };
 }
 function getContactCompanyDenomination(contact) {
-    var _a, _b, _c, _d;
+    var _a, _b, _c, _d, _e, _f;
     if (((_a = contact.companyDenomination) !== null && _a !== void 0 ? _a : "").trim()) {
         return (_b = contact.companyDenomination) !== null && _b !== void 0 ? _b : "";
     }
+    if (((_c = contact.companydenomination) !== null && _c !== void 0 ? _c : "").trim()) {
+        return (_d = contact.companydenomination) !== null && _d !== void 0 ? _d : "";
+    }
     if ("company" in contact) {
         const detailCompany = contact.company;
-        if (((_c = detailCompany === null || detailCompany === void 0 ? void 0 : detailCompany.denomination) !== null && _c !== void 0 ? _c : "").trim()) {
-            return (_d = detailCompany === null || detailCompany === void 0 ? void 0 : detailCompany.denomination) !== null && _d !== void 0 ? _d : "";
+        if (((_e = detailCompany === null || detailCompany === void 0 ? void 0 : detailCompany.denomination) !== null && _e !== void 0 ? _e : "").trim()) {
+            return (_f = detailCompany === null || detailCompany === void 0 ? void 0 : detailCompany.denomination) !== null && _f !== void 0 ? _f : "";
         }
     }
     return "";
 }
 function fillEditForm(contact) {
-    var _a, _b, _c, _d, _e;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+    const associatedCompanyDenomination = getContactCompanyDenomination(contact);
+    const details = contact;
     setElementValue("edit-contact-id", String(contact.contactId));
     setElementValue("edit-contact-name", contact.name);
     setElementValue("edit-contact-surname", contact.surname);
-    populateCompanySelect("edit-contact-company", getContactCompanyDenomination(contact));
+    populateCompanySelect("edit-contact-company", associatedCompanyDenomination);
     setElementValue("edit-contact-title-input", (_a = contact.title) !== null && _a !== void 0 ? _a : "");
     setElementValue("edit-contact-work-role", (_b = contact.workRole) !== null && _b !== void 0 ? _b : "");
-    setElementValue("edit-contact-gender", (_c = contact.gender) !== null && _c !== void 0 ? _c : "");
-    setElementValue("edit-contact-birthday", toDateInputValue((_d = contact.birthday) !== null && _d !== void 0 ? _d : ""));
-    setElementValue("edit-contact-note", (_e = contact.note) !== null && _e !== void 0 ? _e : "");
+    const selectedTypeDescription = ((_e = (_d = (_c = details.contactType) === null || _c === void 0 ? void 0 : _c.description) !== null && _d !== void 0 ? _d : contact.typeDenomination) !== null && _e !== void 0 ? _e : "").trim();
+    populateContactTypeSelect(selectedTypeDescription);
+    populateCategorySelect((_f = editingCategoryIds[0]) !== null && _f !== void 0 ? _f : null);
+    setElementValue("edit-contact-gender", (_g = contact.gender) !== null && _g !== void 0 ? _g : "");
+    setElementValue("edit-contact-birthday", toDateInputValue((_h = contact.birthday) !== null && _h !== void 0 ? _h : ""));
+    setElementValue("edit-contact-note", (_j = contact.note) !== null && _j !== void 0 ? _j : "");
+    fillEditAddressFields(details.address);
+}
+async function syncContactCategorySelection(contactId) {
+    const selectedCategoryId = getSelectedPositiveNumber("edit-contact-category");
+    const previousCategoryIds = [...editingCategoryIds];
+    const categoryIdsToRemove = selectedCategoryId == null
+        ? previousCategoryIds
+        : previousCategoryIds.filter((id) => id !== selectedCategoryId);
+    for (const categoryId of categoryIdsToRemove) {
+        await removeCategoryFromContact(contactId, categoryId);
+    }
+    if (selectedCategoryId != null && !previousCategoryIds.includes(selectedCategoryId)) {
+        await addCategoryToContact(contactId, selectedCategoryId);
+    }
+    editingCategoryIds = selectedCategoryId == null ? [] : [selectedCategoryId];
+}
+async function applySelectedCategoryToContact(contactId) {
+    const selectedCategoryId = getSelectedPositiveNumber("edit-contact-category");
+    if (selectedCategoryId == null) {
+        return;
+    }
+    await addCategoryToContact(contactId, selectedCategoryId);
+}
+async function copyChannelsToContact(contactId) {
+    var _a, _b, _c, _d, _e, _f, _g, _h;
+    const sourceMails = (_a = editingContactDetails === null || editingContactDetails === void 0 ? void 0 : editingContactDetails.mailAddresses) !== null && _a !== void 0 ? _a : [];
+    for (const item of sourceMails) {
+        const normalizedMail = ((_b = item.mail) !== null && _b !== void 0 ? _b : "").trim();
+        if (!normalizedMail) {
+            continue;
+        }
+        await createMailAddress({
+            mailAddressId: 0,
+            mail: normalizedMail,
+            mailAddressTypeId: (_c = item.mailAddressTypeId) !== null && _c !== void 0 ? _c : (_d = item.mailAddressType) === null || _d === void 0 ? void 0 : _d.mailAddressTypeId,
+            contactId
+        });
+    }
+    const sourcePhones = (_e = editingContactDetails === null || editingContactDetails === void 0 ? void 0 : editingContactDetails.phoneNumbers) !== null && _e !== void 0 ? _e : [];
+    for (const item of sourcePhones) {
+        const normalizedNumber = ((_f = item.number) !== null && _f !== void 0 ? _f : "").trim();
+        if (!normalizedNumber) {
+            continue;
+        }
+        await createPhoneNumber({
+            phoneNumberId: 0,
+            number: normalizedNumber,
+            prefix: item.prefix,
+            nationality: item.nationality,
+            phoneNumberTypeId: (_g = item.phoneNumberTypeId) !== null && _g !== void 0 ? _g : (_h = item.phoneNumberType) === null || _h === void 0 ? void 0 : _h.phoneNumberTypeId,
+            contactId
+        });
+    }
+}
+async function migrateContactToSelectedCompany(sourceContactId, selectedCompanyId, payload) {
+    const createdContact = selectedCompanyId == null
+        ? await createContactAndReturn(payload)
+        : await createContactWithCompanyAndReturn(selectedCompanyId, payload);
+    await copyChannelsToContact(createdContact.contactId);
+    await applySelectedCategoryToContact(createdContact.contactId);
+    await deleteContact(sourceContactId);
+    return createdContact.contactId;
 }
 function ensureSubitemsPlaceholder(container, message) {
     if (!container) {
@@ -789,10 +985,10 @@ function createPhoneRow(item) {
             showError(editError, getUpsertErrorMessage(error));
         }
     });
-    row.appendChild(typeSelect);
     row.appendChild(prefixInput);
     row.appendChild(numberInput);
     row.appendChild(nationalityInput);
+    row.appendChild(typeSelect);
     actions.appendChild(editButton);
     actions.appendChild(saveButton);
     actions.appendChild(removeButton);
@@ -835,26 +1031,34 @@ function renderPhoneRows(items) {
     ensureSubitemsPlaceholder(phoneListContainer, "Nessun numero presente.");
 }
 async function openEditPanel(contact) {
-    var _a, _b;
+    var _a, _b, _c;
     if (!editPanel || !addButton) {
         return;
     }
     editingContactId = contact.contactId;
+    editingCategoryIds = [];
     clearError(editError);
     fillEditForm(contact);
     renderMailAddressRows([]);
     renderPhoneRows([]);
     try {
-        const details = await getContactWithDetails(contact.contactId);
+        const [details, groupCategories] = await Promise.all([
+            getContactWithDetails(contact.contactId),
+            getCategoriesByContact(contact.contactId)
+        ]);
+        editingCategoryIds = ((_a = groupCategories.categories) !== null && _a !== void 0 ? _a : [])
+            .map((item) => item.categoryId)
+            .filter((id) => Number.isInteger(id) && id > 0);
         editingContactDetails = details;
         fillEditForm(details);
-        renderMailAddressRows((_a = details.mailAddresses) !== null && _a !== void 0 ? _a : []);
-        renderPhoneRows((_b = details.phoneNumbers) !== null && _b !== void 0 ? _b : []);
+        renderMailAddressRows((_b = details.mailAddresses) !== null && _b !== void 0 ? _b : []);
+        renderPhoneRows((_c = details.phoneNumbers) !== null && _c !== void 0 ? _c : []);
         showPanel(editPanel, addButton);
     }
     catch (error) {
         editingContactDetails = null;
         editingContactId = null;
+        editingCategoryIds = [];
         await showMessagePopup("Errore", `Impossibile caricare i dettagli del contatto: ${error.message}`);
     }
 }
@@ -911,7 +1115,7 @@ function renderTable(contacts) {
         const surnameCell = document.createElement("td");
         surnameCell.textContent = contact.surname;
         const companyCell = document.createElement("td");
-        companyCell.textContent = contact.companyDenomination || "-";
+        companyCell.textContent = getContactCompanyDenomination(contact) || "-";
         const titleCell = document.createElement("td");
         titleCell.textContent = contact.title || "-";
         const roleCell = document.createElement("td");
@@ -966,12 +1170,10 @@ function setupAddForm() {
                 return;
             }
             const selectedCompanyId = getSelectedCompanyId("contact-company");
-            if (selectedCompanyId != null) {
-                await createContactWithCompany(selectedCompanyId, payload);
-            }
-            else {
-                await createContact(payload);
-            }
+            const createdContact = selectedCompanyId != null
+                ? await createContactWithCompanyAndReturn(selectedCompanyId, payload)
+                : await createContactAndReturn(payload);
+            await createContactAddressFromAddForm(createdContact.contactId);
             addForm.reset();
             hidePanel(addPanel, addButton);
             await loadContacts();
@@ -1004,15 +1206,22 @@ function setupEditForm() {
             const selectedCompanyName = selectedCompanyId == null
                 ? ""
                 : ((_b = (_a = companyOptions.find((company) => company.companyId === selectedCompanyId)) === null || _a === void 0 ? void 0 : _a.denomination) !== null && _b !== void 0 ? _b : "").trim().toLowerCase();
-            const currentCompanyName = ((_c = editingContactDetails === null || editingContactDetails === void 0 ? void 0 : editingContactDetails.companyDenomination) !== null && _c !== void 0 ? _c : "").trim().toLowerCase();
+            const currentCompanyName = editingContactDetails == null
+                ? ""
+                : getContactCompanyDenomination(editingContactDetails).trim().toLowerCase();
             if (selectedCompanyName !== currentCompanyName) {
-                showError(editError, "Cambio azienda su contatto esistente non supportato da questa API. Crea un nuovo contatto con l'azienda corretta.");
-                return;
+                const createdContactId = await migrateContactToSelectedCompany(editingContactId, selectedCompanyId, payload);
+                await upsertContactAddress(createdContactId, null);
             }
-            await updateContact(editingContactId, payload);
+            else {
+                await updateContact(editingContactId, payload);
+                await syncContactCategorySelection(editingContactId);
+                await upsertContactAddress(editingContactId, (_c = editingContactDetails === null || editingContactDetails === void 0 ? void 0 : editingContactDetails.address) === null || _c === void 0 ? void 0 : _c.addressId);
+            }
             hidePanel(editPanel, addButton);
             editingContactId = null;
             editingContactDetails = null;
+            editingCategoryIds = [];
             await loadContacts();
         }
         catch (error) {
@@ -1070,6 +1279,7 @@ function setupButtons() {
             renderPhoneRows([]);
             editingContactId = null;
             editingContactDetails = null;
+            editingCategoryIds = [];
         }
     });
 }
@@ -1079,6 +1289,7 @@ async function init() {
     await (editAddressBinding === null || editAddressBinding === void 0 ? void 0 : editAddressBinding.initialize());
     setupPopup();
     await loadContactChannelTypeOptions();
+    await loadContactMetadataOptions();
     await loadCompanyOptions();
     setupButtons();
     setupAddForm();
