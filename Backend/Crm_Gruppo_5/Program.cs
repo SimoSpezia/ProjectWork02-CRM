@@ -9,7 +9,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddCors(options => {
     options.AddPolicy("FrontendPolicy", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.WithOrigins(
+                "https://projectwork-05-frontend-demo-g2asd9etb8gsdsaj.germanywestcentral-01.azurewebsites.net"
+              )
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
