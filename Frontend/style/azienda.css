@@ -823,6 +823,32 @@
     border-color: #c8d0da;
 }
 
+.form-buttons button[type="button"]:active {
+    background-color: #e8ecf0;
+    color: var(--text-dark);
+    border-color: #bcc6d1;
+    transform: translateY(0);
+}
+
+:root[data-theme="dark"] :is(.add-company-panel, .info-company-panel) .form-buttons button[type="button"] {
+    background-color: #2d353f;
+    color: #dbe2ea;
+    border: 1.5px solid var(--border);
+}
+
+:root[data-theme="dark"] :is(.add-company-panel, .info-company-panel) .form-buttons button[type="button"]:hover {
+    background-color: #333d48;
+    color: #f2f5f9;
+    border-color: #5a6776;
+}
+
+:root[data-theme="dark"] :is(.add-company-panel, .info-company-panel) .form-buttons button[type="button"]:active {
+    background-color: #28313b;
+    color: #f2f5f9;
+    border-color: #546273;
+    transform: translateY(0);
+}
+
 /* ========================================
    OVERLAY BACKDROP
    ======================================== */
