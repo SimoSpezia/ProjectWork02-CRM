@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="it">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <link rel="stylesheet" href="style/email.css">
     <title>Email</title>
 </head>
+
 <body>
     <div class="header">
         <div class="header-title">
@@ -16,10 +18,12 @@
         <div class="menu">
             <a class="menu-link" href="contatti.html">Contatti</a>
             <a class="menu-link" href="azienda.html">Azienda</a>
+            <a class="menu-link" href="email.html">Tipo-Email</a>
             <a class="menu-link" href="numeri.html">Tipo-Numeri</a>
             <label class="theme-switch" for="theme-toggle" aria-label="Attiva tema scuro">
                 <span class="theme-icon sun" aria-hidden="true">☀</span>
-                <input type="checkbox" id="theme-toggle" class="theme-switch-input" aria-label="Switch tema chiaro e scuro">
+                <input type="checkbox" id="theme-toggle" class="theme-switch-input"
+                    aria-label="Switch tema chiaro e scuro">
                 <span class="theme-slider" aria-hidden="true"></span>
                 <span class="theme-icon moon" aria-hidden="true">☾</span>
             </label>
@@ -34,12 +38,8 @@
                 </button>
             </div>
 
-            <div id="add-email-type-panel"
-                 class="add-email-panel"
-                 role="dialog"
-                 aria-modal="true"
-                 aria-labelledby="add-email-title"
-                 style="display:none;">
+            <div id="add-email-type-panel" class="add-email-panel" role="dialog" aria-modal="true"
+                aria-labelledby="add-email-title" style="display:none;">
                 <h2 id="add-email-title">Aggiungi Tipo Email</h2>
                 <form id="add-email-type-form" novalidate>
                     <label for="email-type-description">Descrizione</label>
@@ -57,12 +57,8 @@
                 </form>
             </div>
 
-            <div id="edit-email-type-panel"
-                 class="add-email-panel"
-                 role="dialog"
-                 aria-modal="true"
-                 aria-labelledby="edit-email-title"
-                 style="display:none;">
+            <div id="edit-email-type-panel" class="add-email-panel" role="dialog" aria-modal="true"
+                aria-labelledby="edit-email-title" style="display:none;">
                 <h2 id="edit-email-title">Modifica Tipo Email</h2>
                 <form id="edit-email-type-form" novalidate>
                     <input type="hidden" id="edit-email-type-id">
@@ -98,12 +94,15 @@
             </div>
 
             <div id="email-popup-overlay" class="email-popup-overlay" hidden>
-                <div class="email-popup" role="dialog" aria-modal="true" aria-labelledby="email-popup-title" aria-describedby="email-popup-message">
+                <div class="email-popup" role="dialog" aria-modal="true" aria-labelledby="email-popup-title"
+                    aria-describedby="email-popup-message">
                     <h3 id="email-popup-title">Conferma azione</h3>
                     <p id="email-popup-message"></p>
                     <div class="email-popup-actions">
-                        <button type="button" id="email-popup-cancel" class="email-popup-btn email-popup-btn-secondary">Annulla</button>
-                        <button type="button" id="email-popup-confirm" class="email-popup-btn email-popup-btn-primary">Conferma</button>
+                        <button type="button" id="email-popup-cancel"
+                            class="email-popup-btn email-popup-btn-secondary">Annulla</button>
+                        <button type="button" id="email-popup-confirm"
+                            class="email-popup-btn email-popup-btn-primary">Conferma</button>
                     </div>
                 </div>
             </div>
@@ -112,4 +111,5 @@
 
     <script type="module" src="src/email.js"></script>
 </body>
+
 </html>

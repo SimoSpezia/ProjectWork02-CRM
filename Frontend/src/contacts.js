@@ -985,10 +985,10 @@ function createPhoneRow(item) {
             showError(editError, getUpsertErrorMessage(error));
         }
     });
-    row.appendChild(typeSelect);
     row.appendChild(prefixInput);
     row.appendChild(numberInput);
     row.appendChild(nationalityInput);
+    row.appendChild(typeSelect);
     actions.appendChild(editButton);
     actions.appendChild(saveButton);
     actions.appendChild(removeButton);
