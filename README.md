@@ -1,20 +1,54 @@
-# Introduction 
-TODO: Give a short introduction of your project. Let this section explain the objectives or the motivation behind this project. 
+**CRM Contact Management - Proof of Concept (PoC)**
+*Descrizione del Progetto*
+Questo progetto è un Proof of Concept (PoC) di un sistema CRM (Customer Relationship Management), sviluppato per la Start Up Starter srl su commissione di ITS Tech srl. 
+L'applicativo si concentra specificamente sul modulo di gestione dei contatti e delle aziende a essi collegate.
 
-# Getting Started
-TODO: Guide users through getting your code up and running on their own system. In this section you can talk about:
-1.	Installation process
-2.	Software dependencies
-3.	Latest releases
-4.	API references
+*Architettura e Tecnologie Cloud*
+L'infrastruttura è interamente ospitata su Microsoft Azure;
+ogni ambiente è composto dalle seguenti risorse:
 
-# Build and Test
-TODO: Describe and show how to build your code and run the tests. 
+    Front-end: Un Azure App Service dedicato per la gestione dell'interfaccia utente.
 
-# Contribute
-TODO: Explain how other users and developers can contribute to make your code better. 
+    Back-end: Un Azure App Service dedicato all'esposizione delle Web API.
 
-If you want to learn more about creating good readme files then refer the following [guidelines](https://docs.microsoft.com/en-us/azure/devops/repos/git/create-a-readme?view=azure-devops). You can also seek inspiration from the below readme files:
-- [ASP.NET Core](https://github.com/aspnet/Home)
-- [Visual Studio Code](https://github.com/Microsoft/vscode)
-- [Chakra Core](https://github.com/Microsoft/ChakraCore)
+    Database: Un Azure SQL Server per la persistenza dei dati, configurato per essere accessibile esclusivamente dal back-end.
+
+*Gestione del Codice e DevOps*
+L'organizzazione del ciclo di vita del software è gestita tramite le pratiche DevOps:
+
+    Version Control: Il codice sorgente è ospitato su repository Git in Azure DevOps.
+
+    Branching Strategy: Separazione netta tra la branch Dev (per gli sviluppi e l'integrazione continua) e la branch master (per le versioni stabili e i rilasci).
+
+    Project Management: Tutte le attività e i task di sviluppo sono censiti e tracciati sulle Azure DevOps Boards.
+
+*Struttura Dati (Entità)*
+Il sistema gestisce la raccolta e la catalogazione dei contatti attraverso un database relazionale composto dalle seguenti entità principali:
+
+    Contact: Gestione delle anagrafiche dei contatti (Nome, Cognome, Data di nascita, ecc.).
+
+    Company: Dati delle aziende a cui i contatti possono essere associati (Denominazione, P.IVA, Sito web).
+
+    Category: Categorie di raggruppamento (es. Cliente, Fornitore).
+
+    Recapiti:
+
+        PhoneNumber e Phone Number Type (es. Lavoro, Personale, Emergenza).
+
+        MailAddress e MailAddress Type.
+
+*Funzionalità dell'Applicativo*
+Back-end (Web API)
+
+    Operazioni CRUD: Sono implementate le 5 operazioni fondamentali (GetAll, GetSingle, Create, Update, Delete) per ogni singola entità, con i relativi DTO.
+
+    Endpoint Specifici: API per ottenere i dettagli completi di un contatto (inclusi indirizzi email, numeri di telefono ordinati per priorità e categorie), liste di contatti per azienda e filtraggi avanzati per recapiti.
+
+*Front-end (Interfaccia Utente)*
+L'interfaccia web è strutturata in una pagina con un menu di navigazione che permette di spostarsi tra le sezioni: Contatti, Aziende, Tipologie Email, Tipologie Numeri.
+
+    Visualizzazione a Griglia: I dati sono presentati in griglie interattive che espongono i campi principali, con possibilità di modifica o eliminazione diretta della riga.
+
+    Dettaglio Aziende (Popup/Lightbox): Permette non solo di modificare i dati dell'azienda, ma anche di visualizzare la lista dei contatti associati e di eseguire operazioni CRUD su di essi direttamente da questo pannello.
+
+    Dettaglio Contatti: Oltre all'anagrafica e all'azienda associata, il pannello permette di aggiungere, modificare e cancellare dinamicamente i numeri di telefono e gli indirizzi email del contatto.
