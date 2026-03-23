@@ -1,5 +1,6 @@
 **CRM Contact Management - Proof of Concept (PoC)**
-Descrizione del Progetto
+
+*Descrizione del Progetto*
 Questo progetto è un Proof of Concept (PoC) di un sistema CRM (Customer Relationship Management), sviluppato per la Start Up Starter srl su commissione di ITS Tech srl. 
 L'applicativo si concentra specificamente sul modulo di gestione dei contatti e delle aziende a essi collegate.
 
