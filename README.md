@@ -1,10 +1,12 @@
-**CRM Contact Management - Proof of Concept (PoC)**
+***CRM Contact Management - Proof of Concept (PoC)***
 
-*Descrizione del Progetto*
+**Descrizione del Progetto**
+
 Questo progetto è un Proof of Concept (PoC) di un sistema CRM (Customer Relationship Management), sviluppato per la Start Up Starter srl su commissione di ITS Tech srl. 
 L'applicativo si concentra specificamente sul modulo di gestione dei contatti e delle aziende a essi collegate.
 
-*Architettura e Tecnologie Cloud*
+**Architettura e Tecnologie Cloud**
+
 L'infrastruttura è interamente ospitata su Microsoft Azure;
 ogni ambiente è composto dalle seguenti risorse:
 
@@ -14,7 +16,8 @@ ogni ambiente è composto dalle seguenti risorse:
 
     Database: Un Azure SQL Server per la persistenza dei dati, configurato per essere accessibile esclusivamente dal back-end.
 
-*Gestione del Codice e DevOps*
+**Gestione del Codice e DevOps**
+
 L'organizzazione del ciclo di vita del software è gestita tramite le pratiche DevOps:
 
     Version Control: Il codice sorgente è ospitato su repository Git in Azure DevOps.
@@ -23,7 +26,8 @@ L'organizzazione del ciclo di vita del software è gestita tramite le pratiche D
 
     Project Management: Tutte le attività e i task di sviluppo sono censiti e tracciati sulle Azure DevOps Boards.
 
-*Struttura Dati (Entità)*
+**Struttura Dati (Entità)**
+
 Il sistema gestisce la raccolta e la catalogazione dei contatti attraverso un database relazionale composto dalle seguenti entità principali:
 
     Contact: Gestione delle anagrafiche dei contatti (Nome, Cognome, Data di nascita, ecc.).
@@ -38,14 +42,16 @@ Il sistema gestisce la raccolta e la catalogazione dei contatti attraverso un da
 
         MailAddress e MailAddress Type.
 
-*Funzionalità dell'Applicativo*
+**Funzionalità dell'Applicativo**
+
 Back-end (Web API)
 
     Operazioni CRUD: Sono implementate le 5 operazioni fondamentali (GetAll, GetSingle, Create, Update, Delete) per ogni singola entità, con i relativi DTO.
 
     Endpoint Specifici: API per ottenere i dettagli completi di un contatto (inclusi indirizzi email, numeri di telefono ordinati per priorità e categorie), liste di contatti per azienda e filtraggi avanzati per recapiti.
 
-*Front-end (Interfaccia Utente)*
+**Front-end (Interfaccia Utente)**
+
 L'interfaccia web è strutturata in una pagina con un menu di navigazione che permette di spostarsi tra le sezioni: Contatti, Aziende, Tipologie Email, Tipologie Numeri.
 
     Visualizzazione a Griglia: I dati sono presentati in griglie interattive che espongono i campi principali, con possibilità di modifica o eliminazione diretta della riga.
